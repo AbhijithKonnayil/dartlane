@@ -2,6 +2,7 @@ import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:cli_completion/cli_completion.dart';
 import 'package:dartlane/src/commands/commands.dart';
+import 'package:dartlane/src/core/logger.dart';
 import 'package:dartlane/src/version.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:pub_updater/pub_updater.dart';
@@ -10,19 +11,13 @@ const executableName = 'dartlane';
 const packageName = 'dartlane';
 const description = 'A Very Good Project created by Very Good CLI.';
 
-/// {@template dartlane_command_runner}
-/// A [CommandRunner] for the CLI.
-///
-/// ```bash
-/// $ dartlane --version
-/// ```
-/// {@endtemplate}
+
 class DartlaneCommandRunner extends CompletionCommandRunner<int> {
   /// {@macro dartlane_command_runner}
   DartlaneCommandRunner({
     Logger? logger,
     PubUpdater? pubUpdater,
-  })  : _logger = logger ?? Logger(),
+  })  : _logger = logger ?? DLogger(),
         _pubUpdater = pubUpdater ?? PubUpdater(),
         super(executableName, description) {
     // Add root options and flags
@@ -39,7 +34,7 @@ class DartlaneCommandRunner extends CompletionCommandRunner<int> {
       );
 
     // Add sub commands
-    addCommand(SampleCommand(logger: _logger));
+    addCommand(RunCommand(logger: _logger));
     addCommand(UpdateCommand(logger: _logger, pubUpdater: _pubUpdater));
   }
 
