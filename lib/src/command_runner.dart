@@ -2,6 +2,7 @@ import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:cli_completion/cli_completion.dart';
 import 'package:dartlane/src/commands/commands.dart';
+import 'package:dartlane/src/commands/init_command.dart';
 import 'package:dartlane/src/core/logger.dart';
 import 'package:dartlane/src/version.dart';
 import 'package:mason_logger/mason_logger.dart';
@@ -11,11 +12,9 @@ const executableName = 'dartlane';
 const packageName = 'dartlane';
 const description = 'A Very Good Project created by Very Good CLI.';
 
-
 class DartlaneCommandRunner extends CompletionCommandRunner<int> {
-  /// {@macro dartlane_command_runner}
   DartlaneCommandRunner({
-    Logger? logger,
+    DLogger? logger,
     PubUpdater? pubUpdater,
   })  : _logger = logger ?? DLogger(),
         _pubUpdater = pubUpdater ?? PubUpdater(),
@@ -34,23 +33,21 @@ class DartlaneCommandRunner extends CompletionCommandRunner<int> {
       );
 
     // Add sub commands
-    addCommand(RunCommand(logger: _logger));
     addCommand(UpdateCommand(logger: _logger, pubUpdater: _pubUpdater));
+    addCommand(RunCommand(logger: _logger));
+    addCommand(InitCommand(logger: _logger));
   }
 
   @override
   void printUsage() => _logger.info(usage);
 
-  final Logger _logger;
+  final DLogger _logger;
   final PubUpdater _pubUpdater;
 
   @override
   Future<int> run(Iterable<String> args) async {
     try {
       final topLevelResults = parse(args);
-      if (topLevelResults['verbose'] == true) {
-        _logger.level = Level.verbose;
-      }
       return await runCommand(topLevelResults) ?? ExitCode.success.code;
     } on FormatException catch (e, stackTrace) {
       // On format errors, show the commands error message, root usage and
