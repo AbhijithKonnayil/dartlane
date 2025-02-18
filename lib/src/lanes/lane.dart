@@ -1,4 +1,4 @@
-import 'package:dartlane/src/core/core.dart';
+import 'package:dartlane/src/core/logger.dart';
 
 abstract interface class Lane {
   static final DLogger _logger = DLogger();
