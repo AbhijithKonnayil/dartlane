@@ -1,3 +1,4 @@
 {
-  "words": ["cusomlane", "dartlane", "initializated"]
+  "words": ["cusomlane", "dartlane", "genhtml", "initializated"],
+  "ignorePaths": ["example/*"]
 }
