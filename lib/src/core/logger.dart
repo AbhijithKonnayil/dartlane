@@ -7,7 +7,11 @@ class DLogger {
   DLogger._internal();
   final Logger _logger = Logger(
     filter: ProductionFilter(),
-    printer: Printer(),
+    printer: DefaultLogPrinter(),
+  );
+  final Logger _customLogger = Logger(
+    filter: ProductionFilter(),
+    printer: CustomLogPrinter(),
   );
 
   static final DLogger _instance = DLogger._internal();
@@ -20,6 +24,10 @@ class DLogger {
     _logger.i(msg);
   }
 
+  void success(String msg) {
+    _customLogger.i(msg);
+  }
+
   progress(String s) {}
 
   void detail(String msg) {
@@ -27,12 +35,12 @@ class DLogger {
   }
 }
 
-class Printer extends PrettyPrinter {
+class DefaultLogPrinter extends PrettyPrinter {
   @override
   List<String> log(LogEvent event) {
     String message = stringifyMessage(event.message);
     List<String> buffer = [];
-    AnsiColor color = _getLevelColor(event.level);
+    AnsiColor color = getLevelColor(event.level);
 
     for (var line in message.split('\n')) {
       buffer.add(color('$line'));
@@ -40,11 +48,17 @@ class Printer extends PrettyPrinter {
     return buffer;
   }
 
-  AnsiColor _getLevelColor(Level level) {
+  AnsiColor getLevelColor(Level level) {
     AnsiColor? color;
     if (colors) {
       color = levelColors?[level] ?? PrettyPrinter.defaultLevelColors[level];
     }
     return color ?? const AnsiColor.none();
   }
+}
+
+class CustomLogPrinter extends DefaultLogPrinter {
+  final Map<Level, AnsiColor>? levelColors = {
+    Level.info: const AnsiColor.fg(02)
+  };
 }
