@@ -35,6 +35,7 @@ jobs:
         !brick/**/*.md
         .*/**/*.md
       modified_files_only: false
+      config: "."
 
   verify-version:
     runs-on: ubuntu-latest
