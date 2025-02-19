@@ -36,12 +36,11 @@ jobs:
       - name: 🪄 Spell Check    
         uses: streetsidesoftware/cspell-action@v6
         with:
-          includes: |
+          files: |
             **/*.md
             !brick/**/*.md
             .*/**/*.md
-          modified_files_only: false
-          config: "."
+          incremental_files_only: false
 
   verify-version:
     runs-on: ubuntu-latest
