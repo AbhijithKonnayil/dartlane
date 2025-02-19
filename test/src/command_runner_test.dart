@@ -26,8 +26,10 @@ void main() {
 
     test('should have correct executable name and description', () {
       expect(commandRunner.executableName, 'dartlane');
-      expect(commandRunner.description,
-          'A Very Good Project created by Very Good CLI.');
+      expect(
+        commandRunner.description,
+        'A Very Good Project created by Very Good CLI.',
+      );
     });
 
     test('should add version flag', () {
