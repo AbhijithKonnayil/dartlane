@@ -77,27 +77,6 @@ class DartlaneCommandRunner extends CompletionCommandRunner<int> {
       return ExitCode.success.code;
     }
 
-    // Verbose logs
-    _logger
-      ..detail('Argument information:')
-      ..detail('  Top level options:');
-    for (final option in topLevelResults.options) {
-      if (topLevelResults.wasParsed(option)) {
-        _logger.detail('  - $option: ${topLevelResults[option]}');
-      }
-    }
-    if (topLevelResults.command != null) {
-      final commandResult = topLevelResults.command!;
-      _logger
-        ..detail('  Command: ${commandResult.name}')
-        ..detail('    Command options:');
-      for (final option in commandResult.options) {
-        if (commandResult.wasParsed(option)) {
-          _logger.detail('    - $option: ${commandResult[option]}');
-        }
-      }
-    }
-
     // Run the command or show version
     final int? exitCode;
     if (topLevelResults['version'] == true) {
