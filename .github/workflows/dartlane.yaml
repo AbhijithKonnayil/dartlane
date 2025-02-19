@@ -28,18 +28,20 @@ jobs:
     uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/dart_package.yml@v1
 
   spell-check:
-    - name: 📚 Git Checkout
-      uses: actions/checkout@v4
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@v4
     
-    - name: 🪄 Spell Check    
-      uses: streetsidesoftware/cspell-action@v6
-      with:
-        includes: |
-          **/*.md
-          !brick/**/*.md
-          .*/**/*.md
-        modified_files_only: false
-        config: "."
+      - name: 🪄 Spell Check    
+        uses: streetsidesoftware/cspell-action@v6
+        with:
+          includes: |
+            **/*.md
+            !brick/**/*.md
+            .*/**/*.md
+          modified_files_only: false
+          config: "."
 
   verify-version:
     runs-on: ubuntu-latest
