@@ -35,7 +35,7 @@ class RunCommand extends Command<int> {
   }) async {
     final lanesFile = findDartlaneLanesFile(projectPath);
     if (lanesFile == null) {
-      _logger.err('lanes.dart not found in $projectPath/dartlane');
+      _logger..err('`lanes.dart` not found in $projectPath/dartlane');
       return;
     }
 

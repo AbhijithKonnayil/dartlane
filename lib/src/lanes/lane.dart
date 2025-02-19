@@ -27,7 +27,11 @@ abstract interface class Lane {
     if (_lanes.containsKey(name)) {
       _lanes[name]!.execute();
     } else {
-      _logger.err('Lane "$name" not found.');
+      _logger
+        ..err('Lane "$name" not found.')
+        ..info(
+            '\nMake sure you have created and registered your lane in `dartlane/lane.dart`')
+        ..detail('eg:\nLane.register($name)\n');
     }
   }
 

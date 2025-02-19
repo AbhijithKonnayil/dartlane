@@ -24,7 +24,7 @@ Future<void> runCustomLaneInIsolate(SendPort sendPort) async {
 
   // Listen for exit notification
   exitPort.listen((_) {
-    _logger.info('Isolate exited.');
+    //_logger.info('Isolate exited.');
   });
   sendPort.send(receivePort.sendPort);
 
