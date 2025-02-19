@@ -9,7 +9,7 @@ Future<void> runCustomLaneInIsolate(SendPort sendPort) async {
   final errorPort = ReceivePort();
   final exitPort = ReceivePort();
   DLogger _logger = DLogger();
-  
+
   // Listen for regular messages
   messagePort.listen((message) {
     _logger.info('Received message: $message');

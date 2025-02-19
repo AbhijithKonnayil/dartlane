@@ -8,3 +8,5 @@
 /// dartlane --help
 /// ```
 library;
+
+export './src/lanes/lane.dart';
