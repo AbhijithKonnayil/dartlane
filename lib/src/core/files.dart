@@ -45,7 +45,7 @@ class FileSystemUtils {
       final templateContent = content;
 
       // Replace placeholders with actual data
-      final newContent = _replacePlaceholders(templateContent, data);
+      final newContent = replacePlaceholders(templateContent, data);
 
       // Write the new file
       File(newFilePath).writeAsStringSync(newContent);
@@ -56,7 +56,7 @@ class FileSystemUtils {
     }
   }
 
-  static String _replacePlaceholders(String content, Map<String, String> data) {
+  static String replacePlaceholders(String content, Map<String, String> data) {
     var newContent = content;
     data.forEach((key, value) {
       newContent = newContent.replaceAll('{{$key}}', value);

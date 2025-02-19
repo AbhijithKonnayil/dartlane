@@ -29,6 +29,7 @@ jobs:
     with:
       no_example: true
       analyze_directories: "lib"
+      min_coverage: 20
 
   spell-check:
     runs-on: ubuntu-latest
