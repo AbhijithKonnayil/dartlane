@@ -5,14 +5,30 @@ import 'package:dartlane/src/core/logger.dart';
 class FileSystemUtils {
   static final DLogger _logger = DLogger();
 
-  static void checkAndCreateDirectory(String path) {
+  static void checkAndCreateDirectory(String path,
+      {void Function()? onDirCreateSuccess,
+      void Function()? onDirCreateFailed}) {
     final directory = Directory(path);
 
     if (directory.existsSync()) {
       _logger.err('Directory already exists: ${directory.path}');
+      stdout.write('Do you want to overwrite it? (yes/no): ');
+      String? response = stdin.readLineSync()?.toLowerCase();
+
+      if (response == 'yes') {
+        // Delete the existing directory and create a new one
+        directory.deleteSync(recursive: true);
+        directory.createSync(recursive: true);
+        _logger.info('Directory overwritten: ${directory.path}');
+        onDirCreateSuccess?.call();
+      } else {
+        _logger.info('Directory creation skipped.');
+        onDirCreateFailed?.call();
+      }
     } else {
       directory.createSync(recursive: true);
       _logger.info('Directory created: ${directory.path}');
+      onDirCreateSuccess?.call();
     }
   }
 

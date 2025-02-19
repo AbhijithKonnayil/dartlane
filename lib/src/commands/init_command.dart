@@ -34,7 +34,7 @@ class InitCommand extends Command<int> {
 
     // Listen to stdout and stderr streams
     process.stdout.listen((data) {
-      _logger.info(String.fromCharCodes(data).trim());
+      _logger.detail(String.fromCharCodes(data).trim());
     });
 
     process.stderr.listen((data) {
@@ -43,10 +43,23 @@ class InitCommand extends Command<int> {
 
     // Wait for the process to complete
     final exitCode = await process.exitCode;
-    final templateUri =
+    const templateUri =
         Resource('package:dartlane/src/contents/lane_content.dart');
     final content = await templateUri.readAsString();
-    FileSystemUtils.createFileFromTemplate(content, "Dartlane.dart", {});
+    FileSystemUtils.checkAndCreateDirectory(
+      "dartlane",
+      onDirCreateSuccess: () {
+        FileSystemUtils.createFileFromTemplate(
+          content,
+          'dartlane/lane.dart',
+          {},
+        );
+        _logger.success('Dartlane initializated successfully !!');
+      },
+      onDirCreateFailed: () {
+        _logger.err("Dartlane initialization canceled !!");
+      },
+    );
     return ExitCode.success.code;
   }
 }

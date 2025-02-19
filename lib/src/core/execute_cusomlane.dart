@@ -3,12 +3,13 @@ import 'dart:isolate';
 
 import 'package:dartlane/src/core/logger.dart';
 
-void runCustomLaneInIsolate(SendPort sendPort) async {
+Future<void> runCustomLaneInIsolate(SendPort sendPort) async {
   final receivePort = ReceivePort();
   final messagePort = ReceivePort();
   final errorPort = ReceivePort();
   final exitPort = ReceivePort();
   DLogger _logger = DLogger();
+  
   // Listen for regular messages
   messagePort.listen((message) {
     _logger.info('Received message: $message');
