@@ -8,17 +8,17 @@ Future<void> runCustomLaneInIsolate(SendPort sendPort) async {
   final messagePort = ReceivePort();
   final errorPort = ReceivePort();
   final exitPort = ReceivePort();
-  DLogger _logger = DLogger();
+  final logger = DLogger();
 
   // Listen for regular messages
   messagePort.listen((message) {
-    _logger.info('Received message: $message');
+    logger.info('Received message: $message');
   });
 
   // Listen for errors
   errorPort.listen((error) {
     if (error is List && error.length == 2 && error[0] == 'error') {
-      _logger.err('Isolate error: ${error[1]}');
+      logger.err('Isolate error: ${error[1]}');
     }
   });
 
@@ -52,22 +52,23 @@ Future<void> runCustomLaneInIsolate(SendPort sendPort) async {
       debugName: 'DynamicIsolate',
     );
   } catch (e) {
-    _logger.err('Error executing custom lane: $e');
+    logger.err('Error executing custom lane: $e');
   }
 }
 
 String insertCode(String originalCode, String customCode) {
   // Find the index where the main function ends
-  int mainEndIndex =
+  final mainEndIndex =
       originalCode.indexOf('}', originalCode.indexOf('void main'));
 
-  // If the main function end is found, insert the custom code before the last '}'
+  // If the main function end is found,\ insert the custom code before the last '}'
   if (mainEndIndex != -1) {
-    // Split the original code into two parts: before and after the main function's closing brace
-    String beforeMainEnd = originalCode.substring(0, mainEndIndex);
-    String afterMainEnd = originalCode.substring(mainEndIndex);
+    // Split the original code into two parts:
+    //before and after the main function's closing brace
+    final beforeMainEnd = originalCode.substring(0, mainEndIndex);
+    final afterMainEnd = originalCode.substring(mainEndIndex);
 
-    // Combine the parts with the custom code inserted before the closing brace of main
+    // Combine the parts with the custom code \ inserted before the closing brace of main
     return '$beforeMainEnd\n  $customCode\n$afterMainEnd';
   }
 

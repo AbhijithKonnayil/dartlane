@@ -5,20 +5,23 @@ import 'package:dartlane/src/core/logger.dart';
 class FileSystemUtils {
   static final DLogger _logger = DLogger();
 
-  static void checkAndCreateDirectory(String path,
-      {void Function()? onDirCreateSuccess,
-      void Function()? onDirCreateFailed}) {
+  static void checkAndCreateDirectory(
+    String path, {
+    void Function()? onDirCreateSuccess,
+    void Function()? onDirCreateFailed,
+  }) {
     final directory = Directory(path);
 
     if (directory.existsSync()) {
       _logger.err('Directory already exists: ${directory.path}');
       stdout.write('Do you want to overwrite it? (yes/no): ');
-      String? response = stdin.readLineSync()?.toLowerCase();
+      final response = stdin.readLineSync()?.toLowerCase();
 
       if (response == 'yes') {
         // Delete the existing directory and create a new one
-        directory.deleteSync(recursive: true);
-        directory.createSync(recursive: true);
+        directory
+          ..deleteSync(recursive: true)
+          ..createSync(recursive: true);
         _logger.info('Directory overwritten: ${directory.path}');
         onDirCreateSuccess?.call();
       } else {
@@ -33,7 +36,10 @@ class FileSystemUtils {
   }
 
   static void createFileFromTemplate(
-      String content, String newFilePath, Map<String, String> data) {
+    String content,
+    String newFilePath,
+    Map<String, String> data,
+  ) {
     try {
       // Read the template file
       final templateContent = content;
@@ -42,12 +48,11 @@ class FileSystemUtils {
       final newContent = _replacePlaceholders(templateContent, data);
 
       // Write the new file
-      final newFile = File(newFilePath);
-      newFile.writeAsStringSync(newContent);
+      File(newFilePath).writeAsStringSync(newContent);
 
-      print('File created successfully: $newFilePath');
+      _logger.info('File created successfully: $newFilePath');
     } catch (e) {
-      print('Error: $e');
+      _logger.err('Error: $e');
     }
   }
 

@@ -23,14 +23,15 @@ class InitCommand extends Command<int> {
   Future<int> run() async {
     // FileSystemUtils.checkAndCreateDirectory("dartlane");
     final process = await Process.start(
-        'flutter',
-        [
-          'pub',
-          'add',
-          'dartlane',
-          '--path=../',
-        ],
-        runInShell: true);
+      'flutter',
+      [
+        'pub',
+        'add',
+        'dartlane',
+        '--path=../',
+      ],
+      runInShell: true,
+    );
 
     // Listen to stdout and stderr streams
     process.stdout.listen((data) {
@@ -42,12 +43,12 @@ class InitCommand extends Command<int> {
     });
 
     // Wait for the process to complete
-    final exitCode = await process.exitCode;
+    await process.exitCode;
     const templateUri =
         Resource('package:dartlane/src/contents/lane_content.dart');
     final content = await templateUri.readAsString();
     FileSystemUtils.checkAndCreateDirectory(
-      "dartlane",
+      'dartlane',
       onDirCreateSuccess: () {
         FileSystemUtils.createFileFromTemplate(
           content,
@@ -57,7 +58,7 @@ class InitCommand extends Command<int> {
         _logger.success('Dartlane initializated successfully !!');
       },
       onDirCreateFailed: () {
-        _logger.err("Dartlane initialization canceled !!");
+        _logger.err('Dartlane initialization canceled !!');
       },
     );
     return ExitCode.success.code;

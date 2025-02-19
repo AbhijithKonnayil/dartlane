@@ -4,9 +4,8 @@ import 'dart:isolate';
 import 'package:args/command_runner.dart';
 import 'package:dartlane/src/core/execute_cusomlane.dart';
 import 'package:dartlane/src/core/files.dart';
+import 'package:dartlane/src/core/logger.dart';
 import 'package:io/io.dart';
-
-import '../core/logger.dart';
 
 class RunCommand extends Command<int> {
   RunCommand({
@@ -23,7 +22,7 @@ class RunCommand extends Command<int> {
 
   @override
   Future<int> run() async {
-    String laneName = argResults!.rest.first;
+    final laneName = argResults!.rest.first;
     final projectPath = Directory.current.path;
     await executeCustomLane(projectPath: projectPath, laneName: laneName);
     return ExitCode.success.code;
@@ -35,7 +34,7 @@ class RunCommand extends Command<int> {
   }) async {
     final lanesFile = findDartlaneLanesFile(projectPath);
     if (lanesFile == null) {
-      _logger..err('`lanes.dart` not found in $projectPath/dartlane');
+      _logger.err('`lanes.dart` not found in $projectPath/dartlane');
       return;
     }
 

@@ -1,18 +1,15 @@
+// ignore_for_file: avoid_dynamic_calls
+
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
 import 'package:dartlane/src/command_runner.dart';
+import 'package:dartlane/src/core/logger.dart';
 import 'package:dartlane/src/version.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:pub_updater/pub_updater.dart';
 
-import '../core/logger.dart';
-
-/// {@template update_command}
-/// A command which updates the CLI.
-/// {@endtemplate}
 class UpdateCommand extends Command<int> {
-  /// {@macro update_command}
   UpdateCommand({
     required DLogger logger,
     PubUpdater? pubUpdater,

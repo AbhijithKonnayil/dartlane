@@ -12,7 +12,8 @@ abstract interface class Lane {
   static void register(String name, Lane lane) {
     if (_registeredLanes.containsKey(name)) {
       throw ArgumentError(
-          'A lane with the name "$name" is already registered.');
+        'A lane with the name "$name" is already registered.',
+      );
     }
     _registeredLanes[name] = lane;
   }
@@ -30,7 +31,8 @@ abstract interface class Lane {
       _logger
         ..err('Lane "$name" not found.')
         ..info(
-            '\nMake sure you have created and registered your lane in `dartlane/lane.dart`')
+          '\nMake sure you have created and registered your lane in `dartlane/lane.dart`',
+        )
         ..detail('eg:\nLane.register($name)\n');
     }
   }
