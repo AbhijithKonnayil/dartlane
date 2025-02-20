@@ -3,7 +3,10 @@ import 'dart:io';
 import 'package:dartlane/src/command_runner.dart';
 
 Future<void> main(List<String> args) async {
-  await _flushThenExit(await DartlaneCommandRunner().run(args));
+  //ReceivePort receivePort = ReceivePort();
+  //Isolate.spawn(isoMain, null);
+  await DartlaneCommandRunner().run(args);
+  //await _flushThenExit(await DartlaneCommandRunner().run(args));
 }
 
 /// Flushes the stdout and stderr streams, then exits the program with the given

@@ -1,12 +1,20 @@
+import 'dart:isolate';
+
+import 'package:dartlane/src/core/enums.dart';
 import 'package:dartlane/src/core/logger.dart';
 
-abstract interface class Lane {
+import 'flutter_build_lane.dart';
+
+abstract class Lane {
   static final DLogger _logger = DLogger();
   static final Map<String, Lane> _lanes = {
     ..._inbuiltLanes,
     ..._registeredLanes,
   };
-  static final Map<String, Lane> _inbuiltLanes = {};
+  static final Map<String, Lane> _inbuiltLanes = {
+    //'flutterBuild': FlutterBuildLane(),
+    'flutterBuildApk': FlutterBuildApkLane(),
+  };
   static final Map<String, Lane> _registeredLanes = {};
 
   static void register(String name, Lane lane) {
@@ -24,9 +32,9 @@ abstract interface class Lane {
     });
   }
 
-  static void runLane(String name) {
+  static Future<void> runLane(String name, SendPort sendPort) async {
     if (_lanes.containsKey(name)) {
-      _lanes[name]!.execute();
+      await _lanes[name]!.executeAndSendStatus(sendPort);
     } else {
       _logger
         ..err('Lane "$name" not found.')
@@ -37,6 +45,11 @@ abstract interface class Lane {
     }
   }
 
-  void description();
-  void execute();
+  String get description;
+  Future<void> execute();
+
+  Future<void> executeAndSendStatus(SendPort sendPort) async {
+    await execute();
+    sendPort.send(Status.completed.name);
+  }
 }
