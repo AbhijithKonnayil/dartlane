@@ -3,7 +3,6 @@ import 'dart:isolate';
 
 import 'package:args/command_runner.dart';
 import 'package:dartlane/src/core/enums.dart';
-import 'package:dartlane/src/core/execute_cusomlane.dart';
 import 'package:dartlane/src/core/files.dart';
 import 'package:dartlane/src/core/logger.dart';
 import 'package:io/io.dart';
@@ -41,15 +40,16 @@ class RunCommand extends Command<int> {
 
     final receivePort = ReceivePort();
     receivePort.listen(
-        (data) {
-          if (data == Status.completed.name) {
-            receivePort.close();
-          }
-        },
-        onDone: () {},
-        onError: (_) {
-          _logger.err(_.toString());
-        });
+      (data) {
+        if (data == Status.completed.name) {
+          receivePort.close();
+        }
+      },
+      onDone: () {},
+      onError: (_) {
+        _logger.err(_.toString());
+      },
+    );
     try {
       final libraryUri = Uri.file(lanesFile.path);
       final library = await Isolate.resolvePackageUri(libraryUri);
@@ -74,36 +74,23 @@ class RunCommand extends Command<int> {
     }
   }
 
-  //
-  Future<void> executeCustomLane_({
-    required String projectPath,
-    required String laneName,
-  }) async {
-    final lanesFile = findDartlaneLanesFile(projectPath);
-    if (lanesFile == null) {
-      _logger.err('`lanes.dart` not found in $projectPath/dartlane');
-      return;
+  String insertCode(String originalCode, String customCode) {
+    // Find the index where the main function ends
+    final mainEndIndex =
+        originalCode.indexOf('}', originalCode.indexOf('Future<void> main'));
+
+    // If the main function end is found,\ insert the custom code before the last '}'
+    if (mainEndIndex != -1) {
+      // Split the original code into two parts:
+      //before and after the main function's closing brace
+      final beforeMainEnd = originalCode.substring(0, mainEndIndex);
+      final afterMainEnd = originalCode.substring(mainEndIndex);
+
+      // Combine the parts with the custom code \ inserted before the closing brace of main
+      return '$beforeMainEnd\n  $customCode\n$afterMainEnd';
     }
 
-    // Spawn an isolate to run the custom lane
-    final receivePort = ReceivePort();
-    await Isolate.spawn(runCustomLaneInIsolate, receivePort.sendPort)
-        .then((isolate) {
-      isolate.addOnExitListener(receivePort.sendPort);
-    });
-
-    // Send the path of the lanes file to the isolate
-    final sendPort = await receivePort.first as SendPort;
-    sendPort.send({
-      'lanesFilePath': lanesFile.path,
-      'laneName': laneName,
-    });
-  }
-}
-
-void isoMain(Object? message) {
-  int i = 0;
-  while (true) {
-    print('I am alive ${i++}');
+    // If the main function end is not found, return the original code
+    return originalCode;
   }
 }
