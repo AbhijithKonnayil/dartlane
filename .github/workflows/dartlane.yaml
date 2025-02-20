@@ -26,15 +26,25 @@ jobs:
 
   build:
     uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/dart_package.yml@v1
+    with:
+      no_example: true
+      analyze_directories: "lib"
+      min_coverage: 20
 
   spell-check:
-    uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/spell_check.yml@v1
-    with:
-      includes: |
-        **/*.md
-        !brick/**/*.md
-        .*/**/*.md
-      modified_files_only: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@v4
+    
+      - name: 🪄 Spell Check    
+        uses: streetsidesoftware/cspell-action@v6
+        with:
+          files: |
+            **/*.md
+            !brick/**/*.md
+            .*/**/*.md
+          incremental_files_only: false
 
   verify-version:
     runs-on: ubuntu-latest
@@ -49,7 +59,7 @@ jobs:
 
       - name: 📦 Install Dependencies
         run: |
-          dart pub get
+          dart pub get --no-example
 
       - name: 🔎 Verify version
         run: dart run test --run-skipped -t version-verify

@@ -2,13 +2,14 @@ import 'dart:io';
 
 import 'package:dartlane/src/command_runner.dart';
 import 'package:dartlane/src/commands/commands.dart';
+import 'package:dartlane/src/core/logger.dart';
 import 'package:dartlane/src/version.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:pub_updater/pub_updater.dart';
 import 'package:test/test.dart';
 
-class _MockLogger extends Mock implements Logger {}
+class _MockLogger extends Mock implements DLogger {}
 
 class _MockProgress extends Mock implements Progress {}
 
@@ -19,7 +20,7 @@ void main() {
 
   group('update', () {
     late PubUpdater pubUpdater;
-    late Logger logger;
+    late DLogger logger;
     late DartlaneCommandRunner commandRunner;
 
     setUp(() {
