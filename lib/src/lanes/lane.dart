@@ -2,7 +2,8 @@ import 'dart:isolate';
 
 import 'package:dartlane/src/core/enums.dart';
 import 'package:dartlane/src/core/logger.dart';
-import 'package:dartlane/src/lanes/flutter_build_lane.dart';
+import 'package:dartlane/src/lanes/flutter_build_lane/flutter_build_lane.dart';
+import 'package:meta/meta.dart';
 
 abstract class Lane {
   static final DLogger _logger = DLogger();
@@ -12,7 +13,8 @@ abstract class Lane {
   };
   static final Map<String, Lane> _inbuiltLanes = {
     //'flutterBuild': FlutterBuildLane(),
-    'flutterBuildApk': FlutterBuildApkLane(),
+    FlutterBuildApkLane().name: FlutterBuildApkLane(),
+    FlutterBuildAppBundleLane().name: FlutterBuildAppBundleLane(),
   };
   static final Map<String, Lane> _registeredLanes = {};
 
@@ -44,15 +46,19 @@ abstract class Lane {
           '\nMake sure you have created and registered your lane in `dartlane/lane.dart`',
         )
         ..detail('eg:\nLane.register($name)\n');
+      sendPort.send(Status.completed.name);
     }
   }
 
   String get description;
+  String get name;
   Future<void> execute(Map<String, String> laneArgs);
 
+  @protected
   Future<void> executeAndSendStatus(
     SendPort mainSendPort,
   ) async {
+    _logger.info('Executing $name Lane\n');
     final isolateReceivePort = ReceivePort()
       ..listen((data) {
         if (data is Map<String, Map<String, String>>) {

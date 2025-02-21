@@ -25,7 +25,7 @@ class DLogger {
   }
 
   void success(String msg) {
-    _customLogger.i(msg);
+    _customLogger.i('✓ $msg\n');
   }
 
   dynamic progress(String s) {}

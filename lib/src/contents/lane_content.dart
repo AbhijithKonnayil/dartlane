@@ -19,4 +19,7 @@ class CustomLane extends Lane {
 
   @override
   String get description => 'Custom lane description';
+
+  @override
+  String get name => 'custom';
 }
