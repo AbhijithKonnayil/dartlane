@@ -1,8 +1,7 @@
 import 'dart:io';
 
 import 'package:dartlane/src/core/logger.dart';
-
-import 'lane.dart';
+import 'package:dartlane/src/lanes/lane.dart';
 
 enum BuildType { debug, release, profile, s }
 
@@ -18,8 +17,8 @@ class FlutterBuildLane extends Lane {
   String get description => 'Build an executable for flutter';
 
   @override
-  Future<void> execute() async {
-    // TODO: implement execute
+  Future<void> execute(Map<String, String> laneArgs) {
+    throw UnimplementedError();
   }
 }
 
@@ -29,11 +28,10 @@ class FlutterBuildApkLane extends FlutterBuildLane {
   @override
   String get description => 'Build an Android APK file from your app.';
 
-  @override
   String get name => 'flutterBuildApk';
 
   @override
-  Future<void> execute() async {
+  Future<void> execute(Map<String, String> laneArgs) async {
     _logger.info('Executing $name Lane');
     try {
       final process = await Process.start(
