@@ -8,7 +8,6 @@ import 'package:test/test.dart';
 void main() {
   group('FileSystemUtils', () {
     const testDirPath = 'test_dir';
-    const testFilePath = 'test_dir/test_file.txt';
     const testTemplateContent = 'Hello {{name}}!';
     const testData = {'name': 'World'};
     const testNewFilePath = 'test_dir/new_file.txt';
@@ -28,7 +27,7 @@ void main() {
     });
 
     test('checkAndCreateDirectory creates directory if it does not exist', () {
-      bool onDirCreateSuccessCalled = false;
+      var onDirCreateSuccessCalled = false;
 
       FileSystemUtils.checkAndCreateDirectory(
         testDirPath,
@@ -63,7 +62,7 @@ void main() {
         () {
       // Create a directory first
       Directory(testDirPath).createSync();
-      bool onDirCreateFailedCalled = false;
+      var onDirCreateFailedCalled = false;
 
       // Mock stdin using IOOverrides
       IOOverrides.runZoned(
@@ -140,17 +139,18 @@ void main() {
 
 // Mock class to simulate stdin input
 class StdinMock extends Mock implements Stdin {
-  final String input;
-
   StdinMock(this.input);
+  final String input;
 
   StdinMock getInput() {
     return this;
   }
 
   @override
-  String? readLineSync(
-      {Encoding encoding = systemEncoding, bool retainNewlines = false}) {
+  String? readLineSync({
+    Encoding encoding = systemEncoding,
+    bool retainNewlines = false,
+  }) {
     return input;
   }
 }

@@ -1,5 +1,8 @@
+coverage=$1
+
 dart format --line-length 80 .
 dart analyze lib test
+if [ "$coverage" = "coverage" ]; then
 dart pub global activate coverage
 dart pub global run coverage:test_with_coverage
 
@@ -13,4 +16,5 @@ echo "COVERAGE : $coverage_percentage"
 if (( $(echo "$coverage_percentage < 80" | bc -l) )); then
   echo "Not eligible for PR"
   exit 1
+fi
 fi
