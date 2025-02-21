@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'package:args/command_runner.dart';
 import 'package:dartlane/src/core/enums.dart';
 import 'package:dartlane/src/core/files.dart';
+import 'package:dartlane/src/core/lane_args_parser.dart';
 import 'package:dartlane/src/core/logger.dart';
 import 'package:io/io.dart';
 
@@ -23,14 +24,20 @@ class RunCommand extends Command<int> {
   @override
   Future<int> run() async {
     final laneName = argResults!.rest.first;
+    final laneArgs = LaneArgsParser(argResults!.rest).parse();
     final projectPath = Directory.current.path;
-    await executeCustomLane(projectPath: projectPath, laneName: laneName);
+    await executeCustomLane(
+      projectPath: projectPath,
+      laneName: laneName,
+      laneArgs: laneArgs,
+    );
     return ExitCode.success.code;
   }
 
   Future<void> executeCustomLane({
     required String projectPath,
     required String laneName,
+    required Map<String, String> laneArgs,
   }) async {
     final lanesFile = findDartlaneLanesFile(projectPath);
     if (lanesFile == null) {
@@ -39,10 +46,16 @@ class RunCommand extends Command<int> {
     }
 
     final receivePort = ReceivePort();
+    late final SendPort isolateSendPort;
     receivePort.listen(
       (data) {
         if (data == Status.completed.name) {
           receivePort.close();
+        } else if (data is SendPort) {
+          print("sendport receiver");
+          isolateSendPort = data;
+          final laneArgsData = {'execute': laneArgs};
+          isolateSendPort.send(laneArgsData);
         }
       },
       onDone: () {},
@@ -70,7 +83,7 @@ class RunCommand extends Command<int> {
         receivePort.sendPort,
       );
     } catch (e) {
-      print(e);
+      _logger.err('$e');
     }
   }
 

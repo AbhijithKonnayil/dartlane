@@ -13,8 +13,8 @@ Future<void> main(
 
 class CustomLane extends Lane {
   @override
-  Future<void> execute() async {
-    print('Custom lane executed');
+  Future<void> execute(Map<String, String> laneArgs) async {
+    print('Custom lane executed with args : $laneArgs');
   }
 
   @override
