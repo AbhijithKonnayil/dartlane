@@ -18,6 +18,7 @@ abstract class FlutterBuildLane extends Lane {
     switch (exeType) {
       case ExecutableType.apk:
         return FlutterBuildApkLane();
+      // ignore: no_default_cases
       default:
         return FlutterBuildApkLane();
     }
