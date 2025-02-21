@@ -1,21 +1,25 @@
 // ignore_for_file: avoid_print
 
+import 'dart:isolate';
+
 import 'package:dartlane/dartlane.dart';
 
-void main(
+Future<void> main(
   List<String> args,
-) {
+  SendPort sendPort,
+) async {
   Lane.register('custom', CustomLane());
 }
 
-class CustomLane implements Lane {
+class CustomLane extends Lane {
   @override
-  void description() {
-    print('Custom lane description');
+  Future<void> execute(Map<String, String> laneArgs) async {
+    print('Custom lane executed with args : $laneArgs');
   }
 
   @override
-  void execute() {
-    print('Custom lane executed');
-  }
+  String get description => 'Custom lane description';
+
+  @override
+  String get name => 'custom';
 }

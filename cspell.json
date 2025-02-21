@@ -1,4 +1,12 @@
 {
-  "words": ["cusomlane", "dartlane", "genhtml", "initializated"],
-  "ignorePaths": ["example/*"]
+  "words": [
+    "appbundle",
+    "cusomlane",
+    "dartlane",
+    "genhtml",
+    "initializated"
+  ],
+  "ignorePaths": [
+    "example/*"
+  ]
 }

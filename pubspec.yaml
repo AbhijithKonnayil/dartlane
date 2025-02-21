@@ -11,10 +11,12 @@ environment:
 
 dependencies:
   args: ^2.5.0
+  change_case: ^2.2.0
   cli_completion: ^0.5.1
   io: ^1.0.5
   logger: ^2.5.0
   mason_logger: ^0.3.0
+  meta: ^1.16.0
   pub_updater: ^0.4.0
   resource_portable: ^3.1.0
 
