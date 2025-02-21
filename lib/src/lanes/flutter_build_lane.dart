@@ -1,8 +1,7 @@
 import 'dart:io';
 
 import 'package:dartlane/src/core/logger.dart';
-
-import 'lane.dart';
+import 'package:dartlane/src/lanes/lane.dart';
 
 enum BuildType { debug, release, profile, s }
 
