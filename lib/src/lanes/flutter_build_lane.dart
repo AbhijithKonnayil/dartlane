@@ -29,7 +29,6 @@ class FlutterBuildApkLane extends FlutterBuildLane {
   @override
   String get description => 'Build an Android APK file from your app.';
 
-  @override
   String get name => 'flutterBuildApk';
 
   @override

@@ -52,15 +52,17 @@ class RunCommand extends Command<int> {
         if (data == Status.completed.name) {
           receivePort.close();
         } else if (data is SendPort) {
-          print("sendport receiver");
+          // ignore: avoid_print
+          print('sendPort receiver');
           isolateSendPort = data;
           final laneArgsData = {'execute': laneArgs};
           isolateSendPort.send(laneArgsData);
         }
       },
       onDone: () {},
-      onError: (_) {
-        _logger.err(_.toString());
+      // ignore: inference_failure_on_untyped_parameter
+      onError: (err) {
+        _logger.err(err.toString());
       },
     );
     try {
