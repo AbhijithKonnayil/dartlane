@@ -1,10 +1,15 @@
 {
   "words": [
     "appbundle",
+    "Appdistro",
     "cusomlane",
     "dartlane",
+    "discoveryapis",
+    "firebaseappdistribution",
     "genhtml",
-    "initializated"
+    "googleservice",
+    "initializated",
+    "Longrunning"
   ],
   "ignorePaths": [
     "example/*"

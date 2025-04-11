@@ -2,6 +2,7 @@ import 'dart:isolate';
 
 import 'package:dartlane/src/core/enums.dart';
 import 'package:dartlane/src/core/logger.dart';
+import 'package:dartlane/src/lanes/firebase_app_distribution/firebase_app_distribution_lane.dart';
 import 'package:dartlane/src/lanes/flutter_build_lane/flutter_build_lane.dart';
 import 'package:meta/meta.dart';
 
@@ -13,6 +14,7 @@ abstract class Lane {
   };
   static final Map<String, Lane> _inbuiltLanes = {
     //'flutterBuild': FlutterBuildLane(),
+    FirebaseAppDistributionLane().name: FirebaseAppDistributionLane(),
     FlutterBuildApkLane().name: FlutterBuildApkLane(),
     FlutterBuildAppBundleLane().name: FlutterBuildAppBundleLane(),
   };
