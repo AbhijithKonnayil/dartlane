@@ -9,4 +9,4 @@
 /// ```
 library;
 
-export './src/lanes/lanes.dart';
+export './src/lanes/lane.dart';
