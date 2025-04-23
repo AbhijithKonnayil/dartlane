@@ -2,10 +2,9 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:args/command_runner.dart';
-import 'package:dartlane/src/core/enums.dart';
 import 'package:dartlane/src/core/files.dart';
 import 'package:dartlane/src/core/lane_args_parser.dart';
-import 'package:dartlane/src/core/logger.dart';
+import 'package:dartlane_core/dartlane_core.dart';
 import 'package:io/io.dart';
 
 class RunCommand extends Command<int> {
@@ -76,7 +75,7 @@ class RunCommand extends Command<int> {
 
       final modifiedCode = insertCode(
         laneFileContentFromRepo,
-        'await Lane.runLane("$laneName",sendPort);',
+        'await Lanes.runLane("$laneName",sendPort);',
       );
 
       await Isolate.spawnUri(

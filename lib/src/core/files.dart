@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dartlane/src/core/logger.dart';
+import 'package:dartlane_core/dartlane_core.dart';
 
 class FileSystemUtils {
   static final DLogger _logger = DLogger();
