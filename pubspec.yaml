@@ -10,6 +10,8 @@ environment:
   sdk: ^3.5.0
 
 dependencies:
+  dartlane_core:
+    path: ./packages/dartlane_core
   args: ^2.5.0
   change_case: ^2.2.0
   cli_completion: ^0.5.1

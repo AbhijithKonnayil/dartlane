@@ -1,6 +1,6 @@
 import 'package:dartlane/src/command_runner.dart';
 import 'package:dartlane/src/commands/update_command.dart';
-import 'package:dartlane/src/core/logger.dart';
+import 'package:dartlane_core/dartlane_core.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:pub_updater/pub_updater.dart';
 import 'package:test/test.dart';

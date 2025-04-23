@@ -4,8 +4,8 @@ import 'dart:io';
 
 import 'package:args/command_runner.dart';
 import 'package:dartlane/src/command_runner.dart';
-import 'package:dartlane/src/core/logger.dart';
 import 'package:dartlane/src/version.dart';
+import 'package:dartlane_core/dartlane_core.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:pub_updater/pub_updater.dart';
 

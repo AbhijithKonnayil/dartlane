@@ -3,9 +3,8 @@ import 'dart:io';
 
 import 'package:change_case/change_case.dart';
 import 'package:dartlane/src/core/enums.dart';
-import 'package:dartlane/src/core/logger.dart';
 import 'package:dartlane/src/lanes/flutter_build_lane/flutter_build_lane_args.dart';
-import 'package:dartlane/src/lanes/lane.dart';
+import 'package:dartlane_core/dartlane_core.dart';
 
 abstract class FlutterBuildLane extends Lane {
   FlutterBuildLane({

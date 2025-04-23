@@ -1,4 +1,5 @@
-enum Status { completed }
+//remove
+//enum Status { completed }
 
 enum BuildType {
   debug,

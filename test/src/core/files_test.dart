@@ -41,7 +41,7 @@ void main() {
     test('checkAndCreateDirectory overwrites directory if user confirms', () {
       // Create a directory first
       Directory(testDirPath).createSync();
-      bool onDirCreateSuccessCalled = false;
+      var onDirCreateSuccessCalled = false;
 
       // Mock stdin using IOOverrides
       IOOverrides.runZoned(
