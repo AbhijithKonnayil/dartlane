@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:args/command_runner.dart';
 import 'package:dartlane/src/core/files.dart';
-import 'package:dartlane/src/core/logger.dart';
+import 'package:dartlane_core/dartlane_core.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:resource_portable/resource.dart';
 

@@ -3,12 +3,13 @@
 import 'dart:isolate';
 
 import 'package:dartlane/dartlane.dart';
+import 'package:dartlane_core/dartlane_core.dart';
 
 Future<void> main(
   List<String> args,
   SendPort sendPort,
 ) async {
-  Lane.register('custom', CustomLane());
+  Lanes.register('custom', CustomLane());
 }
 
 class CustomLane extends Lane {

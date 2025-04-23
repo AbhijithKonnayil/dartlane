@@ -1,12 +1,11 @@
 import 'dart:isolate';
 
-import 'package:dartlane/src/core/enums.dart';
-import 'package:dartlane/src/core/logger.dart';
 import 'package:dartlane/src/lanes/flutter_build_lane/flutter_build_lane.dart';
-import 'package:meta/meta.dart';
+import 'package:dartlane_core/dartlane_core.dart';
 
-abstract class Lane {
+abstract class Lanes {
   static final DLogger _logger = DLogger();
+
   static final Map<String, Lane> _lanes = {
     ..._inbuiltLanes,
     ..._registeredLanes,
@@ -33,10 +32,7 @@ abstract class Lane {
     });
   }
 
-  static Future<void> runLane(
-    String name,
-    SendPort sendPort,
-  ) async {
+  static Future<void> runLane(String name, SendPort sendPort) async {
     if (_lanes.containsKey(name)) {
       await _lanes[name]!.executeAndSendStatus(sendPort);
     } else {
@@ -50,28 +46,4 @@ abstract class Lane {
     }
   }
 
-  String get description;
-  String get name;
-  Future<void> execute(Map<String, String> laneArgs);
-
-  @protected
-  Future<void> executeAndSendStatus(
-    SendPort mainSendPort,
-  ) async {
-    _logger.info('Executing $name Lane\n');
-    final isolateReceivePort = ReceivePort()
-      ..listen((data) {
-        if (data is Map<String, Map<String, String>>) {
-          if (data.containsKey('execute')) {
-            final args = data['execute']!;
-            execute(args).whenComplete(() {
-              mainSendPort.send(Status.completed.name);
-            });
-          } else {
-            mainSendPort.send(Status.completed.name);
-          }
-        }
-      });
-    mainSendPort.send(isolateReceivePort.sendPort);
-  }
 }
