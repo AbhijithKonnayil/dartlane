@@ -1,9 +1,10 @@
-import 'dart:io' hide HttpClient;
 import 'dart:io';
 
 import 'package:dartlane/src/core/datatype_utils.dart';
 import 'package:dartlane/src/core/enums.dart';
 import 'package:dartlane/src/core/exception.dart';
+import 'package:dartlane/src/core/utils.dart';
+import 'package:dartlane/src/lanes/firebase_app_distribution/constants.dart';
 import 'package:dartlane/src/lanes/firebase_app_distribution/firebase_app_distribution_helper.dart';
 import 'package:dartlane/src/lanes/firebase_app_distribution/firebase_dist_api.dart';
 import 'package:dartlane_core/dartlane_core.dart';
@@ -14,7 +15,6 @@ import 'package:path/path.dart' as path;
 
 class FirebaseAppDistributionLane extends Lane {
   final DLogger _logger = DLogger();
-  final httpClient = HttpClient();
   final appDistHelper = FirebaseAppDistributionHelper();
 
   static const DEFAULT_UPLOAD_TIMEOUT_SECONDS = 300;
@@ -31,15 +31,17 @@ class FirebaseAppDistributionLane extends Lane {
       print(params);
       final appId = appDistHelper.appIdFromParams(params);
       final appName = appDistHelper.appNameFromAppId(appId!);
-      final platform = platformFromAppId(appId);
+      final platform = appDistHelper.platformFromAppId(appId);
       final timeout = params.getValue(
-        'upload_timeout',
+        Keys.UPLOAD_TIMEOUT,
         defaultVale: DEFAULT_UPLOAD_TIMEOUT_SECONDS.toString(),
       );
       final binaryPath = getBinaryPath(platform, params);
-      await upload(
+      final serviceAccountFilePath = getServiceAccountFilePath(params);
+      final response = await upload(
         appName: appName,
         binaryPath: binaryPath,
+        serviceCredentialsFilePath: serviceAccountFilePath,
       );
     } catch (e) {
       _logger.err(e.toString());
@@ -49,8 +51,10 @@ class FirebaseAppDistributionLane extends Lane {
   @override
   String get name => 'firebaseAppDistribution';
 
-  Future<auth.AutoRefreshingAuthClient> getAuthenticatedClient() async {
-    final serviceAccount = File('service_account.json').readAsStringSync();
+  Future<auth.AutoRefreshingAuthClient> getAuthenticatedClient(
+    String serviceCredentialsFilePath,
+  ) async {
+    final serviceAccount = File(serviceCredentialsFilePath).readAsStringSync();
     final credentials = auth.ServiceAccountCredentials.fromJson(serviceAccount);
 
     final scopes = [FirebaseAppDistributionApi.cloudPlatformScope];
@@ -62,19 +66,16 @@ class FirebaseAppDistributionLane extends Lane {
   Future<GoogleLongrunningOperation> upload({
     required String appName,
     required String binaryPath,
+    required String serviceCredentialsFilePath,
   }) async {
     try {
       final binaryFile = File(binaryPath);
       final binaryFileLength = binaryFile.lengthSync();
-      final serviceAccount = File('service_account.json').readAsStringSync();
-      final credentials =
-          auth.ServiceAccountCredentials.fromJson(serviceAccount);
+      _logger.info('Using Service Account at file $serviceCredentialsFilePath');
       // Obtain authenticated HTTP client
-
-      final client = await auth.clientViaServiceAccount(
-        credentials,
-        [FirebaseAppDistributionApi.cloudPlatformScope], // Required scope
-      );
+      final client = await getAuthenticatedClient(serviceCredentialsFilePath);
+      _logger.info(
+          'Uploading binary at path `$binaryPath` to Firebase App Distribution');
       return await FirebaseDistApi(client).media.upload(
             GoogleFirebaseAppdistroV1UploadReleaseRequest(),
             appName,
@@ -89,27 +90,13 @@ class FirebaseAppDistributionLane extends Lane {
     }
   }
 
-  static FlutterPlatform platformFromAppId(String appId) {
-    try {
-      if (appId.contains(':ios:')) {
-        return FlutterPlatform.ios;
-      } else if (appId.contains(':android:')) {
-        return FlutterPlatform.android;
-      } else {
-        throw DtException('Unknown Platform');
-      }
-    } catch (e) {
-      rethrow;
-    }
-  }
-
   String getBinaryPath(
     FlutterPlatform platform,
     Map<String, String> params,
   ) {
     try {
       if (platform == FlutterPlatform.ios) {
-        return params['ipa_path'] ??
+        return params[Keys.APK_PATH] ??
             Directory('.')
                 .listSync()
                 .whereType<File>()
@@ -117,10 +104,10 @@ class FirebaseAppDistributionLane extends Lane {
                 .last
                 .path;
       } else if (platform == FlutterPlatform.android) {
-        if (params['apk_path'] != null ||
-            params['android_artifact_path'] != null) {
-          return (params['apk_path'] ?? params['android_artifact_path'])!;
-        } else if (params['android_artifact_type'] == 'AAB') {
+        if (params[Keys.APK_PATH] != null ||
+            params[Keys.ANDROID_ARTIFACT_PATH] != null) {
+          return (params[Keys.APK_PATH] ?? params[Keys.ANDROID_ARTIFACT_PATH])!;
+        } else if (params[Keys.ANDROID_ARTIFACT_TYPE] == 'AAB') {
           return Directory(
             path.join(
               'build',
@@ -152,9 +139,26 @@ class FirebaseAppDistributionLane extends Lane {
               .path;
         }
       }
-      throw DtException('Unknown Platform');
+      throw DException('Unknown Platform');
     } catch (e) {
       rethrow;
+    }
+  }
+
+  String getServiceAccountFilePath(Map<String, String> params) {
+    try {
+      final serviceAccountFilePath = params.getValue(
+        Keys.SERVICE_ACCOUNT_FILE_PATH,
+        defaultVale: Utils.getEnvironmentVariable(
+          Keys.GOOGLE_APPLICATION_CREDENTIALS,
+        ),
+      );
+      return serviceAccountFilePath;
+    } catch (e) {
+      throw DException(
+        Messages.SERVICE_ACCOUNT_NOT_FOUND_MESSAGE,
+        title: Messages.SERVICE_ACCOUNT_NOT_FOUND_TITLE,
+      );
     }
   }
 }
