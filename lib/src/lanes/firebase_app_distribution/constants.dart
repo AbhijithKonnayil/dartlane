@@ -20,4 +20,6 @@ class Messages {
       'Missing app id. Please check that the app parameter is set and try again.';
   static const String UNSUPPORTED_FILE_FORMAT =
       'Unsupported distribution file format, should be .ipa, .apk, or .aab';
+
+  static const String BINARY_PATH_NOT_FOUND_TITLE = 'Binary path not found';
 }
