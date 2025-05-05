@@ -59,17 +59,40 @@ class FirebaseAppDistributionLane extends Lane {
         binaryPath: binaryPath,
         client: client,
       );
-      final release = await pollUploadReleaseOperation(
+      var release = await pollUploadReleaseOperation(
         operation: operation,
         client: client,
         binaryType: binaryType,
       );
       final releaseNotes = getReleaseNotes(params);
-      await updateReleaseNotes(
+      release = await updateReleaseNotes(
         client: client,
         release: release,
         releaseNotes: releaseNotes,
       );
+      await distributeRelease(
+        client: client,
+        params: params,
+        release: release,
+      );
+      _logger.success(
+        '🎉 App Distribution upload finished successfully.',
+      );
+      if (release.firebaseConsoleUri != null) {
+        _logger.info(
+          '${Messages.VIEW_RELEASE_IN_CONSOLE}: ${release.firebaseConsoleUri}',
+        );
+      }
+      if (release.testingUri != null) {
+        _logger.info(
+          '${Messages.SHARE_RELEASE_WITH_TESTERS}: ${release.testingUri}',
+        );
+      }
+      if (release.binaryDownloadUri != null) {
+        _logger.info(
+          '${Messages.DOWNLOAD_BINARY_LINK}: ${release.binaryDownloadUri}',
+        );
+      }
     } catch (e) {
       _logger.err(e.toString());
     }
@@ -314,7 +337,7 @@ class FirebaseAppDistributionLane extends Lane {
   }
 
   String? getReleaseNotes(Map<String, String> params) {
-    final releaseNotes = appDistHelper.getValueFromValueOrFile(
+    final (releaseNotes, isFromFile) = appDistHelper.getValueFromValueOrFile(
       filePath: params[Keys.RELEASE_NOTES_FILE_PATH],
       value: params[Keys.RELEASE_NOTES],
     );
@@ -351,6 +374,46 @@ class FirebaseAppDistributionLane extends Lane {
             release.name!,
             //updateMask: 'releaseNotes.text',
           );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<GoogleFirebaseAppdistroV1DistributeReleaseResponse> distributeRelease({
+    required auth.AutoRefreshingAuthClient client,
+    required Map<String, String> params,
+    required GoogleFirebaseAppdistroV1Release release,
+  }) async {
+    try {
+      final (testers, isTestersFromFile) =
+          appDistHelper.getValueFromValueOrFile(
+        value: params[Keys.TESTERS],
+        filePath: params[Keys.TESTERS_FILE_PATH],
+      );
+      final (groups, isGroupsFromFile) = appDistHelper.getValueFromValueOrFile(
+        value: params[Keys.GROUPS],
+        filePath: params[Keys.GROUPS_FILE_PATH],
+      );
+      final emails = testers.stringToArray(
+        delimiter: isTestersFromFile ? '\n' : ',',
+      );
+      final groupAliases = groups.stringToArray(
+        delimiter: isGroupsFromFile ? '\n' : ',',
+      );
+      if (emails.isNotEmpty || groupAliases.isNotEmpty) {
+        _logger.info(Messages.DISTRIBUTING_RELEASE);
+        return await FirebaseDistApi(client).projects.apps.releases.distribute(
+              GoogleFirebaseAppdistroV1DistributeReleaseRequest(
+                testerEmails: emails,
+                groupAliases: groupAliases,
+              ),
+              release.name!,
+            );
+      } else {
+        throw DException(
+          Messages.NO_TESTERS_OR_GROUPS,
+        );
+      }
     } catch (e) {
       rethrow;
     }

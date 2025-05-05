@@ -11,6 +11,10 @@ class Keys {
   static const String ANDROID_ARTIFACT_TYPE = 'android_artifact_type';
   static const String RELEASE_NOTES = 'release_notes';
   static const String RELEASE_NOTES_FILE_PATH = 'release_notes_file_path';
+  static const String TESTERS = 'testers';
+  static const String TESTERS_FILE_PATH = 'testers_file_path';
+  static const String GROUPS = 'groups';
+  static const String GROUPS_FILE_PATH = 'groups_file_path';
 }
 
 class Messages {
@@ -28,4 +32,15 @@ class Messages {
       'At present,only APK files are supported for upload to Firebase App Distribution.';
   static const String NO_RELEASE_NOTES_MESSAGE =
       '⏩ No release notes passed in. Skipping this step.';
+
+  static const String DISTRIBUTING_RELEASE =
+      'Distributing release to testers and groups.';
+  static const String NO_TESTERS_OR_GROUPS =
+      'No testers or groups found. Skipping distribution.';
+  static const String VIEW_RELEASE_IN_CONSOLE =
+      '🔗 View this release in the Firebase console';
+  static const String SHARE_RELEASE_WITH_TESTERS =
+      '🔗 Share this release with testers who have access';
+  static const String DOWNLOAD_BINARY_LINK =
+      '🔗 Download the release binary (link expires in 1 hour)';
 }

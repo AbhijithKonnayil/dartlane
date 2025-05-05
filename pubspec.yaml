@@ -27,6 +27,8 @@ dependencies:
   pub_updater: ^0.5.0
   resource_portable: ^3.1.0
 
+  path: any
+  _discoveryapis_commons: any
 dev_dependencies:
   build_runner: ^2.4.12
   build_verify: ^3.1.0

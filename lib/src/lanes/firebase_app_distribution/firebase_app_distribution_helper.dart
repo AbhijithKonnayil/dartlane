@@ -22,15 +22,16 @@ class FirebaseAppDistributionHelper {
   }
 
   /// Reads a value from a file if the value is null or empty.
-  String? getValueFromValueOrFile({String? value, String? filePath}) {
+  /// return (value , isValueFromFile)
+  (String?, bool) getValueFromValueOrFile({String? value, String? filePath}) {
     if ((value == null || value.isEmpty) && filePath != null) {
       try {
-        return File(filePath).readAsStringSync();
+        return (File(filePath).readAsStringSync(), true);
       } catch (e) {
         throw DException(filePath, title: 'Invalid path');
       }
     }
-    return value;
+    return (value, false);
   }
 
   String? appIdFromParams(
@@ -74,8 +75,10 @@ class FirebaseAppDistributionHelper {
     return null;
 
     // TODO(abhijithkonnayil): impement this function for ios
-    // this will be used to get the app id from the archive plist , will be used in `appIdFromParams()`
+    // this will be used to get the app id from the archive plist ,
+    // will be used in `appIdFromParams()`
   }
+
   FlutterPlatform platformFromAppId(String appId) {
     try {
       if (appId.contains(':ios:')) {
