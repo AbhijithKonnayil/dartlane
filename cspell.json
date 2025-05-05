@@ -10,9 +10,9 @@
     "genhtml",
     "googleservice",
     "initializated",
-    "Longrunning"
+    "Longrunning",
+    "xcworkspace",
+    "xcassets"
   ],
-  "ignorePaths": [
-    "example/*"
-  ]
+  "ignorePaths": ["example/*"]
 }
