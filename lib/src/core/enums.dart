@@ -25,3 +25,8 @@ enum ExecutableType {
   ios,
   windows
 }
+
+enum FlutterPlatform {
+  android,
+  ios,
+}

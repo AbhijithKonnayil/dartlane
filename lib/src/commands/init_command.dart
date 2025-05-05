@@ -22,7 +22,7 @@ class InitCommand extends Command<int> {
   @override
   Future<int> run() async {
     // FileSystemUtils.checkAndCreateDirectory("dartlane");
-    final process = await Process.start(
+    await runShellCommand(
       'flutter',
       [
         'pub',
@@ -30,20 +30,16 @@ class InitCommand extends Command<int> {
         'dartlane',
         '--path=../',
       ],
-      runInShell: true,
     );
-
-    // Listen to stdout and stderr streams
-    process.stdout.listen((data) {
-      _logger.detail(String.fromCharCodes(data).trim());
-    });
-
-    process.stderr.listen((data) {
-      _logger.err(String.fromCharCodes(data).trim());
-    });
-
-    // Wait for the process to complete
-    await process.exitCode;
+    await runShellCommand(
+      'flutter',
+      [
+        'pub',
+        'add',
+        'dartlane_core',
+        '--path=../packages/dartlane_core',
+      ],
+    );
     const templateUri =
         Resource('package:dartlane/src/contents/lane_content.dart');
     final content = await templateUri.readAsString();
@@ -62,5 +58,24 @@ class InitCommand extends Command<int> {
       },
     );
     return ExitCode.success.code;
+  }
+
+  Future<int> runShellCommand(String executableName, List<String> args) async {
+    final process = await Process.start(
+      executableName,
+      args,
+      runInShell: true,
+    );
+
+    process.stdout.listen((data) {
+      _logger.detail(String.fromCharCodes(data).trim());
+    });
+
+    process.stderr.listen((data) {
+      _logger.err(String.fromCharCodes(data).trim());
+    });
+
+    // Wait for the process to complete
+    return process.exitCode;
   }
 }

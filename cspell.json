@@ -1,12 +1,18 @@
 {
   "words": [
+    "abhijithkonnayil",
     "appbundle",
+    "Appdistro",
     "cusomlane",
     "dartlane",
+    "discoveryapis",
+    "firebaseappdistribution",
     "genhtml",
-    "initializated"
+    "googleservice",
+    "initializated",
+    "Longrunning",
+    "xcworkspace",
+    "xcassets"
   ],
-  "ignorePaths": [
-    "example/*"
-  ]
+  "ignorePaths": ["example/*"]
 }

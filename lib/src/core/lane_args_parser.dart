@@ -2,7 +2,11 @@ class LaneArgsParser {
   LaneArgsParser(
     this.rawArgs,
   );
-  static final RegExp _keyValuePattern = RegExp(r'(\w+):([^,\]]+)');
+
+  /// This regex doesn't match
+  /// testers:abhijith.k2012@gmail.com,iamabhijith.k@gmail.com
+  //static final RegExp _keyValuePattern = RegExp(r'(\w+):([^,\]]+)');
+  static final RegExp _keyValuePattern = RegExp(r'(\w+):(.+)');
 
   List<String> rawArgs;
 
