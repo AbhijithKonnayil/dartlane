@@ -40,6 +40,16 @@ class FirebaseAppDistributionLane extends Lane {
       );
       final binaryPath = getBinaryPath(platform, params);
       final binaryType = appDistHelper.binaryTypeFromPath(binaryPath);
+      if (binaryType != ExecutableType.apk) {
+        throw DException(
+          Messages.ONLY_APK_SUPPORTED_FOR_NOW,
+          title: 'Unsupported File Type',
+        );
+      }
+      if (binaryType == ExecutableType.appbundle) {
+        validateAabSetup();
+        getAabInfo();
+      }
       final serviceCredentialsFilePath = getServiceAccountFilePath(params);
       _logger.info('Using Service Account at file $serviceCredentialsFilePath');
       // Obtain authenticated HTTP client
@@ -50,7 +60,16 @@ class FirebaseAppDistributionLane extends Lane {
         client: client,
       );
       final release = await pollUploadReleaseOperation(
-          operation: operation, client: client, binaryType: binaryType);
+        operation: operation,
+        client: client,
+        binaryType: binaryType,
+      );
+      final releaseNotes = getReleaseNotes(params);
+      await updateReleaseNotes(
+        client: client,
+        release: release,
+        releaseNotes: releaseNotes,
+      );
     } catch (e) {
       _logger.err(e.toString());
     }
@@ -103,7 +122,7 @@ class FirebaseAppDistributionLane extends Lane {
     required ExecutableType binaryType,
   }) async {
     _logger.info('Validating upload...');
-    for (int i = 0; i < UPLOAD_MAX_POLLING_RETRIES; i++) {
+    for (var i = 0; i < UPLOAD_MAX_POLLING_RETRIES; i++) {
       // ignore: inference_failure_on_instance_creation
       await Future.delayed(
         const Duration(seconds: UPLOAD_POLLING_INTERVAL_SECONDS),
@@ -179,13 +198,13 @@ class FirebaseAppDistributionLane extends Lane {
     GoogleLongrunningOperation operation,
   ) {
     if (operation.response == null) {
-      throw Exception('No response found in operation');
+      throw DException('No response found in operation');
     }
     if (operation.response!['release'] == null) {
-      throw Exception('No release found in operation response');
+      throw DException('No release found in operation response');
     }
     if (operation.response!['release'] is! Map<String, dynamic>) {
-      throw Exception('Release is not a map');
+      throw DException('Release is not a map');
     }
     return GoogleFirebaseAppdistroV1Release.fromJson(
       operation.response!['release']! as Map<String, dynamic>,
@@ -284,6 +303,56 @@ class FirebaseAppDistributionLane extends Lane {
         Messages.SERVICE_ACCOUNT_NOT_FOUND_MESSAGE,
         title: Messages.SERVICE_ACCOUNT_NOT_FOUND_TITLE,
       );
+    }
+  }
+
+  void validateAabSetup() {
+    // TODO(abhijithkonnayil): Implement AAB setup validation
+  }
+  void getAabInfo() {
+    // TODO(abhijithkonnayil): Implement AAB info retrieval
+  }
+
+  String? getReleaseNotes(Map<String, String> params) {
+    final releaseNotes = appDistHelper.getValueFromValueOrFile(
+      filePath: params[Keys.RELEASE_NOTES_FILE_PATH],
+      value: params[Keys.RELEASE_NOTES],
+    );
+    return releaseNotes;
+  }
+
+  Future<GoogleFirebaseAppdistroV1Release> updateReleaseNotes({
+    required String? releaseNotes,
+    required GoogleFirebaseAppdistroV1Release release,
+    required auth.AutoRefreshingAuthClient client,
+  }) async {
+    if (releaseNotes.hasValue()) {
+      _logger.info('📜 Setting release notes.');
+      release.releaseNotes = GoogleFirebaseAppdistroV1ReleaseNotes(
+        text: releaseNotes,
+      );
+      return updateRelease(
+        client,
+        release,
+      );
+    } else {
+      _logger.info(Messages.NO_RELEASE_NOTES_MESSAGE);
+    }
+    return release;
+  }
+
+  Future<GoogleFirebaseAppdistroV1Release> updateRelease(
+    auth.AutoRefreshingAuthClient client,
+    GoogleFirebaseAppdistroV1Release release,
+  ) async {
+    try {
+      return await FirebaseDistApi(client).projects.apps.releases.patch(
+            release,
+            release.name!,
+            //updateMask: 'releaseNotes.text',
+          );
+    } catch (e) {
+      rethrow;
     }
   }
 }

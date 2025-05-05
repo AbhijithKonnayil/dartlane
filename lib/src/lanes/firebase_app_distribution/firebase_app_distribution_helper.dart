@@ -22,12 +22,12 @@ class FirebaseAppDistributionHelper {
   }
 
   /// Reads a value from a file if the value is null or empty.
-  String? getValueFromValueOrFile(String? value, String? filePath) {
+  String? getValueFromValueOrFile({String? value, String? filePath}) {
     if ((value == null || value.isEmpty) && filePath != null) {
       try {
         return File(filePath).readAsStringSync();
       } catch (e) {
-        throw Exception('Invalid path: $filePath');
+        throw DException(filePath, title: 'Invalid path');
       }
     }
     return value;
@@ -71,6 +71,8 @@ class FirebaseAppDistributionHelper {
     String xcodeArchivePath,
     String plistPath,
   ) {
+    return null;
+
     // TODO(abhijithkonnayil): impement this function for ios
     // this will be used to get the app id from the archive plist , will be used in `appIdFromParams()`
   }

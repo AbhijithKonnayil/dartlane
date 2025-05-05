@@ -42,4 +42,8 @@ extension StringUtils on String? {
     }
     return this!.split(RegExp(delimiter)).map((e) => e.trim()).toList();
   }
+
+  bool hasValue() {
+    return this != null && this!.isNotEmpty;
+  }
 }

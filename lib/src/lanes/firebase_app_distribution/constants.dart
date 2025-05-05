@@ -9,6 +9,8 @@ class Keys {
   static const String APK_PATH = 'apk_path';
   static const String ANDROID_ARTIFACT_PATH = 'android_artifact_path';
   static const String ANDROID_ARTIFACT_TYPE = 'android_artifact_type';
+  static const String RELEASE_NOTES = 'release_notes';
+  static const String RELEASE_NOTES_FILE_PATH = 'release_notes_file_path';
 }
 
 class Messages {
@@ -22,4 +24,8 @@ class Messages {
       'Unsupported distribution file format, should be .ipa, .apk, or .aab';
 
   static const String BINARY_PATH_NOT_FOUND_TITLE = 'Binary path not found';
+  static const String ONLY_APK_SUPPORTED_FOR_NOW =
+      'At present,only APK files are supported for upload to Firebase App Distribution.';
+  static const String NO_RELEASE_NOTES_MESSAGE =
+      '⏩ No release notes passed in. Skipping this step.';
 }
