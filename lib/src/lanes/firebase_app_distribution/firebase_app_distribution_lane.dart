@@ -30,10 +30,11 @@ class FirebaseAppDistributionLane extends Lane {
   @override
   Future<void> execute(Map<String, String> params) async {
     try {
-      print(params);
+      _logger.detail(params.toString());
       final appId = appDistHelper.appIdFromParams(params);
       final appName = appDistHelper.appNameFromAppId(appId!);
       final platform = appDistHelper.platformFromAppId(appId);
+      // ignore: unused_local_variable
       final timeout = params.getValue(
         Keys.UPLOAD_TIMEOUT,
         defaultVale: DEFAULT_UPLOAD_TIMEOUT_SECONDS.toString(),
