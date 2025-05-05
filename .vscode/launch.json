@@ -1,0 +1,57 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python Debugger: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/dartlane_example/lane.py",
+      "cwd": "${workspaceFolder}/dartlane_example",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+
+    {
+      "name": "Run dartlane CLI",
+      "type": "dart",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/dartlane.dart", // Path to your CLI tool
+      "args": [
+        "run",
+        "firebaseAppDistribution",
+        "app:1:495848902204:android:cba572d10f34e97f793d39",
+        //"release_notes:This is a test release",
+        //"testers:abhijith.k2012@gmail.com,iamabhijith.k@gmail.com",
+        "testers_file_path:testers.txt",
+        "groups:dev_1,dev_2",
+        "release_notes_file_path:release_notes.txt"
+        //"serviceCredentialsFilePath:service.json"
+      ], // Arguments to pass to the CLI tool
+      "cwd": "${workspaceFolder}/dartlane_example", // Working directory for the command
+      "console": "terminal" // Run in the integrated terminal,
+    },
+    {
+      "name": "dartlane_example",
+      "cwd": "dartlane_example",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      "name": "dartlane_example (profile mode)",
+      "cwd": "dartlane_example",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "dartlane_example (release mode)",
+      "cwd": "dartlane_example",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release"
+    }
+  ]
+}

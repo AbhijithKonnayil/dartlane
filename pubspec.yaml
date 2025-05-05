@@ -16,8 +16,7 @@ dependencies:
   change_case: ^2.2.0
   cli_completion: ^0.5.1
   dio: ^5.8.0+1
-  googleapis:
-    path: ../googleapis.dart/generated/googleapis
+  googleapis: ^14.0.0
   googleapis_auth: ^2.0.0
   http: ^1.3.0
   io: ^1.0.5
