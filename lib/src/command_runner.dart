@@ -66,6 +66,9 @@ class DartlaneCommandRunner extends CompletionCommandRunner<int> {
         ..info('')
         ..info(e.usage);
       return ExitCode.usage.code;
+    } catch (e) {
+      _logger.err(e.toString());
+      return ExitCode.usage.code;
     }
   }
 

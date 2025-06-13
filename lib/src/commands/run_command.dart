@@ -6,6 +6,7 @@ import 'package:dartlane/src/core/files.dart';
 import 'package:dartlane/src/core/lane_args_parser.dart';
 import 'package:dartlane_core/dartlane_core.dart';
 import 'package:io/io.dart';
+import 'package:path/path.dart' as path;
 
 class RunCommand extends Command<int> {
   RunCommand({
@@ -72,19 +73,22 @@ class RunCommand extends Command<int> {
       }
 
       final laneFileContentFromRepo = File(lanesFile.path).readAsStringSync();
-
       final modifiedCode = insertCode(
         laneFileContentFromRepo,
         'await Lanes.runLane("$laneName",sendPort);',
       );
-
+      final importFixedCode = fixImports(modifiedCode);
+      final tempRunnerFile = await writeTempRunnerFile(
+        modifiedCode: importFixedCode,
+      );
       await Isolate.spawnUri(
-        Uri.dataFromString(modifiedCode, mimeType: 'application/dart'),
+        Uri.file(tempRunnerFile),
         [],
         receivePort.sendPort,
       );
     } catch (e) {
       _logger.err('$e');
+      receivePort.sendPort.send(Status.completed.name);
     }
   }
 
@@ -106,5 +110,39 @@ class RunCommand extends Command<int> {
 
     // If the main function end is not found, return the original code
     return originalCode;
+  }
+
+  String fixImports(String code) {
+    return code.replaceAllMapped(
+      RegExp(r'''import\s+['"]([^'"]+)['"];'''),
+      (match) {
+        final path = match.group(1)!;
+        if (path.startsWith('package:') || path.startsWith('dart:')) {
+          return match.group(0)!; // Leave as-is
+        } else {
+          // Convert `file2.dart` to `../file2.dart` for .dart_tool
+          return "import '../dartlane/$path';";
+        }
+      },
+    );
+  }
+
+  Future<String> writeTempRunnerFile({
+    required String modifiedCode,
+  }) async {
+    final projectRoot = Directory.current.path;
+
+    final tempDirPath = path.join(projectRoot, '.dart_tool');
+    final tempDir = Directory(tempDirPath);
+
+    if (!tempDir.existsSync()) {
+      tempDir.createSync(recursive: true);
+    }
+
+    final tempFilePath = path.join(tempDirPath, 'cli_temp_runner.dart');
+    final tempFile = File(tempFilePath);
+    await tempFile.writeAsString(modifiedCode);
+
+    return tempFilePath;
   }
 }
