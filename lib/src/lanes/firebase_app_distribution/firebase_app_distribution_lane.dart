@@ -28,7 +28,7 @@ class FirebaseAppDistributionLane extends Lane {
   String get description => 'Distribute the apk to firebase';
 
   @override
-  Future<void> execute(Map<String, String> params) async {
+  Future<LaneResponse> executeLogic(Map<String, String> params) async {
     try {
       _logger.detail(params.toString());
       final appId = appDistHelper.appIdFromParams(params);
@@ -94,8 +94,13 @@ class FirebaseAppDistributionLane extends Lane {
           '${Messages.DOWNLOAD_BINARY_LINK}: ${release.binaryDownloadUri}',
         );
       }
+      return LaneResponse(
+        response: null,
+        status: Status.completed,
+      );
     } catch (e) {
-      _logger.err(e.toString());
+      // _logger.err(e.toString());
+      rethrow;
     }
   }
 

@@ -14,13 +14,14 @@ Future<void> main(
 
 class CustomLane extends Lane {
   @override
-  Future<void> execute(Map<String, String> laneArgs) async {
-    print('Custom lane executed with args : $laneArgs');
-  }
-
-  @override
   String get description => 'Custom lane description';
 
   @override
   String get name => 'custom';
+
+  @override
+  Future<LaneResponse> executeLogic(Map<String, String> laneArgs) async {
+    print('Custom lane executed with args : $laneArgs');
+    return LaneResponse.success();
+  }
 }

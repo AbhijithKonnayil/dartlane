@@ -42,13 +42,13 @@ abstract class FlutterBuildLane extends Lane {
       [command, ...defaultArgs, ...dynamicArgs].join(' ');
 
   @override
-  Future<void> execute(Map<String, String> laneArgs) async {
+  Future<LaneResponse> executeLogic(Map<String, String> laneArgs) {
     dynamicArgs = getDynamicArgs(laneArgs);
     _logger.info('Executing `$executedCommand`');
-    await executeProcess(defaultArgs, dynamicArgs);
+    return executeProcess(defaultArgs, dynamicArgs);
   }
 
-  Future<void> executeProcess(
+  Future<LaneResponse> executeProcess(
     List<String> defaultArgs,
     List<String> dynamicArgs,
   ) async {
@@ -70,13 +70,12 @@ abstract class FlutterBuildLane extends Lane {
       });
 
       final exitCode = await process.exitCode;
-      if (exitCode == 0) {
-        _logger.success('$name Lane completed successfully.');
-      } else {
-        _logger.err('$name Lane failed with exit code $exitCode.');
-      }
+      return LaneResponse(
+        response: exitCode,
+        status: exitCode == 0 ? Status.completed : Status.error,
+      );
     } catch (e) {
-      _logger.err('Error executing $name Lane: $e');
+      rethrow;
     }
   }
 

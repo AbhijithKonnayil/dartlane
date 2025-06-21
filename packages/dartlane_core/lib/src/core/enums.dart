@@ -1,1 +1,1 @@
-enum Status { completed }
+enum Status { completed, error }
