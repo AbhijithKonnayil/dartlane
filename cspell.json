@@ -3,6 +3,7 @@
     "abhijithkonnayil",
     "appbundle",
     "Appdistro",
+    "cupertino",
     "cusomlane",
     "dartlane",
     "discoveryapis",
@@ -11,8 +12,11 @@
     "googleservice",
     "initializated",
     "Longrunning",
-    "xcworkspace",
-    "xcassets"
+    "Schyler",
+    "xcassets",
+    "xcworkspace"
   ],
-  "ignorePaths": ["example/*"]
+  "ignorePaths": [
+    "example/*"
+  ]
 }

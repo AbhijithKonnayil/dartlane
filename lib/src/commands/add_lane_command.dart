@@ -21,27 +21,28 @@ class AddLaneCommand extends Command<int> {
 
   final DLogger _logger;
 
+  @override
   Future<int> run() async {
-    String laneName = readInput(
+    final laneName = readInput(
       'Enter the lane name',
       defaultValue: 'custom_lane',
     );
-    String directory = readInput(
+    final directory = readInput(
       'Enter the directory name',
       defaultValue: laneName.toSnakeCase(),
     );
-    String className = readInput(
+    final className = readInput(
       'Enter the class Name',
       defaultValue: laneName.toPascalCase(),
     );
-    String argsClassName = readInput(
+    final argsClassName = readInput(
       'Enter the class Name',
       defaultValue: '${laneName}Args'.toPascalCase(),
     );
     final data = {
       'LANE_CLASSNAME': className,
       'LANE_ARGS_CLASSNAME': argsClassName,
-      'LANE_FILENAME': directory
+      'LANE_FILENAME': directory,
     };
     FileSystemUtils.checkAndCreateDirectory(
       directory,
@@ -60,8 +61,10 @@ class AddLaneCommand extends Command<int> {
     );
     final root = findProjectRoot();
     final process = await Process.start(
-        'dart', ['run', 'build_runner', 'build'],
-        workingDirectory: root);
+      'dart',
+      ['run', 'build_runner', 'build'],
+      workingDirectory: root,
+    );
     process.stdout.transform(utf8.decoder).listen(_logger.info);
 
     process.stderr.transform(utf8.decoder).listen(_logger.err);

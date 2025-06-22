@@ -1,7 +1,7 @@
 import 'dart:isolate';
 
+import 'package:dartlane/dartlane.dart';
 import 'package:dartlane/src/lanes/firebase_app_distribution/firebase_app_distribution_lane.dart';
-import 'package:dartlane/src/lanes/flutter_build_lane/flutter_build_lane.dart';
 import 'package:dartlane_core/dartlane_core.dart';
 
 abstract class Lanes {
@@ -16,6 +16,7 @@ abstract class Lanes {
     FirebaseAppDistributionLane().name: FirebaseAppDistributionLane(),
     FlutterBuildApkLane().name: FlutterBuildApkLane(),
     FlutterBuildAppBundleLane().name: FlutterBuildAppBundleLane(),
+    Versioner().name: Versioner(),
   };
   static final Map<String, Lane> _registeredLanes = {};
 

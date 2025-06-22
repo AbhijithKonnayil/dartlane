@@ -12,13 +12,13 @@ class VersionerArgs extends LaneArgs {
     this.value,
   });
 
+  factory VersionerArgs.fromJson(Map<String, dynamic> json) =>
+      _$VersionerArgsFromJson(json);
+
   final String? pubspecFile;
   final VersionComponent versionComponent;
   final String? value;
 
-  factory VersionerArgs.fromJson(Map<String, dynamic> json) =>
-      _$VersionerArgsFromJson(json);
-  
   @override
   Map<String, dynamic> toJson() => _$VersionerArgsToJson(this);
 }

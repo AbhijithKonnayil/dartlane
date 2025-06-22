@@ -1,16 +1,24 @@
 import 'dart:io';
 
+import 'package:dartlane/src/core/exception.dart';
 import 'package:dartlane_core/dartlane_core.dart';
 import 'package:yaml_edit/yaml_edit.dart';
 
 enum VersionComponent { versionName, versionCode, patch, major, minor }
 
 class Versioner extends Lane {
+  Versioner({
+    DLogger? logger,
+  }) {
+    _logger = logger ?? DLogger();
+  }
+
   @override
   String get name => 'versioner';
 
   @override
   String get description => 'updates the version in pubspec.yaml';
+  late final DLogger _logger;
 
   @override
   Future<LaneResponse> executeLogic(Map<String, String> laneArgs) async {
@@ -29,6 +37,14 @@ class Versioner extends Lane {
     final content = await file.readAsString();
     final yamlEditor = YamlEditor(content);
     final currentVersion = yamlEditor.parseAt(['version']).value as String;
+    final versionRegExp = RegExp(r'^\d+\.\d+\.\d+\+\d+$');
+    if (!versionRegExp.hasMatch(currentVersion)) {
+      throw DException(
+        'Current version($currentVersion) is not in valid pattern',
+      );
+    }
+
+    _logger.info('Current Version : $currentVersion');
     //TODO
     //current version regex check
     final newVersion = getVersion(
@@ -37,7 +53,7 @@ class Versioner extends Lane {
     );
     yamlEditor.update(['version'], newVersion);
     file.writeAsStringSync(yamlEditor.toString());
-
+    _logger.info('Updated Version : $newVersion');
     return LaneResponse.success();
   }
 
@@ -45,13 +61,13 @@ class Versioner extends Lane {
     required Map<String, String> laneArgs,
     required String currentVersion,
   }) {
-    String versionName = getVersionName(currentVersion);
-    String versionCode = getVersionCode(currentVersion);
+    var versionName = getVersionName(currentVersion);
+    var versionCode = getVersionCode(currentVersion);
     final versionComponentFromArgs = laneArgs['versionComponent'];
     final versionComponent = getVersionComponent(
       versionComponentFromArgs,
     );
-    List<int> nameParts = versionName.split('.').map(int.parse).toList();
+    final nameParts = versionName.split('.').map(int.parse).toList();
     final value = laneArgs['value'];
 
     switch (versionComponent) {
