@@ -1,6 +1,7 @@
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:cli_completion/cli_completion.dart';
+import 'package:dartlane/src/commands/add_lane_command.dart';
 import 'package:dartlane/src/commands/commands.dart';
 import 'package:dartlane/src/commands/init_command.dart';
 import 'package:dartlane/src/version.dart';
@@ -36,6 +37,7 @@ class DartlaneCommandRunner extends CompletionCommandRunner<int> {
     addCommand(UpdateCommand(logger: _logger, pubUpdater: _pubUpdater));
     addCommand(RunCommand(logger: _logger));
     addCommand(InitCommand(logger: _logger));
+    addCommand(AddLaneCommand(logger: _logger));
   }
 
   @override
