@@ -1,5 +1,6 @@
 import 'dart:isolate';
 
+import 'package:dartlane_core/src/core/lane_args.dart';
 import 'package:dartlane_core/src/core/lane_response.dart';
 import 'package:dartlane_core/src/core/logger.dart';
 
@@ -57,6 +58,10 @@ abstract class Lane {
   /// - [laneArgs]: Runtime arguments passed to the lane.
   /// - Returns: A [LaneResponse] containing the result of the execution.
   Future<LaneResponse> executeLogic(Map<String, String> laneArgs);
+
+  Future<LaneResponse> executeLogicT(LaneArgs args) {
+    return executeLogic(args.toStringJson());
+  }
 
   Future<void> executeAndSendStatus(SendPort mainSendPort) async {
     _logger.info('Executing $name Lane\n');

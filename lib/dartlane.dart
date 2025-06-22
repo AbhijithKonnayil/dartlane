@@ -12,3 +12,4 @@ library;
 export './src/lanes/flutter_build_lane/flutter_build_lane.dart';
 export './src/lanes/lanes.dart';
 export './src/lanes/versioner/versioner.dart';
+export './src/lanes/versioner/versioner_args.dart';
