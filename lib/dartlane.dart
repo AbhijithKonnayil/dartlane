@@ -9,5 +9,4 @@
 /// ```
 library;
 
-export './src/lanes/flutter_build_lane/flutter_build_lane.dart';
-export './src/lanes/lanes.dart';
+export 'package:dartlane_core/dartlane_core.dart';

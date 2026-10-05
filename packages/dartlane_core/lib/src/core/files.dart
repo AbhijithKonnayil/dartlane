@@ -66,7 +66,7 @@ class FileSystemUtils {
 }
 
 File? findDartlaneLanesFile(String projectPath) {
-  final file = File('$projectPath/dartlane/lane.dart');
+  final file = File('$projectPath/dartlane/lanes.dart');
   if (file.existsSync()) {
     return file;
   }

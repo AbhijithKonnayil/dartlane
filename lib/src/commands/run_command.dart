@@ -1,12 +1,8 @@
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:args/command_runner.dart';
-import 'package:dartlane/src/core/files.dart';
-import 'package:dartlane/src/core/lane_args_parser.dart';
 import 'package:dartlane_core/dartlane_core.dart';
-import 'package:io/io.dart';
-import 'package:path/path.dart' as path;
+import 'package:mason_logger/mason_logger.dart';
 
 class RunCommand extends Command<int> {
   RunCommand({
@@ -23,9 +19,15 @@ class RunCommand extends Command<int> {
 
   @override
   Future<int> run() async {
-    final laneName = argResults!.rest.first;
+    final laneName = argResults!.rest.firstOrNull;
+    if (laneName == null) {
+      _logger.err('No lane name provided.');
+      return ExitCode.usage.code;
+    }
+
     final laneArgs = LaneArgsParser(argResults!.rest).parse();
     final projectPath = Directory.current.path;
+
     await executeCustomLane(
       projectPath: projectPath,
       laneName: laneName,
@@ -45,104 +47,28 @@ class RunCommand extends Command<int> {
       return;
     }
 
-    final receivePort = ReceivePort();
-    late final SendPort isolateSendPort;
-    receivePort.listen(
-      (data) {
-        if (data == Status.completed.name) {
-          receivePort.close();
-        } else if (data is SendPort) {
-          // ignore: avoid_print
-          print('sendPort receiver');
-          isolateSendPort = data;
-          final laneArgsData = {'execute': laneArgs};
-          isolateSendPort.send(laneArgsData);
-        }
-      },
-      onDone: () {},
-      // ignore: inference_failure_on_untyped_parameter
-      onError: (err) {
-        _logger.err(err.toString());
-      },
-    );
     try {
-      final libraryUri = Uri.file(lanesFile.path);
-      final library = await Isolate.resolvePackageUri(libraryUri);
-      if (library == null) {
-        throw Exception('Failed to resolve library URI: $libraryUri');
-      }
+      _logger.info('Running lane: $laneName');
 
-      final laneFileContentFromRepo = File(lanesFile.path).readAsStringSync();
-      final modifiedCode = insertCode(
-        laneFileContentFromRepo,
-        'await Lanes.runLane("$laneName",sendPort);',
+      // We pass the lane name as the first argument to the user's script.
+      // Any additional args should ideally be passed too.
+      // For now, we construct the basic command.
+
+      final process = await Process.start(
+        'dart',
+        ['run', lanesFile.path, laneName],
+        mode: ProcessStartMode.inheritStdio,
+        workingDirectory: projectPath,
       );
-      final importFixedCode = fixImports(modifiedCode);
-      final tempRunnerFile = await writeTempRunnerFile(
-        modifiedCode: importFixedCode,
-      );
-      await Isolate.spawnUri(
-        Uri.file(tempRunnerFile),
-        [],
-        receivePort.sendPort,
-      );
+
+      final exitCode = await process.exitCode;
+
+      if (exitCode != ExitCode.success.code) {
+        _logger.err('Lane execution failed with exit code: $exitCode');
+        exit(exitCode);
+      }
     } catch (e) {
       _logger.err('$e');
-      receivePort.sendPort.send(Status.completed.name);
     }
-  }
-
-  String insertCode(String originalCode, String customCode) {
-    // Find the index where the main function ends
-    final mainEndIndex =
-        originalCode.indexOf('}', originalCode.indexOf('Future<void> main'));
-
-    // If the main function end is found,\ insert the custom code before the last '}'
-    if (mainEndIndex != -1) {
-      // Split the original code into two parts:
-      //before and after the main function's closing brace
-      final beforeMainEnd = originalCode.substring(0, mainEndIndex);
-      final afterMainEnd = originalCode.substring(mainEndIndex);
-
-      // Combine the parts with the custom code \ inserted before the closing brace of main
-      return '$beforeMainEnd\n  $customCode\n$afterMainEnd';
-    }
-
-    // If the main function end is not found, return the original code
-    return originalCode;
-  }
-
-  String fixImports(String code) {
-    return code.replaceAllMapped(
-      RegExp(r'''import\s+['"]([^'"]+)['"];'''),
-      (match) {
-        final path = match.group(1)!;
-        if (path.startsWith('package:') || path.startsWith('dart:')) {
-          return match.group(0)!; // Leave as-is
-        } else {
-          // Convert `file2.dart` to `../file2.dart` for .dart_tool
-          return "import '../dartlane/$path';";
-        }
-      },
-    );
-  }
-
-  Future<String> writeTempRunnerFile({
-    required String modifiedCode,
-  }) async {
-    final projectRoot = Directory.current.path;
-
-    final tempDirPath = path.join(projectRoot, '.dart_tool');
-    final tempDir = Directory(tempDirPath);
-
-    if (!tempDir.existsSync()) {
-      tempDir.createSync(recursive: true);
-    }
-
-    final tempFilePath = path.join(tempDirPath, 'cli_temp_runner.dart');
-    final tempFile = File(tempFilePath);
-    await tempFile.writeAsString(modifiedCode);
-
-    return tempFilePath;
   }
 }

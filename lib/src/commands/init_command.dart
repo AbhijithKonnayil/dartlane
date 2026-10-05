@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:dartlane/src/core/files.dart';
 import 'package:dartlane_core/dartlane_core.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:resource_portable/resource.dart';
@@ -48,7 +47,7 @@ class InitCommand extends Command<int> {
       onDirCreateSuccess: () {
         FileSystemUtils.createFileFromTemplate(
           content,
-          'dartlane/lane.dart',
+          'dartlane/lanes.dart',
           {},
         );
         _logger.success('Dartlane initializated successfully !!');

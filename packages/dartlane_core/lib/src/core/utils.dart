@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dartlane/src/core/exception.dart';
+import 'package:dartlane_core/src/core/exception.dart';
 
 class Utils {
   static String getEnvironmentVariable(String key) {
