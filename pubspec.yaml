@@ -1,0 +1,37 @@
+name: dartlane_workspace
+description: Dartlane monorepo. Release automation for Flutter and Dart, written in Dart.
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+
+workspace:
+  - packages/dartlane_core
+  - packages/dartlane_flutter
+  - packages/dartlane_firebase
+  - packages/dartlane
+dev_dependencies:
+  melos: ^8.9.0
+
+melos:
+  repository: https://github.com/AbhijithKonnayil/dartlane
+  command:
+    version:
+      # Versions and changelogs are derived from Conventional Commits.
+      workspaceChangelog: false
+  scripts:
+    analyze:
+      description: Analyze every package.
+      run: melos exec -c 4 -- dart analyze --fatal-infos
+    test:
+      description: Run tests in every package that has a test directory.
+      run: melos exec -c 4 --dir-exists=test -- dart test
+    format:
+      description: Check formatting in every package.
+      run: melos exec -- dart format --set-exit-if-changed .
+    fix:
+      description: Apply automatic fixes (dart fix) and format every package.
+      run: melos exec -- "dart fix --apply && dart format ."
+    check:
+      description: Format check, analyze and test.
+      run: melos run format && melos run analyze && melos run test
