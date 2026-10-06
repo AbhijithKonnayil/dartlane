@@ -2,3 +2,5 @@
 build/
 .dartlane/
 .env
+.idea/
+*.iml
