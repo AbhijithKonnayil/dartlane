@@ -3,7 +3,7 @@ description: Dartlane monorepo. Release automation for Flutter and Dart, written
 publish_to: none
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.10.0
 
 workspace:
   - packages/dartlane_core

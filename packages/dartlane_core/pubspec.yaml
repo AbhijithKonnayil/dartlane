@@ -5,7 +5,9 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.10.0
 
 dev_dependencies:
   test: ^1.25.0
+dependencies:
+  mason_logger: ^0.3.6
