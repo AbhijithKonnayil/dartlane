@@ -64,11 +64,11 @@ iOS signing and App Store Connect are not part of 0.1.0.
 
 ## Planned packages
 
-The repo will be a pub workspace (Dart 3.6+) with four packages:
+The repo will be a pub workspace (Dart 3.10+) with four packages:
 
 | Package | Purpose |
 |---|---|
-| `dartlane_core` | Action, Context, runner, Shell/HTTP/secrets interfaces, errors, test fakes |
+| `dartlane_core` | Action, LaneContext, runner, Shell/HTTP/secrets interfaces, errors, test fakes |
 | `dartlane_flutter` | Build, pub get, analyze, test and version actions |
 | `dartlane_firebase` | `FirebaseDistribute`, upload, auth |
 | `dartlane` | The CLI |

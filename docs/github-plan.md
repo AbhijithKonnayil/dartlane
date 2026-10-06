@@ -40,7 +40,7 @@ Source of truth for the labels, milestones and issues created by
 
 Labels: area:ci,type:chore
 
-Create the workspace layout from the PRD: `packages/dartlane_core`, `packages/dartlane_flutter`, `packages/dartlane_firebase`, `packages/dartlane` (CLI). Root `pubspec.yaml` lists them under `workspace:` and each package sets `resolution: workspace`. Requires Dart SDK 3.6 or newer.
+Create the workspace layout from the PRD: `packages/dartlane_core`, `packages/dartlane_flutter`, `packages/dartlane_firebase`, `packages/dartlane` (CLI). Root `pubspec.yaml` lists them under `workspace:` and each package sets `resolution: workspace`. Requires Dart SDK 3.10 or newer.
 
 **Acceptance criteria**
 - `dart pub get` at the root resolves all four packages with one lockfile.
@@ -83,11 +83,11 @@ Move `analysis_options.yaml` and `cspell.json` so every package uses the same ru
 
 ### M1: Vertical slice
 
-#### Core: Action, Context, lane() and the runner
+#### Core: Action, LaneContext, lane() and the runner
 
 Labels: area:core,type:feature
 
-Implement the core API: `Action<P, R>` base class with `run(Context)` and `describe()`, `Context` (args, env, shell, http, logger, dryRun), `lane(description, fn)`, and `dartlane(args, lanes: {...})` entry point. `ctx.run(action)` is the single choke point for logging, timing and errors.
+Implement the core API: `Action<P, R>` base class with `run(LaneContext)` and `describe()`, `LaneContext` (args, env, shell, http, logger, dryRun), `lane(description, fn)`, and `dartlane(args, lanes: {...})` entry point. `ctx.run(action)` is the single choke point for logging, timing and errors.
 
 **Acceptance criteria**
 - A lane written as a plain Dart function runs and can call actions.
@@ -99,7 +99,7 @@ Implement the core API: `Action<P, R>` base class with `run(Context)` and `descr
 
 Labels: area:core,type:feature
 
-Define `Shell` and HTTP client interfaces with real implementations, and ship `FakeShell`, `FakeHttp` and `FakeContext` in `package:dartlane_core/testing.dart`.
+Define `Shell` and HTTP client interfaces with real implementations, and ship `FakeShell`, `FakeHttp` and `FakeLaneContext` in `package:dartlane_core/testing.dart`.
 
 **Acceptance criteria**
 - Actions never call `Process` or `http` directly; they use `ctx.shell` / `ctx.http`.

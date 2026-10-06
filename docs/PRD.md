@@ -122,7 +122,7 @@ void main(List<String> args) => dartlane(args, lanes: {
 | ID | Requirement |
 |---|---|
 | RT-1 | Lanes are plain Dart functions; registration requires only a name and description. |
-| RT-2 | Actions are typed classes with a `run(Context)` method, a `describe()` for dry-run, and a typed result. |
+| RT-2 | Actions are typed classes with a `run(LaneContext)` method, a `describe()` for dry-run, and a typed result. |
 | RT-3 | `ctx.run(action)` provides timing, logging, error mapping and dry-run uniformly. |
 | RT-4 | Shell and HTTP access go through interfaces; `dartlane_core/testing.dart` provides fakes. |
 | RT-5 | Secrets are read through `ctx.secrets` and masked in logs. |
@@ -146,11 +146,11 @@ void main(List<String> args) => dartlane(args, lanes: {
 
 ## 9. Architecture summary (proposed)
 
-Repo is a pub workspace (Dart 3.6+), fully split into four packages **(decided)**:
+Repo is a pub workspace (Dart 3.10+), fully split into four packages **(decided)**:
 
 ```text
 packages/
-  dartlane_core/       # Action, Context, runner, Shell/HTTP/secrets interfaces, errors, testing fakes
+  dartlane_core/       # Action, LaneContext, runner, Shell/HTTP/secrets interfaces, errors, testing fakes
   dartlane_flutter/    # build, pub get, analyze, test, version actions
   dartlane_firebase/   # FirebaseDistribute, upload/polling, auth, client
   dartlane/            # CLI: init, run, list, doctor, update, launcher
@@ -207,7 +207,7 @@ Capacity: serious part-time, about 15 hrs/week **(decided)**.
 | Store API and iOS signing depth | Defer iOS; ship Android/Firebase first; plan Google Play before iOS. |
 | Competition from Google/Flutter or CI vendors | Run inside any CI; stay pluggable so vendors can embed Dartlane. |
 | Time and burnout (solo maintainer, four packages) | Thin vertical slice first; workspace plus publish script; defer nice-to-haves; seek co-maintainers after launch. |
-| `Context` grows into a god object | Keep it small or split into narrow interfaces. |
+| `LaneContext` grows into a god object | Keep it small or split into narrow interfaces. |
 | `ctx.run` can be bypassed | Document the convention; lint first-party actions. |
 | Dry-run drifts from real behaviour | Treat it as best-effort and say so. |
 | Compile cache bugs | Start with plain `dart run`; add the cache only after it is proven. |

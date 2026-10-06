@@ -30,7 +30,7 @@ Decision: use [Conventional Commits](https://www.conventionalcommits.org)
 choose the next version and generate each package's `CHANGELOG.md`.
 
 Use the package name as scope when a change touches one package, for example
-`feat(dartlane_core): add Context`.
+`feat(dartlane_core): add LaneContext`.
 
 ## Versioning
 
