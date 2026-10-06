@@ -12,6 +12,7 @@ workspace:
   - packages/dartlane
 dev_dependencies:
   melos: ^8.9.0
+  very_good_analysis: ^10.3.0
 
 melos:
   repository: https://github.com/AbhijithKonnayil/dartlane

@@ -15,6 +15,24 @@ permissions:
   contents: read
 
 jobs:
+  spell-check:
+    name: Spell check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Spell check
+        uses: streetsidesoftware/cspell-action@v7
+        with:
+          config: cspell.json
+          files: |
+            **/*.md
+            **/*.dart
+            **/*.yaml
+            **/*.sh
+          incremental_files_only: false
+
   check:
     name: Format, analyze and test
     runs-on: ubuntu-latest

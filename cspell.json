@@ -1,0 +1,33 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "dictionaries": [
+    "softwareTerms",
+    "dart",
+    "flutter"
+  ],
+  "ignorePaths": [
+    ".dart_tool/**",
+    "**/.dart_tool/**",
+    "pubspec.lock",
+    "assets/**",
+    "cspell.json"
+  ],
+  "words": [
+    "Abhijith",
+    "appbundle",
+    "behaviour",
+    "Codemagic",
+    "dartlane",
+    "Fastfile",
+    "fastlane",
+    "Konnayil",
+    "melos",
+    "pubspec",
+    "refactorable",
+    "scaffolder"
+  ],
+  "ignoreRegExpList": [
+    "/\\|\\s*[0-9a-f]{6}\\s*\\|/"
+  ]
+}
