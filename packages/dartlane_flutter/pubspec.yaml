@@ -1,0 +1,14 @@
+name: dartlane_flutter
+description: Flutter actions for Dartlane - build, analyze, test and version.
+version: 0.0.1
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  dartlane_core: any
+
+dev_dependencies:
+  test: ^1.25.0

@@ -1,0 +1,12 @@
+name: dartlane_workspace
+description: Dartlane monorepo. Release automation for Flutter and Dart, written in Dart.
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+
+workspace:
+  - packages/dartlane_core
+  - packages/dartlane_flutter
+  - packages/dartlane_firebase
+  - packages/dartlane
