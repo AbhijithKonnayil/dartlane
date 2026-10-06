@@ -51,6 +51,9 @@ jobs:
       - name: Format check
         run: dart run melos run format
 
+      - name: Dependency rules
+        run: dart run melos run deps
+
       - name: Analyze
         run: dart run melos run analyze
 

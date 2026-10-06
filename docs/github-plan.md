@@ -47,6 +47,7 @@ Create the workspace layout from the PRD: `packages/dartlane_core`, `packages/da
 - Each package has a minimal public library file and an empty passing test.
 - No `path:` dependencies between packages.
 - Dependency direction: CLI, flutter and firebase depend on core only.
+- `tool/check_dependencies.sh` enforces both rules and runs in CI.
 
 #### Set up Melos for scripts, versioning and publishing
 
@@ -79,17 +80,6 @@ Move `analysis_options.yaml` and `cspell.json` so every package uses the same ru
 **Acceptance criteria**
 - One shared lint configuration used by all packages.
 - Spell check runs in CI and passes.
-
-#### Remove the package cycle and path dependencies
-
-Labels: area:core,type:chore
-
-Today the lanes in `dartlane_core` import `package:dartlane/...` while `dartlane` depends on `dartlane_core`, and `dartlane_core`'s pubspec lacks the dependencies those lanes need. Resolve by moving lane code into the new action packages and fixing dependencies.
-
-**Acceptance criteria**
-- No package imports a package that depends on it.
-- Every package's pubspec lists all dependencies it imports.
-- `dart analyze` is clean in each package.
 
 ### M1: Vertical slice
 

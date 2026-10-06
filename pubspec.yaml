@@ -33,6 +33,9 @@ melos:
     fix:
       description: Apply automatic fixes (dart fix) and format every package.
       run: melos exec -- "dart fix --apply && dart format ."
+    deps:
+      description: Enforce workspace dependency rules (no path deps, no cycles).
+      run: ./tool/check_dependencies.sh
     check:
-      description: Format check, analyze and test.
-      run: melos run format && melos run analyze && melos run test
+      description: Format check, deps rules, analyze and test.
+      run: melos run format && melos run deps && melos run analyze && melos run test
