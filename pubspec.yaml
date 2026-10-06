@@ -10,6 +10,7 @@ workspace:
   - packages/dartlane_flutter
   - packages/dartlane_firebase
   - packages/dartlane
+<<<<<<< HEAD
 dev_dependencies:
   melos: ^8.9.0
 
@@ -35,3 +36,5 @@ melos:
     check:
       description: Format check, analyze and test.
       run: melos run format && melos run analyze && melos run test
+=======
+>>>>>>> dev

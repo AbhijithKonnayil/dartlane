@@ -1,0 +1,14 @@
+name: dartlane_firebase
+description: Firebase App Distribution action for Dartlane.
+version: 0.0.1
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  dartlane_core: any
+
+dev_dependencies:
+  test: ^1.25.0
