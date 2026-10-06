@@ -63,7 +63,7 @@ Configure Melos on top of the pub workspace. Start small: run analyze and tests 
 
 Labels: area:ci,type:chore
 
-Update the existing GitHub Actions workflow (and `pr_check.sh`) to run format check, analyze and tests across all packages on every pull request.
+Update the GitHub Actions workflow to run format check, analyze and tests across all packages on every pull request.
 
 **Acceptance criteria**
 - PRs run analyze and test for every package.
