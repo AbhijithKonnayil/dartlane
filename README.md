@@ -36,7 +36,7 @@ The API below is a proposal and names may change.
 
 ```dart
 void main(List<String> args) => dartlane(args, lanes: {
-  'beta': lane('Build and ship to QA', (ctx) async {
+  'beta': Lane('Build and ship to QA', (ctx) async {
     await ctx.run(FlutterAnalyze());
     final build = await ctx.run(FlutterBuild(target: Target.apk, flavor: 'prod'));
     await ctx.run(FirebaseDistribute(build.artifact, app: Config.firebaseAppId, groups: ['qa']));

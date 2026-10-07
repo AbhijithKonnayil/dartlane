@@ -77,7 +77,7 @@ Example (proposed API, names may change):
 
 ```dart
 void main(List<String> args) => dartlane(args, lanes: {
-  'beta': lane('Build and ship to QA', (ctx) async {
+  'beta': Lane('Build and ship to QA', (ctx) async {
     await ctx.run(FlutterAnalyze());
     final build = await ctx.run(FlutterBuild(target: Target.apk, flavor: 'prod'));
     await ctx.run(FirebaseDistribute(build.artifact, app: Config.firebaseAppId, groups: ['qa']));
@@ -143,6 +143,7 @@ void main(List<String> args) => dartlane(args, lanes: {
 - A custom lane is a function in the user's `lanes.dart`.
 - A custom action is a class in the user's `dartlane/` package, or a pub.dev package depending only on `dartlane_core` (convention: `dartlane_<name>`).
 - No registry or manifest in 0.1.0.
+- First-party action packages export ready-made lanes (for example a Firebase distribute lane) built from arguments. `dartlane init` registers them in `lanes.dart`, so common steps run with no custom lane. `dartlane_core` never pre-registers them, to keep it independent of the action packages.
 
 ## 9. Architecture summary (proposed)
 
@@ -222,7 +223,7 @@ Capacity: serious part-time, about 15 hrs/week **(decided)**.
 4. Is `describe()` required or optional for custom actions?
 5. Ship a `dartlane create action` scaffolder before 0.1.0 or after?
 6. Final confirmation of release-automation-layer positioning, plugin-as-package, and env-vars-plus-`.env` for secrets.
-7. How exactly do existing lane names and the legacy `key:value` argument format migrate, if at all?
+7. How exactly does the legacy `key:value` argument format migrate, if at all? (Existing lane names migrate as ready-made lanes exported by the action packages and registered by `init`; see 8.4.)
 
 ## 16. Known issues in the current code (input to the refactor)
 

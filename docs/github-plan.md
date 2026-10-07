@@ -83,11 +83,11 @@ Move `analysis_options.yaml` and `cspell.json` so every package uses the same ru
 
 ### M1: Vertical slice
 
-#### Core: Action, LaneContext, lane() and the runner
+#### Core: Action, LaneContext, Lane and the runner
 
 Labels: area:core,type:feature
 
-Implement the core API: `Action<P, R>` base class with `run(LaneContext)` and `describe()`, `LaneContext` (args, env, shell, http, logger, dryRun), `lane(description, fn)`, and `dartlane(args, lanes: {...})` entry point. `ctx.run(action)` is the single choke point for logging, timing and errors.
+Implement the core API: `Action<P, R>` base class with `run(LaneContext)` and `describe()`, `LaneContext` (args, env, shell, http, logger, dryRun), `Lane(description, body)`, and `dartlane(args, lanes: {...})` entry point. `ctx.run(action)` is the single choke point for logging, timing and errors.
 
 **Acceptance criteria**
 - A lane written as a plain Dart function runs and can call actions.
@@ -175,6 +175,7 @@ Labels: area:cli,type:feature
 - No hardcoded `--path=../`.
 - Adds `.dartlane/` and `.env` to `.gitignore`.
 - Asks before overwriting an existing `dartlane/` folder.
+- The generated `lanes.dart` registers the ready-made lanes from the action packages, so `dartlane run <lane> --key=value` works before the user writes any lane.
 
 #### CLI: run forwards arguments and the exit code
 
@@ -283,6 +284,18 @@ Support release notes, testers and groups as inline values or from files, as the
 
 **Acceptance criteria**
 - Both inline and file inputs work and are tested.
+
+#### Ready-made lanes for the built-in actions
+
+Labels: area:flutter,area:firebase,type:feature
+
+Let users run common steps without writing a lane. `dartlane_flutter` and `dartlane_firebase` export `Lane`s built from `ctx.args`, for example a Firebase distribute lane and Flutter build lanes for apk and appbundle. `dartlane init` registers them in the generated `lanes.dart`. This replaces the old pre-registered built-in lanes without making `dartlane_core` depend on the action packages.
+
+**Acceptance criteria**
+- `dartlane run firebase_distribute --app=<id> --file=app.apk` works from a freshly initialized project with no custom lane.
+- Each ready-made lane is a thin wrapper over its action, with typed argument parsing and clear errors for missing values.
+- Existing lane names from the old code keep working as these lanes, or the renames are documented.
+- Depends on argument parsing and the `init` command.
 
 #### Docs: quick start
 

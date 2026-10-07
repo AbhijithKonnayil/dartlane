@@ -27,7 +27,8 @@
     "opensource",
     "pubspec",
     "refactorable",
-    "scaffolder"
+    "scaffolder",
+    "sysexits"
   ],
   "ignoreRegExpList": [
     "/\\|\\s*[0-9a-f]{6}\\s*\\|/"
