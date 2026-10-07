@@ -132,7 +132,7 @@ void main(List<String> args) => dartlane(args, lanes: {
 ### 8.3 Built-in actions
 | ID | Requirement |
 |---|---|
-| ACT-1 | `FlutterBuild`: one action with typed params (`target`, `mode`, `flavor`, `dartDefines` as a list/map, `buildName`, `buildNumber`, `obfuscate` with `splitDebugInfo`), returns `BuildResult(path, version, mode, flavor)`. Convenience aliases (e.g. `flutterBuildApk`) keep existing lane names working. |
+| ACT-1 | `FlutterBuild`: one action with typed params (`target`, `mode`, `flavor`, `dartDefines` as a list/map, `buildName`, `buildNumber`, `obfuscate` with `splitDebugInfo`), returns `BuildResult(path, target, mode, flavor, version)`. Named constructors `FlutterBuild.apk(...)` and `FlutterBuild.appBundle(...)` are shortcuts. The old lane names (for example `flutterBuildApk`) return as ready-made lanes. |
 | ACT-2 | `FlutterAnalyze`, `FlutterTest`, `FlutterPubGet` as gate steps. |
 | ACT-3 | Version action reads and bumps `version:` and build number in `pubspec.yaml`. (The separate `fastlane-plugin-flutter_versioner` project stays independent **(decided)**.) |
 | ACT-4 | `FirebaseDistribute`: uploads an APK, polls the operation, sets release notes, and distributes to testers and groups; supports notes and testers from a file. |
