@@ -8,6 +8,20 @@ import 'package:mason_logger/mason_logger.dart' as mason;
 /// output with `mason_logger`, hides [detail] messages unless [verbose], and
 /// adapts to CI: on GitHub Actions errors and warnings become annotations, and
 /// on CI it never waits for an answer.
+///
+/// ## CI support
+///
+/// Only the annotations are platform specific, and only GitHub Actions is
+/// supported: [githubActions] switches `error` and `warn` to the
+/// `::error::` and `::warning::` workflow commands. Other platforms print
+/// plain text. Prompts are off on every platform that sets `CI=true` and
+/// whenever no terminal is attached.
+///
+/// Other platforms use different formats (Azure Pipelines uses
+/// `##vso[task.logissue]`, TeamCity uses `##teamcity[message]`), so there is no
+/// single "CI mode". Supporting another one means replacing the [githubActions]
+/// flag with a small formatter chosen in [LaneLogger.fromEnvironment]. That is
+/// deliberately not built until a second platform is needed. See `docs/ci.md`.
 class LaneLogger {
   /// Creates a logger.
   ///
@@ -48,6 +62,8 @@ class LaneLogger {
   final mason.Logger _delegate;
 
   /// Whether errors and warnings are printed as GitHub Actions annotations.
+  ///
+  /// GitHub Actions only; see the class documentation for other platforms.
   final bool githubActions;
 
   /// Whether it is fine to ask the user a question.
