@@ -200,10 +200,24 @@ void main() {
       await expectLater(
         ctx.run(const FlutterBuild(target: BuildTarget.apk)),
         throwsA(
-          isA<ShellException>()
-              .having((e) => e.result.exitCode, 'exitCode', 1)
-              .having((e) => '$e', 'message', contains('assembleRelease')),
+          isA<ShellException>().having((e) => e.result.exitCode, 'exitCode', 1),
         ),
+      );
+      // The build output is printed as it runs, so the reason is in the log.
+      expect(ctx.logger.lines, contains('Gradle task assembleRelease failed'));
+    });
+
+    test('the build log is printed as the build runs', () async {
+      ctx.shell.stub('flutter build apk --release', stdout: _apkOutput);
+
+      await ctx.run(const FlutterBuild(target: BuildTarget.apk));
+
+      expect(
+        ctx.logger.lines,
+        containsAll([
+          contains("Running Gradle task 'assembleRelease'"),
+          contains('Built build/app/outputs/flutter-apk/app-release.apk'),
+        ]),
       );
     });
 
