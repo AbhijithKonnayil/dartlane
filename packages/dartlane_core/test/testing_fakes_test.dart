@@ -22,6 +22,24 @@ void main() {
       expect(result.stdout, 'def');
     });
 
+    test('replays the stubbed output line by line when asked', () async {
+      final shell = FakeLaneShell()
+        ..stub('build', stdout: 'one\ntwo\n', stderr: 'oops\n');
+      final lines = <String>[];
+
+      await shell.run('build', [], onOutput: lines.add);
+
+      expect(lines, ['one', 'two', 'oops']);
+    });
+
+    test('prints nothing when not asked', () async {
+      final shell = FakeLaneShell()..stub('build', stdout: 'one\n');
+
+      final result = await shell.run('build', []);
+
+      expect(result.stdout, 'one\n');
+    });
+
     test('a command with no stub succeeds with empty output', () async {
       final result = await FakeLaneShell().run('anything', []);
 

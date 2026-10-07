@@ -58,13 +58,17 @@ class LaneContext {
 
   /// Runs [executable] with [arguments] and returns the result.
   ///
-  /// The command is logged at detail level. Throws a [ShellException] if the
-  /// command exits with a non-zero code.
+  /// The command is logged at detail level, and its output is printed as it
+  /// runs so a long build shows progress. Pass `streamOutput: false` for a
+  /// command whose output you only want to read from the result, such as
+  /// `git rev-parse HEAD`. Throws a [ShellException] if the command exits with
+  /// a non-zero code.
   Future<ShellResult> sh(
     String executable,
     List<String> arguments, {
     String? workingDirectory,
     Map<String, String>? environment,
+    bool streamOutput = true,
   }) async {
     final line = formatCommand(executable, arguments);
     logger.detail(r'$ ' + line);
@@ -73,8 +77,15 @@ class LaneContext {
       arguments,
       workingDirectory: workingDirectory,
       environment: environment,
+      onOutput: streamOutput ? logger.info : null,
     );
-    if (!result.ok) throw ShellException(commandLine: line, result: result);
+    if (!result.ok) {
+      throw ShellException(
+        commandLine: line,
+        result: result,
+        outputShown: streamOutput,
+      );
+    }
     return result;
   }
 

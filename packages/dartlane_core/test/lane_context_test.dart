@@ -83,13 +83,71 @@ void main() {
       ctx.shell.stub('flutter build apk', exitCode: 1, stderr: 'no pubspec');
 
       await expectLater(
-        ctx.sh('flutter', ['build', 'apk']),
+        ctx.sh('flutter', ['build', 'apk'], streamOutput: false),
         throwsA(
           isA<ShellException>()
               .having((e) => e.result.exitCode, 'exitCode', 1)
               .having((e) => e.commandLine, 'commandLine', 'flutter build apk')
               .having((e) => '$e', 'message', contains('no pubspec')),
         ),
+      );
+    });
+
+    group('output', () {
+      test('is printed as the command runs, standard output first', () async {
+        ctx.shell.stub(
+          'flutter build apk',
+          stdout: 'step one\nstep two\n',
+          stderr: 'a warning\n',
+        );
+
+        await ctx.sh('flutter', ['build', 'apk']);
+
+        expect(ctx.logger.lines, ['step one', 'step two', 'a warning']);
+      });
+
+      test('is still returned in the result', () async {
+        ctx.shell.stub('git rev-parse HEAD', stdout: 'abc123\n');
+
+        final result = await ctx.sh('git', ['rev-parse', 'HEAD']);
+
+        expect(result.stdout, 'abc123\n');
+      });
+
+      test('is not printed with streamOutput: false', () async {
+        ctx.shell.stub('git rev-parse HEAD', stdout: 'abc123\n');
+
+        final result = await ctx.sh(
+          'git',
+          ['rev-parse', 'HEAD'],
+          streamOutput: false,
+        );
+
+        expect(ctx.logger.lines, isEmpty);
+        expect(result.stdout, 'abc123\n');
+      });
+
+      test(
+        'is not repeated in the error when it was already printed',
+        () async {
+          ctx.shell.stub(
+            'flutter build apk',
+            exitCode: 1,
+            stderr: 'no pubspec',
+          );
+
+          await expectLater(
+            ctx.sh('flutter', ['build', 'apk']),
+            throwsA(
+              isA<ShellException>().having(
+                (e) => e.message,
+                'message',
+                '`flutter build apk` exited with code 1.',
+              ),
+            ),
+          );
+          expect(ctx.logger.lines, ['no pubspec']);
+        },
       );
     });
   });

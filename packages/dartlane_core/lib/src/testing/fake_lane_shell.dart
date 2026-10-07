@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dartlane_core/src/lane_shell.dart';
 
 /// One command that a [FakeLaneShell] was asked to run.
@@ -28,6 +30,9 @@ class ShellCall {
 
 /// A [LaneShell] that runs nothing. It records every call and answers with
 /// results you set up.
+///
+/// When asked for output it replays the stubbed output line by line, standard
+/// output first.
 ///
 /// A command with no stub succeeds with empty output, so a lane that runs
 /// many incidental commands only needs stubs for the ones that matter.
@@ -65,6 +70,7 @@ class FakeLaneShell implements LaneShell {
     List<String> arguments, {
     String? workingDirectory,
     Map<String, String>? environment,
+    void Function(String line)? onOutput,
   }) async {
     final call = ShellCall(
       executable: executable,
@@ -73,6 +79,13 @@ class FakeLaneShell implements LaneShell {
       environment: environment,
     );
     _calls.add(call);
-    return _stubs[call.commandLine] ?? const ShellResult(exitCode: 0);
+    final result = _stubs[call.commandLine] ?? const ShellResult(exitCode: 0);
+    if (onOutput != null) {
+      // Like the real shell: every line of output, standard output first.
+      for (final text in [result.stdout, result.stderr]) {
+        const LineSplitter().convert(text).forEach(onOutput);
+      }
+    }
+    return result;
   }
 }
