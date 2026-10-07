@@ -4,6 +4,7 @@ library;
 export 'src/exit_codes.dart';
 export 'src/lane.dart';
 export 'src/lane_action.dart';
+export 'src/lane_args.dart';
 export 'src/lane_context.dart';
 export 'src/lane_error.dart';
 export 'src/lane_logger.dart';

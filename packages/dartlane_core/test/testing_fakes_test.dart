@@ -95,13 +95,13 @@ void main() {
       expect(ctx.http, isA<FakeHttp>());
       expect(ctx.logger, isA<FakeLaneLogger>());
       expect(ctx.env, isEmpty);
-      expect(ctx.args, isEmpty);
+      expect(ctx.args.raw, isEmpty);
     });
 
     test('takes args and env', () {
       final ctx = FakeLaneContext(args: ['--flavor=prod'], env: {'A': '1'});
 
-      expect(ctx.args, ['--flavor=prod']);
+      expect(ctx.args.string('flavor'), 'prod');
       expect(ctx.env, {'A': '1'});
     });
   });

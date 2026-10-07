@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dartlane_core/src/lane_action.dart';
+import 'package:dartlane_core/src/lane_args.dart';
 import 'package:dartlane_core/src/lane_logger.dart';
 import 'package:dartlane_core/src/lane_shell.dart';
 import 'package:http/http.dart' show Client;
@@ -13,25 +14,26 @@ import 'package:http/http.dart' show Client;
 class LaneContext {
   /// Creates a context.
   ///
+  /// [args] are the raw words after the lane name, parsed into [LaneArgs].
   /// [env] defaults to the process environment, [logger] to a [LaneLogger]
   /// that writes to the terminal, [shell] to a [ProcessShell], and [http] to a
   /// real client that is created on first use and closed by [close].
   LaneContext({
-    this.args = const [],
+    Iterable<String> args = const [],
     this.dryRun = false,
     Map<String, String>? env,
     LaneLogger? logger,
     LaneShell? shell,
     Client? http,
-  }) : env = env ?? Platform.environment,
+  }) : args = LaneArgs.parse(args),
+       env = env ?? Platform.environment,
        logger = logger ?? LaneLogger(),
        shell = shell ?? const ProcessShell(),
        _injectedHttp = http;
 
-  /// Arguments given to the lane, after the lane name.
-  ///
-  /// Typed parsing of `--key=value` is not part of the runner yet.
-  final List<String> args;
+  /// Arguments given to the lane, after the lane name, parsed from the command
+  /// line. See [LaneArgs] for the accepted forms and the typed getters.
+  final LaneArgs args;
 
   /// Whether the run should only describe what it would do.
   ///

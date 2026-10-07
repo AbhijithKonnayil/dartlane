@@ -28,7 +28,7 @@ class FakeLaneContext extends LaneContext {
        );
 
   FakeLaneContext._({
-    required super.args,
+    required List<String> args,
     required super.env,
     required super.dryRun,
     required FakeLaneShell shell,
@@ -37,7 +37,7 @@ class FakeLaneContext extends LaneContext {
   }) : _shell = shell,
        _http = http,
        _logger = logger,
-       super(shell: shell, http: http, logger: logger);
+       super(args: args, shell: shell, http: http, logger: logger);
 
   final FakeLaneShell _shell;
   final FakeHttp _http;

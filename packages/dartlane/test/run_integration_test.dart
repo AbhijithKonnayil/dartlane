@@ -13,14 +13,16 @@ import 'package:dartlane_core/testing.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
-const _lanes = '''
+const _lanes = r'''
 import 'dart:io';
 
 import 'package:dartlane_core/dartlane_core.dart';
 
 Future<void> main(List<String> args) => dartlane(args, lanes: {
   'ok': Lane('Writes its arguments', (ctx) {
-    File('args.txt').writeAsStringSync(ctx.args.join('|'));
+    final flavor = ctx.args.string('flavor');
+    final positional = ctx.args.positional.join(',');
+    File('args.txt').writeAsStringSync('flavor=$flavor positional=$positional');
   }),
   'fail': Lane('Always fails', (ctx) => throw const ActionFailed('nope')),
 });
@@ -71,7 +73,7 @@ dependency_overrides:
   ).run(args);
 
   test(
-    'runs the lane from the project root with the arguments, exit code 0',
+    'runs the lane from the project root with typed arguments, exit code 0',
     () async {
       final code = await dartlane(['run', 'ok', '--flavor=prod', 'x']);
 
@@ -79,7 +81,7 @@ dependency_overrides:
       // The lane wrote this file relative to its working directory.
       expect(
         File(p.join(project.path, 'args.txt')).readAsStringSync(),
-        '--flavor=prod|x',
+        'flavor=prod positional=x',
       );
     },
     timeout: const Timeout(Duration(minutes: 2)),

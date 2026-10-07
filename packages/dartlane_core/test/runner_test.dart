@@ -44,7 +44,9 @@ void main() {
         env: {'A': '1'},
         logger: logger,
       );
-      expect(seen!.args, ['--flavor=prod', 'x']);
+      expect(seen!.args.raw, ['--flavor=prod', 'x']);
+      expect(seen!.args.string('flavor'), 'prod');
+      expect(seen!.args.positional, ['x']);
       expect(seen!.env, {'A': '1'});
     });
 
@@ -95,7 +97,7 @@ void main() {
   group('runLanes logging', () {
     final lane = Lane('Log', (ctx) {
       ctx.logger.detail('a detail');
-      ctx.logger.info('args: ${ctx.args}');
+      ctx.logger.info('args: ${ctx.args.raw}');
     });
 
     test('detail output is hidden by default', () async {
@@ -140,6 +142,65 @@ void main() {
       expect(
         github.lines,
         contains('::error::Upload rejected with status 500'),
+      );
+    });
+  });
+
+  group('runLanes arguments', () {
+    test('typed options reach the lane', () async {
+      String? flavor;
+      bool? notify;
+      List<String>? testers;
+
+      final code = await runLanes(
+        [
+          'go',
+          '--flavor=prod',
+          '--no-notify',
+          '--testers=a@x.com,b@y.com',
+        ],
+        lanes: {
+          'go': Lane('Go', (ctx) {
+            flavor = ctx.args.string('flavor');
+            notify = ctx.args.flag('notify', defaultValue: true);
+            testers = ctx.args.list('testers');
+          }),
+        },
+        logger: logger,
+      );
+
+      expect(code, ExitCodes.success);
+      expect(flavor, 'prod');
+      expect(notify, isFalse);
+      expect(testers, ['a@x.com', 'b@y.com']);
+    });
+
+    test(
+      'a missing required option exits with the usage code and a hint',
+      () async {
+        final code = await runLanes(
+          ['go'],
+          lanes: {'go': Lane('Go', (ctx) => ctx.args.requireString('app'))},
+          logger: logger,
+        );
+
+        expect(code, ExitCodes.usage);
+        expect(logger.lines, contains('error: Missing required option --app.'));
+        expect(logger.lines, contains('Hint: Pass --app=<value>.'));
+      },
+    );
+
+    test('a value of the wrong type is a user error', () async {
+      final code = await runLanes(
+        ['go', '--retries=many'],
+        lanes: {'go': Lane('Go', (ctx) => ctx.args.integer('retries'))},
+        logger: logger,
+      );
+
+      expect(code, ExitCodes.usage);
+      expect(
+        logger.lines,
+        contains('error: --retries must be a whole number, but got "many".'),
       );
     });
   });
