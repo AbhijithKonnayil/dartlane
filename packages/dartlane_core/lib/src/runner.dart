@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dartlane_core/src/exit_codes.dart';
 import 'package:dartlane_core/src/lane.dart';
 import 'package:dartlane_core/src/lane_context.dart';
+import 'package:dartlane_core/src/lane_error.dart';
 import 'package:dartlane_core/src/lane_logger.dart';
 
 /// Entry point for a project's lanes file.
@@ -24,10 +25,15 @@ Future<void> dartlane(
 
 /// Runs the lane named by the first of [args] and returns an exit code.
 ///
-/// Returns [ExitCodes.success] on success, [ExitCodes.usage] when the lane name
-/// is missing or unknown (after printing the available lanes) and
-/// [ExitCodes.failure] when the lane throws. Pass [logger] and [env] to control
-/// output and environment in tests.
+/// Returns [ExitCodes.success] on success and [ExitCodes.usage] when the lane
+/// name is missing or unknown (after printing the available lanes).
+///
+/// When the lane throws a [LaneError], its message (and a [UserError]'s hint)
+/// is printed without a stack trace and the error's own exit code is returned.
+/// The stack trace is only logged at detail level, so it shows with verbose
+/// logging. Any other exception is reported as unexpected and returns
+/// [ExitCodes.failure]. Pass [logger] and [env] to control output and
+/// environment in tests.
 Future<int> runLanes(
   List<String> args, {
   required Map<String, Lane> lanes,
@@ -53,9 +59,14 @@ Future<int> runLanes(
   final ctx = LaneContext(args: args.sublist(1), env: env, logger: log);
   try {
     await selected.run(ctx);
+  } on LaneError catch (error, stackTrace) {
+    log.error(error.message);
+    if (error case UserError(:final hint?)) log.info('Hint: $hint');
+    log.detail('$stackTrace');
+    return error.exitCode;
   } on Object catch (error, stackTrace) {
     log
-      ..error('Lane "$name" failed: $error')
+      ..error('Lane "$name" failed with an unexpected error: $error')
       ..detail('$stackTrace');
     return ExitCodes.failure;
   } finally {

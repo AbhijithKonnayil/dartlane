@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:dartlane_core/src/lane_error.dart';
+
 /// Runs external commands for a lane.
 ///
 /// Actions reach this through `LaneContext.shell` or `LaneContext.sh`, never
@@ -42,9 +44,10 @@ class ShellResult {
 }
 
 /// A command exited with a non-zero code.
-class ShellException implements Exception {
+class ShellException extends ActionFailed {
   /// Creates an exception for [commandLine] that produced [result].
-  const ShellException({required this.commandLine, required this.result});
+  ShellException({required this.commandLine, required this.result})
+    : super(_describe(commandLine, result));
 
   /// The command that failed, as typed, for example `flutter build apk`.
   final String commandLine;
@@ -52,8 +55,7 @@ class ShellException implements Exception {
   /// What the command produced.
   final ShellResult result;
 
-  @override
-  String toString() {
+  static String _describe(String commandLine, ShellResult result) {
     final stderr = result.stderr.trim();
     final detail = stderr.isEmpty ? '' : '\n$stderr';
     return '`$commandLine` exited with code ${result.exitCode}.$detail';

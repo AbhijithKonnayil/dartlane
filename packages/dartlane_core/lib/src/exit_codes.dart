@@ -6,9 +6,10 @@ abstract final class ExitCodes {
   /// The lane finished.
   static const success = 0;
 
-  /// The lane threw.
+  /// A step failed (`ActionFailed`) or the lane threw something unexpected.
   static const failure = 1;
 
-  /// The lane name was missing or unknown (`EX_USAGE`).
+  /// The person running the lane gave something wrong: the lane name was
+  /// missing or unknown, or a `UserError` was thrown (`EX_USAGE`).
   static const usage = 64;
 }
