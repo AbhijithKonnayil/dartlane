@@ -111,7 +111,7 @@ void main() {
       expect(
         logger.lines,
         contains(
-          'Done. Run your first lane with: dart run dartlane/lanes.dart build',
+          'Done. Run your first lane with: dartlane run build',
         ),
       );
     });
