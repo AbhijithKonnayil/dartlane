@@ -6,12 +6,12 @@ import 'package:dartlane_core/dartlane_core.dart';
 ///
 /// Returns its text in upper case, so `UppercaseAction('hi')` gives `'HI'`.
 /// Describes itself as `uppercase <text>`.
-class UppercaseAction extends Action<String, String> {
-  /// Creates an action that upper-cases its text parameter.
-  const UppercaseAction(super.params);
+class UppercaseAction extends LaneAction<String> {
+  /// Creates an action that upper-cases [text].
+  const UppercaseAction(this.text);
 
-  /// The text to upper-case. Same value as [params].
-  String get text => params;
+  /// The text to upper-case.
+  final String text;
 
   @override
   Future<String> run(LaneContext ctx) async => text.toUpperCase();
@@ -23,9 +23,9 @@ class UppercaseAction extends Action<String, String> {
 /// An action that always fails, to test error handling.
 ///
 /// Throws a [StateError] with the message `boom`.
-class FailingAction extends Action<void, void> {
+class FailingAction extends LaneAction<void> {
   /// Creates an action with no parameters that throws when run.
-  const FailingAction() : super(null);
+  const FailingAction();
 
   @override
   Future<void> run(LaneContext ctx) async => throw StateError('boom');
@@ -35,9 +35,9 @@ class FailingAction extends Action<void, void> {
 ///
 /// Returns `7`. Its `describe()` is the class name,
 /// `DefaultDescribeAction`.
-class DefaultDescribeAction extends Action<void, int> {
+class DefaultDescribeAction extends LaneAction<int> {
   /// Creates an action with no parameters that returns 7.
-  const DefaultDescribeAction() : super(null);
+  const DefaultDescribeAction();
 
   @override
   Future<int> run(LaneContext ctx) async => 7;
@@ -47,9 +47,9 @@ class DefaultDescribeAction extends Action<void, int> {
 ///
 /// Throws a [UserError] with the message `Missing credentials` and the hint
 /// `Set FIREBASE_TOKEN`.
-class MisconfiguredAction extends Action<void, void> {
+class MisconfiguredAction extends LaneAction<void> {
   /// Creates an action with no parameters that throws a user error.
-  const MisconfiguredAction() : super(null);
+  const MisconfiguredAction();
 
   @override
   Future<void> run(LaneContext ctx) async => throw const UserError(
@@ -61,9 +61,9 @@ class MisconfiguredAction extends Action<void, void> {
 /// An action that ran and failed.
 ///
 /// Throws an [ActionFailed] with the message `Upload rejected with status 500`.
-class RejectedAction extends Action<void, void> {
+class RejectedAction extends LaneAction<void> {
   /// Creates an action with no parameters that throws an action failure.
-  const RejectedAction() : super(null);
+  const RejectedAction();
 
   @override
   Future<void> run(LaneContext ctx) async =>

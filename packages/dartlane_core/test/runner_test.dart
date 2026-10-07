@@ -145,12 +145,11 @@ void main() {
   });
 
   group('runLanes errors', () {
-    Future<int> runWith(Action<void, void> action, LaneLogger logger) =>
-        runLanes(
-          ['go'],
-          lanes: {'go': Lane('Go', (ctx) => ctx.run(action))},
-          logger: logger,
-        );
+    Future<int> runWith(LaneAction<void> action, LaneLogger logger) => runLanes(
+      ['go'],
+      lanes: {'go': Lane('Go', (ctx) => ctx.run(action))},
+      logger: logger,
+    );
 
     test('a user error exits with the usage code and shows its hint', () async {
       final code = await runWith(const MisconfiguredAction(), logger);
