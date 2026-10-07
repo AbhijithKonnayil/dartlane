@@ -27,9 +27,9 @@ void main() {
 
   group('ShellException', () {
     test('names the command, the exit code and the error output', () {
-      const exception = ShellException(
+      final exception = ShellException(
         commandLine: 'flutter build apk',
-        result: ShellResult(exitCode: 2, stderr: 'boom\n'),
+        result: const ShellResult(exitCode: 2, stderr: 'boom\n'),
       );
       expect(
         '$exception',
@@ -38,9 +38,9 @@ void main() {
     });
 
     test('omits the error output when there is none', () {
-      const exception = ShellException(
+      final exception = ShellException(
         commandLine: 'flutter build apk',
-        result: ShellResult(exitCode: 2),
+        result: const ShellResult(exitCode: 2),
       );
       expect('$exception', '`flutter build apk` exited with code 2.');
     });

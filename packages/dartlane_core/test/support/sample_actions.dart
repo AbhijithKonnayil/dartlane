@@ -42,3 +42,30 @@ class DefaultDescribeAction extends Action<void, int> {
   @override
   Future<int> run(LaneContext ctx) async => 7;
 }
+
+/// An action that fails because of something the user must fix.
+///
+/// Throws a [UserError] with the message `Missing credentials` and the hint
+/// `Set FIREBASE_TOKEN`.
+class MisconfiguredAction extends Action<void, void> {
+  /// Creates an action with no parameters that throws a user error.
+  const MisconfiguredAction() : super(null);
+
+  @override
+  Future<void> run(LaneContext ctx) async => throw const UserError(
+    'Missing credentials',
+    hint: 'Set FIREBASE_TOKEN',
+  );
+}
+
+/// An action that ran and failed.
+///
+/// Throws an [ActionFailed] with the message `Upload rejected with status 500`.
+class RejectedAction extends Action<void, void> {
+  /// Creates an action with no parameters that throws an action failure.
+  const RejectedAction() : super(null);
+
+  @override
+  Future<void> run(LaneContext ctx) async =>
+      throw const ActionFailed('Upload rejected with status 500');
+}

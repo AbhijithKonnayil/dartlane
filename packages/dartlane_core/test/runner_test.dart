@@ -75,14 +75,82 @@ void main() {
       expect(logger.lines, contains('  beta  Ship to QA'));
     });
 
-    test('a failing lane exits non-zero', () async {
+    test('an unexpected error exits non-zero and says so', () async {
       final code = await runLanes(
         ['bad'],
         lanes: {'bad': Lane('Bad', (ctx) => ctx.run(const FailingAction()))},
         logger: logger,
       );
       expect(code, ExitCodes.failure);
-      expect(logger.lines.any((l) => l.contains('Lane "bad" failed')), isTrue);
+      expect(
+        logger.lines,
+        contains(
+          'error: Lane "bad" failed with an unexpected error: '
+          'Bad state: boom',
+        ),
+      );
+    });
+  });
+
+  group('runLanes errors', () {
+    Future<int> runWith(Action<void, void> action, LaneLogger logger) =>
+        runLanes(
+          ['go'],
+          lanes: {'go': Lane('Go', (ctx) => ctx.run(action))},
+          logger: logger,
+        );
+
+    test('a user error exits with the usage code and shows its hint', () async {
+      final code = await runWith(const MisconfiguredAction(), logger);
+
+      expect(code, ExitCodes.usage);
+      expect(logger.lines, contains('error: Missing credentials'));
+      expect(logger.lines, contains('Hint: Set FIREBASE_TOKEN'));
+    });
+
+    test('a failed action exits with the failure code', () async {
+      final code = await runWith(const RejectedAction(), logger);
+
+      expect(code, ExitCodes.failure);
+      expect(
+        logger.lines,
+        contains('error: Upload rejected with status 500'),
+      );
+    });
+
+    test(
+      'a failed command exits with the failure code and shows why',
+      () async {
+        final code = await runLanes(
+          ['build'],
+          lanes: {
+            'build': Lane('Build', (ctx) {
+              throw ShellException(
+                commandLine: 'flutter build apk',
+                result: const ShellResult(exitCode: 1, stderr: 'no pubspec'),
+              );
+            }),
+          },
+          logger: logger,
+        );
+
+        expect(code, ExitCodes.failure);
+        expect(
+          logger.lines,
+          contains(
+            'error: `flutter build apk` exited with code 1.\nno pubspec',
+          ),
+        );
+      },
+    );
+
+    test('a stack trace is hidden unless logging is verbose', () async {
+      await runWith(const MisconfiguredAction(), logger);
+      expect(logger.lines.any((l) => l.contains('.dart:')), isFalse);
+
+      final verbose = FakeLaneLogger(verbose: true);
+      await runWith(const MisconfiguredAction(), verbose);
+      expect(verbose.lines.any((l) => l.contains('.dart:')), isTrue);
     });
   });
 }
