@@ -38,8 +38,8 @@ The API below is a proposal and names may change.
 void main(List<String> args) => dartlane(args, lanes: {
   'beta': Lane('Build and ship to QA', (ctx) async {
     await ctx.run(FlutterAnalyze());
-    final build = await ctx.run(FlutterBuild(target: Target.apk, flavor: 'prod'));
-    await ctx.run(FirebaseDistribute(build.artifact, app: Config.firebaseAppId, groups: ['qa']));
+    final build = await ctx.run(FlutterBuild(target: BuildTarget.apk, flavor: 'prod'));
+    await ctx.run(FirebaseDistribute(build.path, app: Config.firebaseAppId, groups: ['qa']));
   }),
 });
 ```
@@ -68,7 +68,7 @@ The repo will be a pub workspace (Dart 3.10+) with four packages:
 
 | Package | Purpose |
 |---|---|
-| `dartlane_core` | Action, LaneContext, runner, Shell/HTTP/secrets interfaces, errors, test fakes |
+| `dartlane_core` | LaneAction, LaneContext, runner, Shell/HTTP/secrets interfaces, errors, test fakes |
 | `dartlane_flutter` | Build, pub get, analyze, test and version actions |
 | `dartlane_firebase` | `FirebaseDistribute`, upload, auth |
 | `dartlane` | The CLI |

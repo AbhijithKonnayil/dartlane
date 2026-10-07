@@ -14,8 +14,8 @@
 # from a pubspec, not a declared dependency that points the wrong way.
 #
 # How: the pubspecs are read with grep, so a dependency must be written in the
-# normal block form (`  name: version`). Only packages/ is checked; examples/
-# may depend on anything.
+# normal block form (`  name: version`, and `    path: ../x` for a path).
+# Only packages/ is checked; examples/ may depend on anything.
 #
 # Usage:  ./tool/check_dependencies.sh     (or: melos run deps)
 # Exit:   0 when all rules hold, 1 and a message per violation otherwise.
@@ -33,7 +33,9 @@ status=0
 for pkg in $workspace_packages; do
   pubspec="packages/$pkg/pubspec.yaml"
 
-  if grep -Eq '^\s+path:' "$pubspec"; then
+  # A path dependency has `path:` nested under the package name (four spaces
+  # or more). A package that is itself called `path` sits at two spaces.
+  if grep -Eq '^ {4,}path:' "$pubspec"; then
     echo "$pubspec: path dependencies are not allowed"
     status=1
   fi
