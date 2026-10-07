@@ -58,6 +58,8 @@ Future<int> runLanes(
       ..error('Lane "$name" failed: $error')
       ..detail('$stackTrace');
     return ExitCodes.failure;
+  } finally {
+    ctx.close();
   }
   log.success('Lane "$name" finished.');
   return ExitCodes.success;

@@ -2,22 +2,31 @@ import 'dart:io';
 
 import 'package:dartlane_core/src/action.dart';
 import 'package:dartlane_core/src/lane_logger.dart';
+import 'package:dartlane_core/src/lane_shell.dart';
+import 'package:http/http.dart' show Client;
 
 /// What a lane and its actions can see and use while running.
 ///
-/// Shell and HTTP access are added with the interfaces for them.
+/// Actions run commands through [shell] or [sh] and make web requests through
+/// [http], never through `Process` or `dart:io` directly, so tests can swap in
+/// fakes.
 class LaneContext {
   /// Creates a context.
   ///
-  /// [env] defaults to the process environment and [logger] to a [LaneLogger]
-  /// that writes to the terminal.
+  /// [env] defaults to the process environment, [logger] to a [LaneLogger]
+  /// that writes to the terminal, [shell] to a [ProcessShell], and [http] to a
+  /// real client that is created on first use and closed by [close].
   LaneContext({
     this.args = const [],
     this.dryRun = false,
     Map<String, String>? env,
     LaneLogger? logger,
+    LaneShell? shell,
+    Client? http,
   }) : env = env ?? Platform.environment,
-       logger = logger ?? LaneLogger();
+       logger = logger ?? LaneLogger(),
+       shell = shell ?? const ProcessShell(),
+       _injectedHttp = http;
 
   /// Arguments given to the lane, after the lane name.
   ///
@@ -34,6 +43,46 @@ class LaneContext {
 
   /// Where progress and errors are written.
   final LaneLogger logger;
+
+  /// Runs external commands. Prefer [sh] unless you need the exit code.
+  final LaneShell shell;
+
+  final Client? _injectedHttp;
+  Client? _ownHttp;
+
+  /// Makes web requests.
+  ///
+  /// A `package:http` [Client], so it can be wrapped, for example by
+  /// `googleapis_auth`, or replaced with a fake in tests.
+  Client get http => _injectedHttp ?? (_ownHttp ??= Client());
+
+  /// Runs [executable] with [arguments] and returns the result.
+  ///
+  /// The command is logged at detail level. Throws a [ShellException] if the
+  /// command exits with a non-zero code.
+  Future<ShellResult> sh(
+    String executable,
+    List<String> arguments, {
+    String? workingDirectory,
+    Map<String, String>? environment,
+  }) async {
+    final line = formatCommand(executable, arguments);
+    logger.detail(r'$ ' + line);
+    final result = await shell.run(
+      executable,
+      arguments,
+      workingDirectory: workingDirectory,
+      environment: environment,
+    );
+    if (!result.ok) throw ShellException(commandLine: line, result: result);
+    return result;
+  }
+
+  /// Releases resources this context created itself.
+  ///
+  /// Closes the HTTP client only if the context created it. A client passed to
+  /// the constructor stays open; its owner closes it.
+  void close() => _ownHttp?.close();
 
   /// Runs [action] and returns its result.
   ///
