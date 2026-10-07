@@ -124,7 +124,7 @@ void main(List<String> args) => dartlane(args, lanes: {
 | RT-1 | Lanes are plain Dart functions; registration requires only a name and description. |
 | RT-2 | Actions are typed classes with a `run(LaneContext)` method, a `describe()` for dry-run, and a typed result. |
 | RT-3 | `ctx.run(action)` provides timing, logging, error mapping and dry-run uniformly. |
-| RT-4 | Shell and HTTP access go through interfaces; `dartlane_core/testing.dart` provides fakes. |
+| RT-4 | Shell access goes through `LaneShell` and HTTP through a `package:http` `Client` (`ctx.shell`, `ctx.sh`, `ctx.http`); `dartlane_core/testing.dart` provides fakes. |
 | RT-5 | Secrets are read through `ctx.secrets` and masked in logs. |
 | RT-6 | Errors form a small hierarchy (user error with a hint, action failed) mapped to exit codes. |
 | RT-7 | Arguments accept `--key=value` (and the legacy `key:value` form if cheap to keep). |

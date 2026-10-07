@@ -99,12 +99,12 @@ Implement the core API: `Action<P, R>` base class with `run(LaneContext)` and `d
 
 Labels: area:core,type:feature
 
-Define `Shell` and HTTP client interfaces with real implementations, and ship `FakeShell`, `FakeHttp` and `FakeLaneContext` in `package:dartlane_core/testing.dart`.
+Define a `LaneShell` interface with a real `ProcessShell`, and use a `package:http` `Client` as the HTTP interface (`ctx.http`). Ship `FakeLaneShell`, `FakeHttp`, `FakeLaneLogger` and `FakeLaneContext` in `package:dartlane_core/testing.dart`. Names carry a `Lane` prefix to avoid clashing with packages such as `process_run`.
 
 **Acceptance criteria**
 - Actions never call `Process` or `http` directly; they use `ctx.shell` / `ctx.http`.
 - A sample lane is unit tested using only fakes.
-- `ctx.sh(...)` throws on a non-zero exit code.
+- `ctx.sh(...)` throws a `ShellException` on a non-zero exit code.
 
 #### Core: error types and exit-code mapping
 
