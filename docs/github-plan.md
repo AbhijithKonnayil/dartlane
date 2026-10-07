@@ -227,6 +227,14 @@ Labels: area:cli,type:feature
 - Clear pass/fail output with a suggested fix for each failure.
 - Non-zero exit code when a required check fails.
 
+**How it works.** `dartlane doctor` runs in two stages.
+1. The CLI checks what it can see itself: the Dart SDK version, `pubspec.yaml`, `dartlane/lanes.dart` and that the packages in `dartlane/` are installed. If a required one fails, the summary is printed and the lanes program is skipped, because it cannot start.
+2. Otherwise it runs `dart run dartlane/lanes.dart --doctor`. A first argument of `--doctor` is reserved (like `--list`): the runner in `dartlane_core` runs the checks that were passed to `dartlane(args, lanes: ..., checks: ...)` and prints them with a summary. That is how packages contribute checks, because actions only exist inside the user's program.
+
+A check is a `DoctorCheck` (`name`, `isRequired`, `run(ctx)` returning `DoctorResult.pass(message)` or `DoctorResult.fail(message, fix: ...)`). A failing required check prints `✗` with a `Fix:` line and makes the exit code 1; a failing optional check is a warning and leaves the exit code 0. A check that throws counts as failed and never stops the others. `dartlane_flutter` contributes `flutterChecks()`: the Flutter SDK (`flutter --version`, required) and the Android flavors found in `android/app/build.gradle(.kts)` (optional). The generated `lanes.dart` passes `checks: flutterChecks()`.
+
+**Credentials.** The Firebase authentication issue adds its own check through the same mechanism, so `doctor` reports whether credentials are available once that action package exists.
+
 #### CLI: fix branding, description and update notice
 
 Labels: area:cli,type:chore,good first issue

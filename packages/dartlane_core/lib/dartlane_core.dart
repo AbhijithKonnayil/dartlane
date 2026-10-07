@@ -1,6 +1,7 @@
 /// Core runtime for Dartlane - actions, context, runner and test fakes.
 library;
 
+export 'src/doctor.dart';
 export 'src/exit_codes.dart';
 export 'src/lane.dart';
 export 'src/lane_action.dart';

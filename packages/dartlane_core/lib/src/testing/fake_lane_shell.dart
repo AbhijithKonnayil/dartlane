@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dartlane_core/src/lane_shell.dart';
 
@@ -42,6 +43,7 @@ class FakeLaneShell implements LaneShell {
 
   final List<ShellCall> _calls = [];
   final Map<String, ShellResult> _stubs = {};
+  final Set<String> _missing = {};
 
   /// Every command run so far, in order.
   List<ShellCall> get calls => List.unmodifiable(_calls);
@@ -64,6 +66,10 @@ class FakeLaneShell implements LaneShell {
     );
   }
 
+  /// Makes [executable] behave as if it is not installed: running it throws a
+  /// [ProcessException], like the real shell does.
+  void stubMissing(String executable) => _missing.add(executable);
+
   @override
   Future<ShellResult> run(
     String executable,
@@ -79,6 +85,14 @@ class FakeLaneShell implements LaneShell {
       environment: environment,
     );
     _calls.add(call);
+    if (_missing.contains(executable)) {
+      throw ProcessException(
+        executable,
+        arguments,
+        'No such file or directory',
+        2,
+      );
+    }
     final result = _stubs[call.commandLine] ?? const ShellResult(exitCode: 0);
     if (onOutput != null) {
       // Like the real shell: every line of output, standard output first.

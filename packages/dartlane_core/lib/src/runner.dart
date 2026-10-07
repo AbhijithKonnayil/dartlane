@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dartlane_core/src/doctor.dart';
 import 'package:dartlane_core/src/exit_codes.dart';
 import 'package:dartlane_core/src/lane.dart';
 import 'package:dartlane_core/src/lane_context.dart';
@@ -18,6 +19,12 @@ const _verboseFlag = '--verbose';
 /// option. `dartlane list` runs the lanes program with this word.
 const _listFlag = '--list';
 
+/// First word that makes the runner run the doctor checks instead of a lane.
+///
+/// Like `--list`, only the first word counts. `dartlane doctor` runs the lanes
+/// program with this word.
+const _doctorFlag = '--doctor';
+
 /// Entry point for a project's lanes file.
 ///
 /// ```dart
@@ -28,13 +35,15 @@ const _listFlag = '--list';
 ///
 /// The first argument is the lane name and the rest go to the lane, except
 /// `--verbose`, which the runner keeps for itself. A first argument of `--list`
-/// prints the available lanes with their descriptions and exits with 0. The
-/// process exit code is set from the result of [runLanes].
+/// prints the available lanes with their descriptions and exits with 0, and a
+/// first argument of `--doctor` runs [checks]. The process exit code is set
+/// from the result of [runLanes].
 Future<void> dartlane(
   List<String> args, {
   required Map<String, Lane> lanes,
+  List<DoctorCheck> checks = const [],
 }) async {
-  exitCode = await runLanes(args, lanes: lanes);
+  exitCode = await runLanes(args, lanes: lanes, checks: checks);
 }
 
 /// Runs the lane named by the first of [args] and returns an exit code.
@@ -49,7 +58,9 @@ Future<void> dartlane(
 /// [ExitCodes.failure].
 ///
 /// A first argument of `--list` prints the available lanes and returns
-/// [ExitCodes.success] without running anything.
+/// [ExitCodes.success] without running anything. A first argument of
+/// `--doctor` runs [checks] instead and returns [ExitCodes.success] if every
+/// required check passed, otherwise [ExitCodes.failure].
 ///
 /// `--verbose` anywhere in [args] turns on detail logging and is not passed to
 /// the lane. Without a [logger], one is created from [env] (the process
@@ -59,6 +70,7 @@ Future<void> dartlane(
 Future<int> runLanes(
   List<String> args, {
   required Map<String, Lane> lanes,
+  List<DoctorCheck> checks = const [],
   LaneLogger? logger,
   Map<String, String>? env,
 }) async {
@@ -74,6 +86,15 @@ Future<int> runLanes(
   if (laneArgs.isNotEmpty && laneArgs.first == _listFlag) {
     _printLanes(log, lanes);
     return ExitCodes.success;
+  }
+
+  if (laneArgs.isNotEmpty && laneArgs.first == _doctorFlag) {
+    final ctx = LaneContext(env: env, logger: log);
+    try {
+      return await runDoctor(checks, ctx);
+    } finally {
+      ctx.close();
+    }
   }
 
   if (laneArgs.isEmpty) {

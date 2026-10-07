@@ -62,8 +62,8 @@ void main() {
       expect(code, ExitCodes.usage);
       expect(logger.lines, contains('error: Unknown lane "nope".'));
       expect(logger.lines, contains('Available lanes:'));
-      expect(logger.lines, contains('  beta   Ship to QA'));
-      expect(logger.lines, contains('  alpha  Ship to devs'));
+      expect(logger.lines, contains('  beta  : Ship to QA'));
+      expect(logger.lines, contains('  alpha : Ship to devs'));
     });
 
     test('missing lane name lists the available lanes and fails', () async {
@@ -74,7 +74,7 @@ void main() {
       );
       expect(code, ExitCodes.usage);
       expect(logger.lines, contains('error: No lane given.'));
-      expect(logger.lines, contains('  beta  Ship to QA'));
+      expect(logger.lines, contains('  beta : Ship to QA'));
     });
 
     test('an unexpected error exits non-zero and says so', () async {
@@ -162,8 +162,8 @@ void main() {
       expect(code, ExitCodes.success);
       expect(logger.lines, [
         'Available lanes:',
-        '  build       Build a release APK',
-        '  distribute  Send it to testers',
+        '  build      : Build a release APK',
+        '  distribute : Send it to testers',
       ]);
       expect(ran, isFalse);
     });
@@ -200,7 +200,7 @@ void main() {
       );
 
       expect(code, ExitCodes.success);
-      expect(logger.lines, contains('  go  Go'));
+      expect(logger.lines, contains('  go : Go'));
     });
   });
 

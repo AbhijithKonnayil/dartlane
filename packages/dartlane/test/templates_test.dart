@@ -51,6 +51,19 @@ void main() {
     expect(yaml['name'], 'x_dartlane');
   });
 
+  test(
+    'the generated pubspec asks for the minimum Dart that doctor checks',
+    () {
+      expect(Templates.pubspec, contains('sdk: ^$minimumDartVersion'));
+    },
+  );
+
+  test('minimumDartVersion matches the sdk constraint in pubspec.yaml', () {
+    final pubspec =
+        loadYaml(File('pubspec.yaml').readAsStringSync()) as YamlMap;
+    expect((pubspec['environment'] as YamlMap)['sdk'], '^$minimumDartVersion');
+  });
+
   test('dartlaneVersion matches the version in pubspec.yaml', () {
     final pubspec =
         loadYaml(File('pubspec.yaml').readAsStringSync()) as YamlMap;

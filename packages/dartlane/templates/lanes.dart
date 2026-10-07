@@ -3,10 +3,11 @@ import 'package:dartlane_flutter/dartlane_flutter.dart';
 
 import 'config.dart';
 
-/// List the lanes, and run one, from the project root:
+/// List the lanes, run one, and check your setup, from the project root:
 ///
 ///     dartlane list
 ///     dartlane run build
+///     dartlane doctor
 ///
 /// or without the dartlane command:
 ///
@@ -26,4 +27,6 @@ Future<void> main(List<String> args) => dartlane(
     }),
     // Add your own lanes here.
   },
+  // What `dartlane doctor` checks. Packages contribute their own checks.
+  checks: flutterChecks(),
 );
