@@ -83,11 +83,11 @@ Move `analysis_options.yaml` and `cspell.json` so every package uses the same ru
 
 ### M1: Vertical slice
 
-#### Core: Action, LaneContext, Lane and the runner
+#### Core: LaneAction, LaneContext, Lane and the runner
 
 Labels: area:core,type:feature
 
-Implement the core API: `Action<P, R>` base class with `run(LaneContext)` and `describe()`, `LaneContext` (args, env, shell, http, logger, dryRun), `Lane(description, body)`, and `dartlane(args, lanes: {...})` entry point. `ctx.run(action)` is the single choke point for logging, timing and errors.
+Implement the core API: `LaneAction<R>` base class with `run(LaneContext)` and `describe()` (actions keep their parameters as plain constructor fields), `LaneContext` (args, env, shell, http, logger, dryRun), `Lane(description, body)`, and `dartlane(args, lanes: {...})` entry point. `ctx.run(action)` is the single choke point for logging, timing and errors.
 
 **Acceptance criteria**
 - A lane written as a plain Dart function runs and can call actions.
@@ -131,12 +131,12 @@ Build on the existing logger: levels (info, detail, warn, error, success), `--ve
 
 Labels: area:flutter,type:feature
 
-One typed build action: `FlutterBuild(target: apk|appbundle, mode, flavor, dartDefines, buildName, buildNumber, obfuscate, splitDebugInfo)`. Returns `BuildResult(path, version, mode, flavor)`. Keep convenience aliases (`flutterBuildApk`, `flutterBuildAppBundle`).
+One typed build action: `FlutterBuild(target: apk|appbundle, mode, flavor, dartDefines, buildName, buildNumber, obfuscate, splitDebugInfo)`. Returns `BuildResult(path, target, mode, flavor, version)`. Keep convenience aliases (`flutterBuildApk`, `flutterBuildAppBundle`).
 
 **Acceptance criteria**
 - A failed `flutter build` fails the lane (non-zero exit).
 - `--dart-define` can be passed multiple times.
-- `BuildResult.path` points to the real artifact, including flavored builds.
+- `BuildResult.path` points to the real artifact, including flavored builds. It is read from Flutter's own `Built <path>` line and never guessed; a build that reports no file is an error.
 - Unit tested with `FakeShell`.
 - Removes the `exeType` naming confusion (target vs mode).
 
@@ -226,7 +226,7 @@ Replace the template description string, verify `dartlane update` and the pub.de
 **Acceptance criteria**
 - `dartlane --help` and `dartlane --version` show correct text.
 
-#### Core: --dry-run using Action.describe()
+#### Core: --dry-run using LaneAction.describe()
 
 Labels: area:core,type:feature
 

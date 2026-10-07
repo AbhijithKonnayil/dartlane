@@ -70,7 +70,7 @@ Dartlane is a **release-automation layer** that runs inside any CI and locally *
 ## 7. Product scope
 
 ### 7.1 Concepts
-- **Action:** one reusable, typed step (for example `FlutterBuild`, `FirebaseDistribute`). Takes typed params, returns a typed result, can describe itself for dry-run.
+- **Action:** one reusable, typed step (for example `FlutterBuild`, `FirebaseDistribute`). Takes typed parameters as plain constructor fields (`LaneAction<R>`, no separate params object), returns a typed result, can describe itself for dry-run.
 - **Lane:** a workflow defined by the user as a Dart function that calls actions in order and passes results between them.
 
 Example (proposed API, names may change):
@@ -79,8 +79,8 @@ Example (proposed API, names may change):
 void main(List<String> args) => dartlane(args, lanes: {
   'beta': Lane('Build and ship to QA', (ctx) async {
     await ctx.run(FlutterAnalyze());
-    final build = await ctx.run(FlutterBuild(target: Target.apk, flavor: 'prod'));
-    await ctx.run(FirebaseDistribute(build.artifact, app: Config.firebaseAppId, groups: ['qa']));
+    final build = await ctx.run(FlutterBuild(target: BuildTarget.apk, flavor: 'prod'));
+    await ctx.run(FirebaseDistribute(build.path, app: Config.firebaseAppId, groups: ['qa']));
   }),
 });
 ```
@@ -90,7 +90,7 @@ void main(List<String> args) => dartlane(args, lanes: {
 **0.1.0 preview (target: ~2 weeks)**
 - CLI: `init`, `run`, `list`, `doctor` (basic), `update`.
 - Actions: `FlutterBuild` (apk, appbundle; modes; flavor; dart-define; build name/number), `FlutterPubGet`, `FlutterAnalyze`, `FlutterTest`, pubspec version read/bump, `FirebaseDistribute` (APK upload, release notes, testers, groups).
-- Typed `BuildResult` handed from build to Firebase; optional explicit path override.
+- Typed `BuildResult` from the build; its `path` is passed to Firebase (`dartlane_firebase` does not depend on `dartlane_flutter`, so it takes a path); optional explicit path override.
 - Service-account-file authentication for Firebase **(decided)**, with Application Default Credentials as a fallback **(proposed, low cost)**.
 - `--dry-run` that prints the planned steps.
 - Correct non-zero exit codes on failure.
@@ -137,7 +137,7 @@ void main(List<String> args) => dartlane(args, lanes: {
 | ACT-3 | Version action reads and bumps `version:` and build number in `pubspec.yaml`. (The separate `fastlane-plugin-flutter_versioner` project stays independent **(decided)**.) |
 | ACT-4 | `FirebaseDistribute`: uploads an APK, polls the operation, sets release notes, and distributes to testers and groups; supports notes and testers from a file. |
 | ACT-5 | `FirebaseDistribute` fails the lane on any error, and treats "no testers or groups" as a clearly reported outcome that does not contradict its own message. |
-| ACT-6 | Binary location comes from `BuildResult` or an explicit override, not from guessing in `build/` output folders. |
+| ACT-6 | Binary location comes from `BuildResult.path`, which is read from Flutter's own `Built <path>` output line, or from an explicit override. It is never guessed from the `build/` folder layout. |
 
 ### 8.4 Extensibility
 - A custom lane is a function in the user's `lanes.dart`.
@@ -151,7 +151,7 @@ Repo is a pub workspace (Dart 3.10+), fully split into four packages **(decided)
 
 ```text
 packages/
-  dartlane_core/       # Action, LaneContext, runner, Shell/HTTP/secrets interfaces, errors, testing fakes
+  dartlane_core/       # LaneAction, LaneContext, runner, Shell/HTTP/secrets interfaces, errors, testing fakes
   dartlane_flutter/    # build, pub get, analyze, test, version actions
   dartlane_firebase/   # FirebaseDistribute, upload/polling, auth, client
   dartlane/            # CLI: init, run, list, doctor, update, launcher
