@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dartlane_core/src/action.dart';
+import 'package:dartlane_core/src/lane_action.dart';
 import 'package:dartlane_core/src/lane_logger.dart';
 import 'package:dartlane_core/src/lane_shell.dart';
 import 'package:http/http.dart' show Client;
@@ -88,7 +88,7 @@ class LaneContext {
   ///
   /// This is the single place where a step is logged and timed. A failure is
   /// logged and rethrown, never swallowed.
-  Future<R> run<P, R>(Action<P, R> action) async {
+  Future<R> run<R>(LaneAction<R> action) async {
     final name = action.describe();
     logger.info('> $name');
     final stopwatch = Stopwatch()..start();

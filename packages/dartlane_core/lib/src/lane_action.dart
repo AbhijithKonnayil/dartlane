@@ -2,18 +2,16 @@ import 'package:dartlane_core/src/lane_context.dart';
 
 /// One reusable, typed step, for example building an APK or uploading it.
 ///
-/// [P] is the type of the parameters the action was created with and [R] is
-/// the type of its result. An action with no parameters uses `void` for [P]
-/// and passes `null` to the constructor.
+/// [R] is the type of the result. An action keeps its parameters as ordinary
+/// fields set by its constructor, so a lane reads like
+/// `FlutterBuild(target: BuildTarget.apk, flavor: 'prod')`. An action with no
+/// result uses `void`.
 ///
 /// Call actions through [LaneContext.run], never [run] directly, so every step
 /// is logged and timed the same way.
-abstract class Action<P, R> {
-  /// Creates an action with its [params].
-  const Action(this.params);
-
-  /// The parameters this action was created with.
-  final P params;
+abstract class LaneAction<R> {
+  /// Creates an action.
+  const LaneAction();
 
   /// Does the work and returns the result.
   Future<R> run(LaneContext ctx);
