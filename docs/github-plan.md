@@ -6,7 +6,7 @@ Source of truth for the labels, milestones and issues created by
 - `## Labels` and `## Milestones`: bullets of `- a | b | c`
   (label: name, color, description; milestone: title, description).
 - `## Issues`: `###` is a milestone title (must match one declared above),
-  `####` is an issue title, the `Labels:` line is the comma-separated labels,
+  `####` is an issue title (an optional leading `#N` GitHub issue number is stripped), the `Labels:` line is the comma-separated labels,
   and everything after it is the issue body.
 - Issue bodies must not contain lines starting with `#`.
 
@@ -36,7 +36,7 @@ Source of truth for the labels, milestones and issues created by
 
 ### M0: Foundation
 
-#### Convert repo to a pub workspace with four package skeletons
+#### #24 Convert repo to a pub workspace with four package skeletons
 
 Labels: area:ci,type:chore
 
@@ -49,7 +49,7 @@ Create the workspace layout from the PRD: `packages/dartlane_core`, `packages/da
 - Dependency direction: CLI, flutter and firebase depend on core only.
 - `tool/check_dependencies.sh` enforces both rules and runs in CI.
 
-#### Set up Melos for scripts, versioning and publishing
+#### #25 Set up Melos for scripts, versioning and publishing
 
 Labels: area:ci,type:chore
 
@@ -60,7 +60,7 @@ Configure Melos on top of the pub workspace. Start small: run analyze and tests 
 - Documented process to version and publish packages (dry run is enough for now).
 - Decide whether to use Conventional Commits and document the decision.
 
-#### Adapt CI to analyze and test all workspace packages
+#### #26 Adapt CI to analyze and test all workspace packages
 
 Labels: area:ci,type:chore
 
@@ -71,7 +71,7 @@ Update the GitHub Actions workflow to run format check, analyze and tests across
 - CI is green on the empty skeletons.
 - Failing analyze or tests blocks merging (branch protection noted in the issue).
 
-#### Share lints and spell-check config across packages
+#### #27 Share lints and spell-check config across packages
 
 Labels: area:ci,type:chore,good first issue
 
@@ -83,7 +83,7 @@ Move `analysis_options.yaml` and `cspell.json` so every package uses the same ru
 
 ### M1: Vertical slice
 
-#### Core: LaneAction, LaneContext, Lane and the runner
+#### #29 Core: LaneAction, LaneContext, Lane and the runner
 
 Labels: area:core,type:feature
 
@@ -95,7 +95,7 @@ Implement the core API: `LaneAction<R>` base class with `run(LaneContext)` and `
 - Unknown lane names print the available lanes and exit non-zero.
 - Unit tested.
 
-#### Core: Shell and HTTP interfaces with test fakes
+#### #30 Core: Shell and HTTP interfaces with test fakes
 
 Labels: area:core,type:feature
 
@@ -106,7 +106,7 @@ Define a `LaneShell` interface with a real `ProcessShell`, and use a `package:ht
 - A sample lane is unit tested using only fakes.
 - `ctx.sh(...)` throws a `ShellException` on a non-zero exit code.
 
-#### Core: error types and exit-code mapping
+#### #31 Core: error types and exit-code mapping
 
 Labels: area:core,type:feature
 
@@ -117,7 +117,7 @@ Introduce a small error hierarchy (for example `UserError` with a hint, and `Act
 - User errors show a clear message and hint without a stack trace unless `--verbose`.
 - No `catch (e) { log }` that swallows failures.
 
-#### Core: logger with levels and CI-friendly output
+#### #32 Core: logger with levels and CI-friendly output
 
 Labels: area:core,type:feature
 
@@ -127,7 +127,7 @@ Build on the existing logger: levels (info, detail, warn, error, success), `--ve
 - `--verbose` shows executed commands; default output stays quiet.
 - When running on GitHub Actions, errors are annotated.
 
-#### Flutter: FlutterBuild action and BuildResult
+#### #33 Flutter: FlutterBuild action and BuildResult
 
 Labels: area:flutter,type:feature
 
@@ -140,7 +140,7 @@ One typed build action: `FlutterBuild(target: apk|appbundle, mode, flavor, dartD
 - Unit tested with `FakeShell`.
 - Removes the `exeType` naming confusion (target vs mode).
 
-#### Firebase: FirebaseDistribute action (migrate existing upload logic)
+#### #34 Firebase: FirebaseDistribute action (migrate existing upload logic)
 
 Labels: area:firebase,type:feature
 
@@ -152,7 +152,7 @@ Move the existing upload, polling, release notes and distribute logic into `dart
 - Upload timeout is honoured; the "no testers or groups" outcome is reported clearly after a successful upload.
 - Unit tested with `FakeHttp`.
 
-#### Example app runs a beta lane end to end
+#### #35 Example app runs a beta lane end to end
 
 Labels: area:ci,type:feature
 
@@ -164,7 +164,7 @@ Add `examples/flutter_app` with a `dartlane/` package whose `beta` lane analyzes
 
 ### M2: 0.1.0
 
-#### CLI: init creates a nested dartlane/ package
+#### #36 CLI: init creates a nested dartlane/ package
 
 Labels: area:cli,type:feature
 
@@ -178,7 +178,7 @@ Labels: area:cli,type:feature
 - `init` runs `dart pub get` in the new package. Until the packages are on pub.dev that needs the hidden `--local-repo <path>` option, which writes a git-ignored `pubspec_overrides.yaml` and leaves `pubspec.yaml` clean.
 - The generated `lanes.dart` registers the ready-made lanes from the action packages, so `dartlane run <lane> --key=value` works before the user writes any lane.
 
-#### CLI: run forwards arguments and the exit code
+#### #37 CLI: run forwards arguments and the exit code
 
 Labels: area:cli,type:feature
 
@@ -189,7 +189,7 @@ Today `run` only passes the lane name and `Lanes.runLane` calls `execute({})`, s
 - The CLI exits with the lane's exit code.
 - Missing `dartlane/` folder gives a clear error pointing to `dartlane init`.
 
-#### Core: argument parsing (--key=value) with typed getters
+#### #38 Core: argument parsing (--key=value) with typed getters
 
 Labels: area:core,type:feature
 
@@ -206,7 +206,7 @@ Parse `--key=value` into `ctx.args` with typed getters (`string`, `bool`, `int`,
 - `ctx.args` is a `LaneArgs` with `string`, `requireString`, `integer`, `requireInteger`, `flag`, `list`, `has`, `names`, `positional`, `raw` and `expectOnly`. A missing or invalid value is a `UserError` with a hint (exit code 64).
 - `string` never splits, so values with commas stay whole. `list` splits at commas and collects repeated options; pass `commaSeparated: false` for values that may contain commas, such as `--dart-define`.
 
-#### CLI: list command
+#### #39 CLI: list command
 
 Labels: area:cli,type:feature
 
@@ -217,7 +217,7 @@ Labels: area:cli,type:feature
 
 **How it works.** The lanes only exist inside the user's program, so `dartlane list` runs `dart run dartlane/lanes.dart --list` and the runner in `dartlane_core` prints them. A first argument of `--list` is reserved for this; a lane can still have its own `--list` option after the lane name. `list` exits with the program's exit code, takes no arguments, and gives the same "no `dartlane/` folder" error as `run`.
 
-#### CLI: doctor command
+#### #40 CLI: doctor command
 
 Labels: area:cli,type:feature
 
@@ -235,7 +235,7 @@ A check is a `DoctorCheck` (`name`, `isRequired`, `run(ctx)` returning `DoctorRe
 
 **Credentials.** The Firebase authentication issue adds its own check through the same mechanism, so `doctor` reports whether credentials are available once that action package exists.
 
-#### CLI: fix branding, description and update notice
+#### #41 CLI: fix branding, description and update notice
 
 Labels: area:cli,type:chore,good first issue
 
@@ -244,7 +244,7 @@ Replace the template description string, verify `dartlane update` and the pub.de
 **Acceptance criteria**
 - `dartlane --help` and `dartlane --version` show correct text.
 
-#### Core: --dry-run using LaneAction.describe()
+#### #42 Core: --dry-run using LaneAction.describe()
 
 Labels: area:core,type:feature
 
@@ -254,7 +254,7 @@ With `--dry-run`, `ctx.run` prints each step's `describe()` and skips side effec
 - Built-in actions implement `describe()`.
 - Documented as best-effort.
 
-#### Core: secrets provider and log masking
+#### #43 Core: secrets provider and log masking
 
 Labels: area:core,type:feature
 
@@ -264,7 +264,7 @@ Labels: area:core,type:feature
 - A secret value never appears in log output.
 - Documented that masking only covers values read via `ctx.secrets`.
 
-#### Flutter: pub get, analyze and test actions
+#### #44 Flutter: pub get, analyze and test actions
 
 Labels: area:flutter,type:feature
 
@@ -274,7 +274,7 @@ Add `FlutterPubGet`, `FlutterAnalyze` and `FlutterTest` as gate steps.
 - A failing analyze or test fails the lane.
 - Unit tested with `FakeShell`.
 
-#### Flutter: pubspec version read and bump action
+#### #45 Flutter: pubspec version read and bump action
 
 Labels: area:flutter,type:feature
 
@@ -284,7 +284,7 @@ Read and bump `version:` and build number in `pubspec.yaml`, returning the new v
 - Supports bumping major, minor, patch and build number.
 - Preserves the rest of `pubspec.yaml` formatting and comments.
 
-#### Firebase: authentication via service account file, with ADC fallback
+#### #46 Firebase: authentication via service account file, with ADC fallback
 
 Labels: area:firebase,type:feature
 
@@ -294,7 +294,7 @@ Support a service-account file path (and `GOOGLE_APPLICATION_CREDENTIALS`), and 
 - Clear error when no credentials can be found, with a pointer to the docs.
 - `doctor` reports whether credentials are available.
 
-#### Firebase: release notes and testers from files
+#### #47 Firebase: release notes and testers from files
 
 Labels: area:firebase,type:feature
 
@@ -315,7 +315,7 @@ Let users run common steps without writing a lane. `dartlane_flutter` and `dartl
 - Existing lane names from the old code keep working as these lanes, or the renames are documented.
 - Depends on argument parsing and the `init` command.
 
-#### Docs: quick start
+#### #48 Docs: quick start
 
 Labels: area:docs,type:feature
 
@@ -325,7 +325,7 @@ A quick start that takes a Flutter developer from install to a Firebase release.
 - A new user can follow it in under 5 minutes.
 - Honest about the Android and Firebase scope.
 
-#### Docs: writing a lane and writing an action
+#### #49 Docs: writing a lane and writing an action
 
 Labels: area:docs,type:feature
 
@@ -334,7 +334,7 @@ Guides with code for custom lanes, one-off shell steps and custom actions (local
 **Acceptance criteria**
 - Includes the `dartlane_<name>` package naming convention.
 
-#### Example GitHub Actions workflow for the beta lane
+#### #50 Example GitHub Actions workflow for the beta lane
 
 Labels: area:ci,area:docs,type:feature
 
@@ -345,7 +345,7 @@ Ship an example workflow that installs Flutter, runs `dartlane run beta`, and re
 
 ### M3: Launch
 
-#### Publish process: remove publish_to: none and release 0.1.0 of all packages
+#### #51 Publish process: remove publish_to: none and release 0.1.0 of all packages
 
 Labels: area:ci,type:chore
 
@@ -356,7 +356,7 @@ Use Melos to version and publish all four packages in dependency order.
 - `dart pub global activate dartlane` works on a clean machine.
 - Verify pub workspace behaviour with global activation before publishing.
 
-#### README rewrite with honest scope and roadmap
+#### #52 README rewrite with honest scope and roadmap
 
 Labels: area:docs,type:feature
 
@@ -365,7 +365,7 @@ Rewrite the README around the 2-minute path, state the Android/Firebase scope pl
 **Acceptance criteria**
 - README commands match what actually works.
 
-#### Record a 2-minute demo
+#### #53 Record a 2-minute demo
 
 Labels: area:docs,type:feature
 
@@ -374,7 +374,7 @@ Screen recording from `dartlane init` to a Firebase release.
 **Acceptance criteria**
 - Embedded in the README.
 
-#### Launch post and community announcement
+#### #54 Launch post and community announcement
 
 Labels: area:docs,type:feature
 
@@ -383,7 +383,7 @@ Write "Ship your Flutter app to Firebase in one command" and announce it in Flut
 **Acceptance criteria**
 - Post published and shared; include a cold-start comparison against fastlane if measured.
 
-#### Find three people to try 0.1.0 and report feedback
+#### #55 Find three people to try 0.1.0 and report feedback
 
 Labels: area:docs,type:chore
 
@@ -394,19 +394,19 @@ Recruit three outside users or teams, give them the quick start, and record what
 
 ### M4: 0.2
 
-#### Git tag and changelog / release notes action
+#### #56 Git tag and changelog / release notes action
 
 Labels: area:flutter,type:feature
 
 Tag a release and generate release notes from commits, usable as Firebase release notes.
 
-#### Notify action for Slack and Discord
+#### #57 Notify action for Slack and Discord
 
 Labels: area:core,type:feature
 
 Post the release link and version to a chat webhook after distribution.
 
-#### Compile cache for faster repeat runs
+#### #58 Compile cache for faster repeat runs
 
 Labels: area:cli,type:feature
 
@@ -416,13 +416,13 @@ Compile the user's lanes file and cache it in `.dartlane/`, keyed by a hash of t
 - Cache invalidates when lanes or dependencies change.
 - Behaviour (working directory, relative paths) matches `dart run`.
 
-#### dartlane create action scaffolder
+#### #59 dartlane create action scaffolder
 
 Labels: area:cli,type:feature
 
 Generate a plugin package skeleton (`dartlane_<name>`) with an action, tests and a README.
 
-#### Lane hooks: onError and onSuccess
+#### #60 Lane hooks: onError and onSuccess
 
 Labels: area:core,type:feature
 
@@ -430,19 +430,19 @@ Allow lanes to define hooks that run after a failure or success (for example to 
 
 ### Later
 
-#### Google Play lane (spike)
+#### #61 Google Play lane (spike)
 
 Labels: area:core,type:feature
 
 Investigate uploading an AAB to the Play internal track via the Play Developer API in pure Dart. Output: a design note and an effort estimate.
 
-#### iOS via App Store Connect API in pure Dart (spike)
+#### #62 iOS via App Store Connect API in pure Dart (spike)
 
 Labels: area:core,type:feature
 
 Investigate signing and uploading to TestFlight without Ruby. Output: a design note listing what must be built natively and what can shell out to Apple tools.
 
-#### fastlane to Dartlane migration helper
+#### #63 fastlane to Dartlane migration helper
 
 Labels: area:cli,type:feature
 
