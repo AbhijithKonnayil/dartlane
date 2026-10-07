@@ -73,8 +73,7 @@ class InitCommand extends Command<int> {
     await _pubGet(package);
 
     logger.success(
-      'Done. Run your first lane with: '
-      'dart run ${LanePackage.folderName}/lanes.dart build',
+      'Done. Run your first lane with: dartlane run build',
     );
     return ExitCodes.success;
   }

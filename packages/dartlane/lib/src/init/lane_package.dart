@@ -15,14 +15,25 @@ class LanePackage {
   LanePackage.of(AppProject project)
     : directory = Directory(p.join(project.root.path, folderName));
 
+  /// The `dartlane/` package of the project in [projectRoot], which may not
+  /// exist.
+  LanePackage.inProject(Directory projectRoot)
+    : directory = Directory(p.join(projectRoot.path, folderName));
+
   /// The folder name, relative to the project root.
   static const folderName = 'dartlane';
+
+  /// The name of the file that defines the lanes.
+  static const lanesFileName = 'lanes.dart';
 
   /// The package folder.
   final Directory directory;
 
   /// Whether the folder already exists.
   bool get exists => directory.existsSync();
+
+  /// The file that defines the lanes. It may not exist.
+  File get lanesFile => File(p.join(directory.path, lanesFileName));
 
   /// Writes the generated files and returns their names, relative to
   /// [directory].

@@ -28,6 +28,10 @@ import 'config.dart';
 
 /// Run a lane from the project root:
 ///
+///     dartlane run build
+///
+/// or without the dartlane command:
+///
 ///     dart run dartlane/lanes.dart build
 Future<void> main(List<String> args) => dartlane(
   args,

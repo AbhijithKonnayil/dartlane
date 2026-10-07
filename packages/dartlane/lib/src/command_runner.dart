@@ -3,20 +3,25 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:dartlane/src/commands/init_command.dart';
+import 'package:dartlane/src/commands/run_command.dart';
+import 'package:dartlane/src/run/lanes_launcher.dart';
 import 'package:dartlane_core/dartlane_core.dart';
 
 /// The `dartlane` command line tool.
 ///
-/// It only launches things: `init` creates the nested `dartlane/` package, and
-/// the lanes themselves run in the user's own program through `dartlane_core`.
+/// It only launches things: `init` creates the nested `dartlane/` package, `run`
+/// starts the user's own lanes program and passes the arguments and exit code
+/// through, and the lanes themselves run in that program through
+/// `dartlane_core`.
 class DartlaneCommandRunner extends CommandRunner<int> {
   /// Creates the runner.
   ///
-  /// Pass [logger], [shell] and [workingDirectory] to control output, commands
-  /// and the project folder in tests.
+  /// Pass [logger], [shell], [launcher] and [workingDirectory] to control
+  /// output, commands, the lanes program and the project folder in tests.
   DartlaneCommandRunner({
     LaneLogger? logger,
     LaneShell? shell,
+    LanesLauncher? launcher,
     Directory? workingDirectory,
   }) : _logger = logger ?? LaneLogger.fromEnvironment(Platform.environment),
        super(
@@ -28,11 +33,18 @@ class DartlaneCommandRunner extends CommandRunner<int> {
       negatable: false,
       help: 'Show detail output.',
     );
+    final projectRoot = workingDirectory ?? Directory.current;
     addCommand(
       InitCommand(
         logger: _logger,
         shell: shell ?? const ProcessShell(),
-        workingDirectory: workingDirectory ?? Directory.current,
+        workingDirectory: projectRoot,
+      ),
+    );
+    addCommand(
+      RunCommand(
+        launcher: launcher ?? const ProcessLanesLauncher(),
+        workingDirectory: projectRoot,
       ),
     );
   }
