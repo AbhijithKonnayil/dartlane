@@ -87,6 +87,24 @@ dependency_overrides:
     timeout: const Timeout(Duration(minutes: 2)),
   );
 
+  test('list shows the lanes of the real program', () {
+    // The command `dartlane list` launches.
+    final result = Process.runSync(
+      Platform.resolvedExecutable,
+      ['run', 'dartlane/lanes.dart', '--list'],
+      workingDirectory: project.path,
+    );
+
+    expect(result.exitCode, 0);
+    expect(result.stdout, contains('Available lanes:'));
+    expect(result.stdout, contains('  ok    Writes its arguments'));
+    expect(result.stdout, contains('  fail  Always fails'));
+  });
+
+  test('dartlane list exits 0 through the real launcher', () async {
+    expect(await dartlane(['list']), ExitCodes.success);
+  });
+
   test('returns the exit code of a failing lane', () async {
     expect(await dartlane(['run', 'fail']), ExitCodes.failure);
   });

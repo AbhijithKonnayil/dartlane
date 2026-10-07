@@ -3,8 +3,9 @@ import 'package:dartlane_flutter/dartlane_flutter.dart';
 
 import 'config.dart';
 
-/// Run a lane from the project root:
+/// List the lanes, and run one, from the project root:
 ///
+///     dartlane list
 ///     dartlane run build
 ///
 /// or without the dartlane command:

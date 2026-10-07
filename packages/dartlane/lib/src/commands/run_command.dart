@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
-import 'package:dartlane/src/init/lane_package.dart';
 import 'package:dartlane/src/run/lanes_launcher.dart';
+import 'package:dartlane/src/run/lanes_program.dart';
 import 'package:dartlane_core/dartlane_core.dart';
 
 /// `dartlane run <lane> [arguments]`: runs a lane from `dartlane/lanes.dart`.
@@ -43,7 +43,7 @@ class RunCommand extends Command<int> {
   String get usageFooter =>
       '\nEverything after the lane name is passed to the lane, for example '
       '`dartlane run build --flavor=prod`.\n'
-      'Run `dartlane run` with no lane to list the lanes.';
+      'Run `dartlane list` to see the lanes.';
 
   @override
   Future<int> run() async {
@@ -54,22 +54,13 @@ class RunCommand extends Command<int> {
       return ExitCodes.success;
     }
 
-    final package = LanePackage.inProject(workingDirectory);
-    if (!package.lanesFile.existsSync()) {
-      throw UserError(
-        package.exists
-            ? 'dartlane/lanes.dart was not found.'
-            : 'No dartlane/ folder found in this folder.',
-        hint:
-            'Run `dartlane init` to create one, or run this from the root of '
-            'a project that has one.',
-      );
-    }
-
     // `dartlane --verbose run beta` also makes the lane verbose.
     final verbose = globalResults?['verbose'] as bool? ?? false;
     if (verbose && !arguments.contains('--verbose')) arguments.add('--verbose');
 
-    return launcher.launch(projectRoot: workingDirectory, arguments: arguments);
+    return LanesProgram(
+      projectRoot: workingDirectory,
+      launcher: launcher,
+    ).run(arguments);
   }
 }

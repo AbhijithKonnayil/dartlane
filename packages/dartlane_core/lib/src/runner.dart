@@ -12,6 +12,12 @@ import 'package:dartlane_core/src/lane_logger.dart';
 /// the lane.
 const _verboseFlag = '--verbose';
 
+/// First word that makes the runner list the lanes instead of running one.
+///
+/// Only the first word counts, so a lane can still have its own `--list`
+/// option. `dartlane list` runs the lanes program with this word.
+const _listFlag = '--list';
+
 /// Entry point for a project's lanes file.
 ///
 /// ```dart
@@ -21,8 +27,9 @@ const _verboseFlag = '--verbose';
 /// ```
 ///
 /// The first argument is the lane name and the rest go to the lane, except
-/// `--verbose`, which the runner keeps for itself. The process exit code is set
-/// from the result of [runLanes].
+/// `--verbose`, which the runner keeps for itself. A first argument of `--list`
+/// prints the available lanes with their descriptions and exits with 0. The
+/// process exit code is set from the result of [runLanes].
 Future<void> dartlane(
   List<String> args, {
   required Map<String, Lane> lanes,
@@ -40,6 +47,9 @@ Future<void> dartlane(
 /// The stack trace is only logged at detail level, so it shows with verbose
 /// logging. Any other exception is reported as unexpected and returns
 /// [ExitCodes.failure].
+///
+/// A first argument of `--list` prints the available lanes and returns
+/// [ExitCodes.success] without running anything.
 ///
 /// `--verbose` anywhere in [args] turns on detail logging and is not passed to
 /// the lane. Without a [logger], one is created from [env] (the process
@@ -60,6 +70,11 @@ Future<int> runLanes(
 
   final log = logger ?? LaneLogger.fromEnvironment(env ?? Platform.environment);
   if (verbose) log.verbose = true;
+
+  if (laneArgs.isNotEmpty && laneArgs.first == _listFlag) {
+    _printLanes(log, lanes);
+    return ExitCodes.success;
+  }
 
   if (laneArgs.isEmpty) {
     log.error('No lane given.');
@@ -103,6 +118,6 @@ void _printLanes(LaneLogger log, Map<String, Lane> lanes) {
   log.info('Available lanes:');
   final width = lanes.keys.fold(0, (w, k) => k.length > w ? k.length : w);
   for (final entry in lanes.entries) {
-    log.info('  ${entry.key.padRight(width)}  ${entry.value.description}');
+    log.info('  ${entry.key.padRight(width)} : ${entry.value.description}');
   }
 }

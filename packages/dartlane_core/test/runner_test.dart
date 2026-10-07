@@ -146,6 +146,64 @@ void main() {
     });
   });
 
+  group('runLanes --list', () {
+    test('prints the lanes with their descriptions and exits 0', () async {
+      var ran = false;
+
+      final code = await runLanes(
+        ['--list'],
+        lanes: {
+          'build': Lane('Build a release APK', (ctx) => ran = true),
+          'distribute': Lane('Send it to testers', (ctx) => ran = true),
+        },
+        logger: logger,
+      );
+
+      expect(code, ExitCodes.success);
+      expect(logger.lines, [
+        'Available lanes:',
+        '  build       Build a release APK',
+        '  distribute  Send it to testers',
+      ]);
+      expect(ran, isFalse);
+    });
+
+    test('says so when there are no lanes, and still exits 0', () async {
+      final code = await runLanes(['--list'], lanes: {}, logger: logger);
+
+      expect(code, ExitCodes.success);
+      expect(logger.lines, ['No lanes are defined.']);
+    });
+
+    test(
+      'only counts as the first word, so a lane can have a --list option',
+      () async {
+        bool? listed;
+
+        final code = await runLanes(
+          ['go', '--list'],
+          lanes: {'go': Lane('Go', (ctx) => listed = ctx.args.flag('list'))},
+          logger: logger,
+        );
+
+        expect(code, ExitCodes.success);
+        expect(listed, isTrue);
+        expect(logger.lines, isNot(contains('Available lanes:')));
+      },
+    );
+
+    test('works together with --verbose', () async {
+      final code = await runLanes(
+        ['--verbose', '--list'],
+        lanes: {'go': Lane('Go', (ctx) {})},
+        logger: logger,
+      );
+
+      expect(code, ExitCodes.success);
+      expect(logger.lines, contains('  go  Go'));
+    });
+  });
+
   group('runLanes arguments', () {
     test('typed options reach the lane', () async {
       String? flavor;

@@ -215,6 +215,8 @@ Labels: area:cli,type:feature
 **Acceptance criteria**
 - Shows lane names and descriptions from the user's `lanes.dart`.
 
+**How it works.** The lanes only exist inside the user's program, so `dartlane list` runs `dart run dartlane/lanes.dart --list` and the runner in `dartlane_core` prints them. A first argument of `--list` is reserved for this; a lane can still have its own `--list` option after the lane name. `list` exits with the program's exit code, takes no arguments, and gives the same "no `dartlane/` folder" error as `run`.
+
 #### CLI: doctor command
 
 Labels: area:cli,type:feature

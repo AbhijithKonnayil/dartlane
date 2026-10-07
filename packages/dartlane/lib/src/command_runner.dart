@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:dartlane/src/commands/init_command.dart';
+import 'package:dartlane/src/commands/list_command.dart';
 import 'package:dartlane/src/commands/run_command.dart';
 import 'package:dartlane/src/run/lanes_launcher.dart';
 import 'package:dartlane_core/dartlane_core.dart';
@@ -11,8 +12,8 @@ import 'package:dartlane_core/dartlane_core.dart';
 ///
 /// It only launches things: `init` creates the nested `dartlane/` package, `run`
 /// starts the user's own lanes program and passes the arguments and exit code
-/// through, and the lanes themselves run in that program through
-/// `dartlane_core`.
+/// through, `list` asks that program for its lanes, and the lanes themselves
+/// run in that program through `dartlane_core`.
 class DartlaneCommandRunner extends CommandRunner<int> {
   /// Creates the runner.
   ///
@@ -41,11 +42,12 @@ class DartlaneCommandRunner extends CommandRunner<int> {
         workingDirectory: projectRoot,
       ),
     );
+    final lanesLauncher = launcher ?? const ProcessLanesLauncher();
     addCommand(
-      RunCommand(
-        launcher: launcher ?? const ProcessLanesLauncher(),
-        workingDirectory: projectRoot,
-      ),
+      RunCommand(launcher: lanesLauncher, workingDirectory: projectRoot),
+    );
+    addCommand(
+      ListCommand(launcher: lanesLauncher, workingDirectory: projectRoot),
     );
   }
 
