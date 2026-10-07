@@ -32,7 +32,7 @@ scripts. Dartlane aims to fix the pain points of that setup:
 
 ## Planned usage
 
-The API below is a proposal and names may change. `dartlane init` already works; until the packages are published it needs `--local-repo <path to this repo>`, and lanes run with `dart run dartlane/lanes.dart <lane>` because `dartlane run` is not built yet.
+The API below is a proposal and names may change. `dartlane init` and `dartlane run` already work. Until the packages are published, `init` needs `--local-repo <path to this repo>`. `dartlane run <lane> [arguments]` starts `dartlane/lanes.dart`, passes the arguments through and exits with the lane's exit code; `dart run dartlane/lanes.dart <lane>` does the same without the CLI.
 
 ```dart
 void main(List<String> args) => dartlane(args, lanes: {
@@ -76,10 +76,26 @@ The repo will be a pub workspace (Dart 3.10+) with four packages:
 ## Repository layout
 
 ```text
-assets/   logo and images
-docs/     PRD and the GitHub issue plan
-tool/     maintenance scripts
+packages/  dartlane_core, dartlane_flutter, dartlane_firebase and the dartlane CLI
+example/   a Flutter app used to try Dartlane end to end
+assets/    logo and images
+docs/      PRD and the GitHub issue plan
+tool/      maintenance scripts
 ```
+
+## Try it from source
+
+The example app's `dartlane/` folder is generated and git-ignored. Recreate it
+from the current code whenever the CLI or the templates change:
+
+```sh
+dart pub get                       # once, from the repo root
+dart run melos run example:reset   # delete example/flutter_app/dartlane and run dartlane init again
+cd example/flutter_app
+dart run ../../packages/dartlane/bin/dartlane.dart run build
+```
+
+`example:reset` deletes everything in that folder, including files you added.
 
 ## Project planning
 

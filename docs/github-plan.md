@@ -185,7 +185,7 @@ Labels: area:cli,type:feature
 Today `run` only passes the lane name and `Lanes.runLane` calls `execute({})`, so arguments are lost.
 
 **Acceptance criteria**
-- `dartlane run beta --flavor=prod` reaches the lane as typed args.
+- `dartlane run beta --flavor=prod` reaches the lane: `run` passes everything after the lane name through untouched (so `--flavor=prod` arrives in `ctx.args`). Typed getters on `ctx.args` come with the argument-parsing issue.
 - The CLI exits with the lane's exit code.
 - Missing `dartlane/` folder gives a clear error pointing to `dartlane init`.
 
