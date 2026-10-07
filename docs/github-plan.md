@@ -174,7 +174,8 @@ Labels: area:cli,type:feature
 - Working lane in under 2 minutes from `init`.
 - No hardcoded `--path=../`.
 - Adds `.dartlane/` and `.env` to `.gitignore`.
-- Asks before overwriting an existing `dartlane/` folder.
+- Asks before overwriting an existing `dartlane/` folder. Without a terminal it refuses and points to `--force`, which overwrites only the generated files and keeps any others.
+- `init` runs `dart pub get` in the new package. Until the packages are on pub.dev that needs the hidden `--local-repo <path>` option, which writes a git-ignored `pubspec_overrides.yaml` and leaves `pubspec.yaml` clean.
 - The generated `lanes.dart` registers the ready-made lanes from the action packages, so `dartlane run <lane> --key=value` works before the user writes any lane.
 
 #### CLI: run forwards arguments and the exit code
