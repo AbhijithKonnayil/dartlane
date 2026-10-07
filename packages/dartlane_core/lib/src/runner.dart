@@ -6,6 +6,12 @@ import 'package:dartlane_core/src/lane_context.dart';
 import 'package:dartlane_core/src/lane_error.dart';
 import 'package:dartlane_core/src/lane_logger.dart';
 
+/// Option that turns on detail logging, such as the commands that are run.
+///
+/// It is read by the runner anywhere in the arguments and not passed on to
+/// the lane.
+const _verboseFlag = '--verbose';
+
 /// Entry point for a project's lanes file.
 ///
 /// ```dart
@@ -14,8 +20,9 @@ import 'package:dartlane_core/src/lane_logger.dart';
 /// });
 /// ```
 ///
-/// The first argument is the lane name and the rest go to the lane. The
-/// process exit code is set from the result of [runLanes].
+/// The first argument is the lane name and the rest go to the lane, except
+/// `--verbose`, which the runner keeps for itself. The process exit code is set
+/// from the result of [runLanes].
 Future<void> dartlane(
   List<String> args, {
   required Map<String, Lane> lanes,
@@ -32,23 +39,35 @@ Future<void> dartlane(
 /// is printed without a stack trace and the error's own exit code is returned.
 /// The stack trace is only logged at detail level, so it shows with verbose
 /// logging. Any other exception is reported as unexpected and returns
-/// [ExitCodes.failure]. Pass [logger] and [env] to control output and
-/// environment in tests.
+/// [ExitCodes.failure].
+///
+/// `--verbose` anywhere in [args] turns on detail logging and is not passed to
+/// the lane. Without a [logger], one is created from [env] (the process
+/// environment by default), so GitHub Actions gets annotations and CI never
+/// prompts. Pass [logger] and [env] to control output and environment in
+/// tests.
 Future<int> runLanes(
   List<String> args, {
   required Map<String, Lane> lanes,
   LaneLogger? logger,
   Map<String, String>? env,
 }) async {
-  final log = logger ?? LaneLogger();
+  final verbose = args.contains(_verboseFlag);
+  final laneArgs = [
+    for (final arg in args)
+      if (arg != _verboseFlag) arg,
+  ];
 
-  if (args.isEmpty) {
+  final log = logger ?? LaneLogger.fromEnvironment(env ?? Platform.environment);
+  if (verbose) log.verbose = true;
+
+  if (laneArgs.isEmpty) {
     log.error('No lane given.');
     _printLanes(log, lanes);
     return ExitCodes.usage;
   }
 
-  final name = args.first;
+  final name = laneArgs.first;
   final selected = lanes[name];
   if (selected == null) {
     log.error('Unknown lane "$name".');
@@ -56,7 +75,7 @@ Future<int> runLanes(
     return ExitCodes.usage;
   }
 
-  final ctx = LaneContext(args: args.sublist(1), env: env, logger: log);
+  final ctx = LaneContext(args: laneArgs.sublist(1), env: env, logger: log);
   try {
     await selected.run(ctx);
   } on LaneError catch (error, stackTrace) {
