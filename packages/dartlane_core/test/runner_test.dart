@@ -1,17 +1,13 @@
 import 'package:dartlane_core/dartlane_core.dart';
+import 'package:dartlane_core/testing.dart';
 import 'package:test/test.dart';
 
-import 'support/recording_logger.dart';
 import 'support/sample_actions.dart';
 
 void main() {
-  late List<String> lines;
-  late LaneLogger logger;
+  late FakeLaneLogger logger;
 
-  setUp(() {
-    lines = [];
-    logger = recordingLogger(lines);
-  });
+  setUp(() => logger = FakeLaneLogger());
 
   group('runLanes', () {
     test('runs a plain function lane that calls actions', () async {
@@ -62,10 +58,10 @@ void main() {
         logger: logger,
       );
       expect(code, ExitCodes.usage);
-      expect(lines, contains('error: Unknown lane "nope".'));
-      expect(lines, contains('Available lanes:'));
-      expect(lines, contains('  beta   Ship to QA'));
-      expect(lines, contains('  alpha  Ship to devs'));
+      expect(logger.lines, contains('error: Unknown lane "nope".'));
+      expect(logger.lines, contains('Available lanes:'));
+      expect(logger.lines, contains('  beta   Ship to QA'));
+      expect(logger.lines, contains('  alpha  Ship to devs'));
     });
 
     test('missing lane name lists the available lanes and fails', () async {
@@ -75,8 +71,8 @@ void main() {
         logger: logger,
       );
       expect(code, ExitCodes.usage);
-      expect(lines, contains('error: No lane given.'));
-      expect(lines, contains('  beta  Ship to QA'));
+      expect(logger.lines, contains('error: No lane given.'));
+      expect(logger.lines, contains('  beta  Ship to QA'));
     });
 
     test('a failing lane exits non-zero', () async {
@@ -86,7 +82,7 @@ void main() {
         logger: logger,
       );
       expect(code, ExitCodes.failure);
-      expect(lines.any((l) => l.contains('Lane "bad" failed')), isTrue);
+      expect(logger.lines.any((l) => l.contains('Lane "bad" failed')), isTrue);
     });
   });
 }
