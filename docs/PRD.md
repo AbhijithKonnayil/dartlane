@@ -127,7 +127,7 @@ void main(List<String> args) => dartlane(args, lanes: {
 | RT-4 | Shell access goes through `LaneShell` and HTTP through a `package:http` `Client` (`ctx.shell`, `ctx.sh`, `ctx.http`); `dartlane_core/testing.dart` provides fakes. |
 | RT-5 | Secrets are read through `ctx.secrets` and masked in logs. |
 | RT-6 | Errors form a small hierarchy (user error with a hint, action failed) mapped to exit codes. |
-| RT-7 | Arguments accept `--key=value` (and the legacy `key:value` form if cheap to keep). |
+| RT-7 | Arguments accept `--key=value`, `--flag` and `--no-flag`, read through typed getters on `ctx.args` (`LaneArgs`). The legacy `key:value` form is dropped. |
 
 ### 8.3 Built-in actions
 | ID | Requirement |
@@ -223,7 +223,7 @@ Capacity: serious part-time, about 15 hrs/week **(decided)**.
 4. Is `describe()` required or optional for custom actions?
 5. Ship a `dartlane create action` scaffolder before 0.1.0 or after?
 6. Final confirmation of release-automation-layer positioning, plugin-as-package, and env-vars-plus-`.env` for secrets.
-7. How exactly does the legacy `key:value` argument format migrate, if at all? (Existing lane names migrate as ready-made lanes exported by the action packages and registered by `init`; see 8.4.)
+7. ~~How do existing lane names and the legacy `key:value` argument format migrate?~~ Decided: lane names migrate as ready-made lanes exported by the action packages and registered by `init` (see 8.4). The `key:value` format is dropped: it is ambiguous with values that contain colons, and arguments never reached lanes in the old code (see RT-7).
 
 ## 16. Known issues in the current code (input to the refactor)
 

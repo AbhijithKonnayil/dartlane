@@ -199,6 +199,13 @@ Parse `--key=value` into `ctx.args` with typed getters (`string`, `bool`, `int`,
 - Values containing commas and colons (for example tester emails) parse correctly.
 - Decision on the legacy format recorded in the issue.
 
+**Decisions**
+- Accepted forms: `--key=value`, `--flag` and `--no-flag`. Only the first `=` splits, so values keep `=`, `:`, `,` and `@`.
+- `--key value` (value in the next word) is not supported. It is ambiguous with a flag followed by a positional argument, so the next word stays positional.
+- The legacy `key:value` format is dropped. It was ambiguous with values that contain colons (URLs, Windows paths, `app:id`), and arguments never reached lanes in the old code, so nothing depends on it. `flavor:prod` now arrives as the positional argument `flavor:prod`, not an error.
+- `ctx.args` is a `LaneArgs` with `string`, `requireString`, `integer`, `requireInteger`, `flag`, `list`, `has`, `names`, `positional`, `raw` and `expectOnly`. A missing or invalid value is a `UserError` with a hint (exit code 64).
+- `string` never splits, so values with commas stay whole. `list` splits at commas and collects repeated options; pass `commaSeparated: false` for values that may contain commas, such as `--dart-define`.
+
 #### CLI: list command
 
 Labels: area:cli,type:feature
