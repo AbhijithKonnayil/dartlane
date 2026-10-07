@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dartlane/src/version.dart';
+import 'package:dartlane/src/version.g.dart';
 import 'package:dartlane_core/dartlane_core.dart';
 
 /// Checks that the Dart SDK running Dartlane is new enough.

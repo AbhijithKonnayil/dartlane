@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:dartlane/src/init/app_project.dart';
 import 'package:dartlane/src/render_template.dart';
 import 'package:dartlane/src/templates.g.dart';
-import 'package:dartlane/src/version.dart';
+import 'package:dartlane/src/version.g.dart';
 import 'package:path/path.dart' as p;
 
 /// The nested `dartlane/` package inside a project.
@@ -49,6 +49,7 @@ class LanePackage {
         'package_name': '${project.name}_dartlane',
         'app_name': project.name,
         'version': dartlaneVersion,
+        'minimum_dart': minimumDartVersion,
       }),
       'lanes.dart': Templates.lanes,
       'config.dart': Templates.config,

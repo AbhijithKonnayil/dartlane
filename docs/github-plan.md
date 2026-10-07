@@ -244,6 +244,15 @@ Replace the template description string, verify `dartlane update` and the pub.de
 **Acceptance criteria**
 - `dartlane --help` and `dartlane --version` show correct text.
 
+**What was done**
+- **Description:** `dartlane --help` starts with "Release automation for Flutter and Dart, written in Dart." and lists `doctor`, `init`, `list`, `run` and `update`. The new code has none of the "A Very Good Project created by Very Good CLI" text.
+- **`--version`:** prints the version alone (`0.0.1`) and exits 0. It needs no command and makes no network call.
+- **Version file:** `lib/src/version.g.dart` is generated from `pubspec.yaml` by `tool/generate_version.dart` (`melos run generate`). It holds `dartlaneVersion` (the `version`) and `minimumDartVersion` (the lower bound of the `sdk` constraint), so neither is typed by hand. The `init` template takes both through placeholders. A test fails if the file is out of date, so after `melos version` run `melos run generate`.
+- **`dartlane update`:** asks pub.dev for the latest version. If it is newer than the installed one it runs `dart pub global activate dartlane <version>` and shows its output; if not, it says it is already the latest. It fails clearly when pub.dev cannot be reached or the package is not published. It always asks pub.dev and ignores the cache.
+- **Update notice:** after a command, `Update available! 0.0.1 → 0.2.0` and the `dartlane update` hint are printed. The check runs while the command runs, asks pub.dev at most once a day (the result is kept in `~/.dartlane/update_check.json`, failures and "not published" included, so being offline costs nothing), and has a 2 second timeout. It only runs on a terminal, so never on CI or when output is piped, never for `update`, `help` or `--version`, and can be turned off with `DARTLANE_NO_UPDATE_CHECK=1`.
+
+**Before publishing.** The name `dartlane` is not taken on pub.dev today. Until it is published under your account, anyone could register it, and `dartlane update` would then install their package. Reserve it with the first release.
+
 #### #42 Core: --dry-run using LaneAction.describe()
 
 Labels: area:core,type:feature

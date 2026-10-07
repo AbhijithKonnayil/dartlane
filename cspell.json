@@ -32,7 +32,8 @@
     "refactorable",
     "scaffolder",
     "sysexits",
-    "tmpl"
+    "tmpl",
+    "USERPROFILE"
   ],
   "ignoreRegExpList": [
     "/\\|\\s*[0-9a-f]{6}\\s*\\|/"

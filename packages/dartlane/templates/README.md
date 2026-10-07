@@ -5,7 +5,7 @@ them here, as normal files.
 
 | File | Written as | Placeholders |
 |---|---|---|
-| `pubspec.yaml.tmpl` | `dartlane/pubspec.yaml` | `{{package_name}}`, `{{app_name}}`, `{{version}}` |
+| `pubspec.yaml.tmpl` | `dartlane/pubspec.yaml` | `{{package_name}}`, `{{app_name}}`, `{{version}}`, `{{minimum_dart}}` |
 | `lanes.dart` | `dartlane/lanes.dart` | none |
 | `config.dart` | `dartlane/config.dart` | none |
 | `pubspec_overrides.yaml.tmpl` | `dartlane/pubspec_overrides.yaml`, only with `--local-repo` | `{{repo}}` |

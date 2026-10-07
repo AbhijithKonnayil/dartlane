@@ -42,6 +42,15 @@ dart run melos version --no-git-tag-version --no-git-commit   # preview-style ru
 Melos bumps only packages that changed, and bumps dependents so the versions stay
 consistent.
 
+The CLI reads its version from a generated file, `packages/dartlane/lib/src/version.g.dart`.
+After `melos version`, regenerate it and commit it with the version bump:
+
+```sh
+dart run melos run generate
+```
+
+A test fails if the file does not match `pubspec.yaml`, so forgetting is caught.
+
 ## Publishing
 
 ```sh

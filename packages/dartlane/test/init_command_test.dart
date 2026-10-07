@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:dartlane/dartlane.dart';
-import 'package:dartlane/src/version.dart';
+import 'package:dartlane/src/version.g.dart';
 import 'package:dartlane_core/dartlane_core.dart';
 import 'package:dartlane_core/testing.dart';
 import 'package:path/path.dart' as p;

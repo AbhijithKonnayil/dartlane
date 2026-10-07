@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:dartlane/src/render_template.dart';
 import 'package:dartlane/src/templates.g.dart';
-import 'package:dartlane/src/version.dart';
+import 'package:dartlane/src/version.g.dart';
 import 'package:test/test.dart';
 import 'package:yaml/yaml.dart';
 
@@ -40,23 +40,28 @@ void main() {
     }
   });
 
-  test('the generated pubspec has no placeholders left once rendered', () {
+  group('the generated pubspec', () {
     final rendered = renderTemplate(Templates.pubspec, {
       'package_name': 'x_dartlane',
       'app_name': 'x',
       'version': dartlaneVersion,
+      'minimum_dart': minimumDartVersion,
     });
-    expect(rendered, isNot(contains('{{')));
-    final yaml = loadYaml(rendered) as YamlMap;
-    expect(yaml['name'], 'x_dartlane');
-  });
 
-  test(
-    'the generated pubspec asks for the minimum Dart that doctor checks',
-    () {
-      expect(Templates.pubspec, contains('sdk: ^$minimumDartVersion'));
-    },
-  );
+    test('has no placeholders left once rendered', () {
+      expect(rendered, isNot(contains('{{')));
+      expect((loadYaml(rendered) as YamlMap)['name'], 'x_dartlane');
+    });
+
+    test('asks for the minimum Dart that doctor checks', () {
+      expect(rendered, contains('sdk: ^$minimumDartVersion'));
+    });
+
+    test('depends on the packages at this version', () {
+      expect(rendered, contains('dartlane_core: ^$dartlaneVersion'));
+      expect(rendered, contains('dartlane_flutter: ^$dartlaneVersion'));
+    });
+  });
 
   test('minimumDartVersion matches the sdk constraint in pubspec.yaml', () {
     final pubspec =

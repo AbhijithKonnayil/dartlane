@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:dartlane/src/doctor/dart_sdk_check.dart';
 import 'package:dartlane/src/doctor/project_checks.dart';
-import 'package:dartlane/src/version.dart';
+import 'package:dartlane/src/version.g.dart';
 import 'package:dartlane_core/testing.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
