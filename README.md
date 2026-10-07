@@ -32,7 +32,7 @@ scripts. Dartlane aims to fix the pain points of that setup:
 
 ## Planned usage
 
-The API below is a proposal and names may change.
+The API below is a proposal and names may change. `dartlane init` already works; until the packages are published it needs `--local-repo <path to this repo>`, and lanes run with `dart run dartlane/lanes.dart <lane>` because `dartlane run` is not built yet.
 
 ```dart
 void main(List<String> args) => dartlane(args, lanes: {

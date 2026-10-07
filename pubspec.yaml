@@ -35,6 +35,9 @@ melos:
     fix:
       description: Apply automatic fixes (dart fix) and format every package.
       exec: dart fix --apply && dart format .
+    generate:
+      description: Regenerate generated code (the dartlane init templates).
+      run: dart run packages/dartlane/tool/generate_templates.dart
     deps:
       description: Enforce workspace dependency rules (no path deps, no cycles).
       run: ./tool/check_dependencies.sh
