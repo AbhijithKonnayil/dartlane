@@ -92,6 +92,58 @@ void main() {
     });
   });
 
+  group('runLanes logging', () {
+    final lane = Lane('Log', (ctx) {
+      ctx.logger.detail('a detail');
+      ctx.logger.info('args: ${ctx.args}');
+    });
+
+    test('detail output is hidden by default', () async {
+      await runLanes(['go'], lanes: {'go': lane}, logger: logger);
+
+      expect(logger.lines, contains('args: []'));
+      expect(logger.lines, isNot(contains('a detail')));
+    });
+
+    test('--verbose shows detail output', () async {
+      await runLanes(['go', '--verbose'], lanes: {'go': lane}, logger: logger);
+
+      expect(logger.lines, contains('a detail'));
+    });
+
+    test('--verbose can come before the lane name', () async {
+      await runLanes(['--verbose', 'go'], lanes: {'go': lane}, logger: logger);
+
+      expect(logger.lines, contains('a detail'));
+    });
+
+    test('--verbose is not passed on to the lane', () async {
+      await runLanes(
+        ['go', '--flavor=prod', '--verbose'],
+        lanes: {'go': lane},
+        logger: logger,
+      );
+
+      expect(logger.lines, contains('args: [--flavor=prod]'));
+    });
+
+    test('a failure is annotated on GitHub Actions', () async {
+      final github = FakeLaneLogger(githubActions: true);
+
+      final code = await runLanes(
+        ['go'],
+        lanes: {'go': Lane('Go', (ctx) => ctx.run(const RejectedAction()))},
+        logger: github,
+      );
+
+      expect(code, ExitCodes.failure);
+      expect(
+        github.lines,
+        contains('::error::Upload rejected with status 500'),
+      );
+    });
+  });
+
   group('runLanes errors', () {
     Future<int> runWith(Action<void, void> action, LaneLogger logger) =>
         runLanes(
