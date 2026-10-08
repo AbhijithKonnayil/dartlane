@@ -30,6 +30,8 @@ scripts. Dartlane aims to fix the pain points of that setup:
 - **Lane:** a workflow you write as a Dart function that calls actions in order and
   passes results between them.
 
+New here? Follow the [quick start](docs/quick-start.md).
+
 ## Planned usage
 
 The API below is a proposal and names may change. `dartlane init`, `dartlane run`, `dartlane list`, `dartlane doctor` and `dartlane update` already work, and `dartlane --version` prints the version. `dartlane run <lane> --dry-run` prints what a lane would do without doing it (a best-effort preview). Until the packages are published, `init` needs `--local-repo <path to this repo>`. `dartlane run <lane> [arguments]` starts `dartlane/lanes.dart`, passes the arguments through and exits with the lane's exit code; `dart run dartlane/lanes.dart <lane>` does the same without the CLI.
@@ -90,7 +92,7 @@ The repo will be a pub workspace (Dart 3.10+) with four packages:
 packages/  dartlane_core, dartlane_flutter, dartlane_firebase and the dartlane CLI
 example/   a Flutter app used to try Dartlane end to end
 assets/    logo and images
-docs/      PRD and the GitHub issue plan
+docs/      quick start, PRD and the GitHub issue plan
 tool/      maintenance scripts
 ```
 
