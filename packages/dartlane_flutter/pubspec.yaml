@@ -1,7 +1,6 @@
 name: dartlane_flutter
 description: Flutter actions for Dartlane - build, analyze, test and version.
 version: 0.0.1
-publish_to: none
 resolution: workspace
 
 environment:

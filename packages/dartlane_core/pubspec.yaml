@@ -1,7 +1,6 @@
 name: dartlane_core
 description: Core runtime for Dartlane - actions, context, runner and test fakes.
 version: 0.0.1
-publish_to: none
 resolution: workspace
 
 environment:

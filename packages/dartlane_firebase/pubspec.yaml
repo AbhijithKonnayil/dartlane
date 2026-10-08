@@ -1,7 +1,6 @@
 name: dartlane_firebase
 description: Firebase App Distribution action for Dartlane.
 version: 0.0.1
-publish_to: none
 resolution: workspace
 
 environment:
