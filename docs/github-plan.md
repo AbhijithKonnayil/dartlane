@@ -368,12 +368,14 @@ Ship an example workflow that installs Flutter, runs `dartlane run beta`, and re
 
 Labels: area:ci,type:chore
 
-Use Melos to version and publish all four packages in dependency order.
+Use Melos to version and publish all four packages in dependency order. Publish prereleases first (`0.1.0-dev.1`, then `0.1.0-rc.1`), because a published version can never be reused. Test each on a clean machine, then graduate to `0.1.0`.
 
 **Acceptance criteria**
-- All four packages are on pub.dev at 0.1.0.
-- `dart pub global activate dartlane` works on a clean machine.
+- `publish_to: none` is removed from all four packages in the same change, so no package depends on an unpublished one.
+- `0.1.0-dev.1` of all four packages is on pub.dev and `dart pub global activate dartlane 0.1.0-dev.1` followed by `dartlane init` and `dartlane run` works on a clean machine, with no `--local-repo`.
 - Verify pub workspace behaviour with global activation before publishing.
+- `dartlane init` writes a `pubspec.yaml` that resolves against a prerelease (`^0.1.0-dev.1`), and the update notice works for a user on a prerelease.
+- All four packages are on pub.dev at 0.1.0, and `dart pub global activate dartlane` (no version) works on a clean machine.
 
 #### #52 README rewrite with honest scope and roadmap
 
