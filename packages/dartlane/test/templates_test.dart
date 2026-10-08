@@ -60,6 +60,7 @@ void main() {
     test('depends on the packages at this version', () {
       expect(rendered, contains('dartlane_core: ^$dartlaneVersion'));
       expect(rendered, contains('dartlane_flutter: ^$dartlaneVersion'));
+      expect(rendered, contains('dartlane_firebase: ^$dartlaneVersion'));
     });
   });
 

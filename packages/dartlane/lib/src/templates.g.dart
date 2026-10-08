@@ -17,11 +17,13 @@ environment:
 dependencies:
   dartlane_core: ^{{version}}
   dartlane_flutter: ^{{version}}
+  dartlane_firebase: ^{{version}}
 ''';
 
   /// `dartlane/lanes.dart`.
   static const lanes = r'''
 import 'package:dartlane_core/dartlane_core.dart';
+import 'package:dartlane_firebase/dartlane_firebase.dart';
 import 'package:dartlane_flutter/dartlane_flutter.dart';
 
 import 'config.dart';
@@ -40,6 +42,12 @@ import 'config.dart';
 Future<void> main(List<String> args) => dartlane(
   args,
   lanes: {
+    // Ready-made lanes, for example
+    // `dartlane run firebase_distribute --app=<id> --file=app.apk`.
+    // `dartlane list` shows them all.
+    ...flutterLanes(),
+    ...firebaseLanes(),
+
     'build': Lane('Build a release APK', (ctx) async {
       final build = await ctx.run(
         FlutterBuild.apk(
@@ -80,5 +88,7 @@ dependency_overrides:
     path: {{repo}}/packages/dartlane_core
   dartlane_flutter:
     path: {{repo}}/packages/dartlane_flutter
+  dartlane_firebase:
+    path: {{repo}}/packages/dartlane_firebase
 ''';
 }

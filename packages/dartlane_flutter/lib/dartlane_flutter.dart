@@ -9,3 +9,4 @@ export 'src/android_flavors.dart';
 export 'src/checks/flutter_checks.dart';
 export 'src/checks/flutter_flavors_check.dart';
 export 'src/checks/flutter_sdk_check.dart';
+export 'src/flutter_lanes.dart';

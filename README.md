@@ -52,6 +52,17 @@ dartlane doctor        # check your environment
 dartlane run beta --dry-run
 ```
 
+## Ready-made lanes
+
+`dartlane init` registers lanes from the action packages, so common steps run without writing a lane:
+
+```sh
+dartlane run flutter_build_apk --flavor=prod --mode=release
+dartlane run firebase_distribute --app=<id> --file=app.apk --groups=qa
+```
+
+Lanes: `flutter_build_apk`, `flutter_build_appbundle`, `flutter_pub_get`, `flutter_analyze`, `flutter_test` and `firebase_distribute`. Run `dartlane list` for their options. They replace the old `flutterBuildApk` and `flutterBuildAppBundle` lanes.
+
 ## Roadmap
 
 | Release | Scope |

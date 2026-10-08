@@ -261,6 +261,7 @@ void main() {
         contains('path: ${p.absolute(repo.path)}/packages/dartlane_core'),
       );
       expect(overrides, contains('packages/dartlane_flutter'));
+      expect(overrides, contains('packages/dartlane_firebase'));
       expect(read('dartlane/pubspec.yaml'), isNot(contains('path:')));
     });
 

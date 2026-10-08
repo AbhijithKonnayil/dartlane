@@ -1,4 +1,5 @@
 import 'package:dartlane_core/dartlane_core.dart';
+import 'package:dartlane_firebase/dartlane_firebase.dart';
 import 'package:dartlane_flutter/dartlane_flutter.dart';
 
 import 'config.dart';
@@ -17,6 +18,12 @@ import 'config.dart';
 Future<void> main(List<String> args) => dartlane(
   args,
   lanes: {
+    // Ready-made lanes, for example
+    // `dartlane run firebase_distribute --app=<id> --file=app.apk`.
+    // `dartlane list` shows them all.
+    ...flutterLanes(),
+    ...firebaseLanes(),
+
     'build': Lane('Build a release APK', (ctx) async {
       final build = await ctx.run(
         FlutterBuild.apk(
