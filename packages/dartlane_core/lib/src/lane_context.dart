@@ -5,6 +5,7 @@ import 'package:dartlane_core/src/lane_action.dart';
 import 'package:dartlane_core/src/lane_args.dart';
 import 'package:dartlane_core/src/lane_logger.dart';
 import 'package:dartlane_core/src/lane_shell.dart';
+import 'package:dartlane_core/src/secrets.dart';
 import 'package:http/http.dart' show Client;
 
 /// What a lane and its actions can see and use while running.
@@ -17,7 +18,8 @@ class LaneContext {
   ///
   /// [args] are the raw words after the lane name, parsed into [LaneArgs].
   /// [env] defaults to the process environment, [logger] to a [LaneLogger]
-  /// that writes to the terminal, [shell] to a [ProcessShell], and [http] to a
+  /// that writes to the terminal, [secretsProvider] to [env] and a `.env` file
+  /// in the working directory, [shell] to a [ProcessShell], and [http] to a
   /// real client that is created on first use and closed by [close].
   LaneContext({
     Iterable<String> args = const [],
@@ -26,11 +28,17 @@ class LaneContext {
     LaneLogger? logger,
     LaneShell? shell,
     Client? http,
+    SecretsProvider? secretsProvider,
   }) : args = LaneArgs.parse(args),
        env = env ?? Platform.environment,
        logger = logger ?? LaneLogger(),
        shell = shell ?? const ProcessShell(),
-       _injectedHttp = http;
+       _injectedHttp = http {
+    secrets = LaneSecrets(
+      secretsProvider ?? EnvSecretsProvider(this.env),
+      this.logger,
+    );
+  }
 
   /// Arguments given to the lane, after the lane name, parsed from the command
   /// line. See [LaneArgs] for the accepted forms and the typed getters.
@@ -55,6 +63,13 @@ class LaneContext {
 
   /// Environment variables visible to the lane.
   final Map<String, String> env;
+
+  /// Reads secrets from environment variables and an optional `.env` file, and
+  /// masks what it returns in the log.
+  ///
+  /// Masking only covers values read through here, not [env]. See
+  /// [LaneSecrets].
+  late final LaneSecrets secrets;
 
   /// Where progress and errors are written.
   final LaneLogger logger;

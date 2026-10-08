@@ -12,3 +12,4 @@ export 'src/lane_error.dart';
 export 'src/lane_logger.dart';
 export 'src/lane_shell.dart';
 export 'src/runner.dart';
+export 'src/secrets.dart';

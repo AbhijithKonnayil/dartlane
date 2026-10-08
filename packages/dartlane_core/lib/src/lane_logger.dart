@@ -60,6 +60,23 @@ class LaneLogger {
   }
 
   final mason.Logger _delegate;
+  final Set<String> _secrets = {};
+
+  /// Replaces [secret] with `***` in all output from now on.
+  ///
+  /// Called for every value read through `LaneContext.secrets`. Empty values
+  /// are ignored.
+  void mask(String secret) {
+    if (secret.isNotEmpty) _secrets.add(secret);
+  }
+
+  String _masked(String message) {
+    if (_secrets.isEmpty) return message;
+    // Longest first, so a secret that contains another is hidden whole.
+    final ordered = _secrets.toList()
+      ..sort((a, b) => b.length.compareTo(a.length));
+    return ordered.fold(message, (text, s) => text.replaceAll(s, '***'));
+  }
 
   /// Whether errors and warnings are printed as GitHub Actions annotations.
   ///
@@ -78,22 +95,22 @@ class LaneLogger {
       _delegate.level = value ? mason.Level.verbose : mason.Level.info;
 
   /// A normal progress message.
-  void info(String message) => _delegate.info(message);
+  void info(String message) => _delegate.info(_masked(message));
 
   /// Extra information, printed only when [verbose] is true.
-  void detail(String message) => _delegate.detail(message);
+  void detail(String message) => _delegate.detail(_masked(message));
 
   /// A step or lane finished successfully.
-  void success(String message) => _delegate.success(message);
+  void success(String message) => _delegate.success(_masked(message));
 
   /// Something looks wrong but the lane continues.
   ///
   /// An annotation on GitHub Actions.
   void warn(String message) {
     if (githubActions) {
-      _delegate.info(_annotation('warning', message));
+      _delegate.info(_annotation('warning', _masked(message)));
     } else {
-      _delegate.warn(message);
+      _delegate.warn(_masked(message));
     }
   }
 
@@ -102,9 +119,9 @@ class LaneLogger {
   /// An annotation on GitHub Actions.
   void error(String message) {
     if (githubActions) {
-      _delegate.info(_annotation('error', message));
+      _delegate.info(_annotation('error', _masked(message)));
     } else {
-      _delegate.err(message);
+      _delegate.err(_masked(message));
     }
   }
 
@@ -113,7 +130,7 @@ class LaneLogger {
   /// When not [interactive] it does not ask and returns [defaultValue].
   bool confirm(String message, {bool defaultValue = false}) {
     if (!interactive) return defaultValue;
-    return _delegate.confirm(message, defaultValue: defaultValue);
+    return _delegate.confirm(_masked(message), defaultValue: defaultValue);
   }
 
   // https://docs.github.com/actions/reference/workflow-commands-for-github-actions

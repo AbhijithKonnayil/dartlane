@@ -1,4 +1,5 @@
 import 'package:dartlane_core/src/lane_context.dart';
+import 'package:dartlane_core/src/secrets.dart';
 import 'package:dartlane_core/src/testing/fake_http.dart';
 import 'package:dartlane_core/src/testing/fake_lane_logger.dart';
 import 'package:dartlane_core/src/testing/fake_lane_shell.dart';
@@ -25,6 +26,7 @@ class FakeLaneContext extends LaneContext {
          shell: FakeLaneShell(),
          http: FakeHttp(dryRun: dryRun),
          logger: FakeLaneLogger(verbose: verbose),
+         secretsProvider: EnvSecretsProvider(env, dotEnvPath: null),
        );
 
   FakeLaneContext._({
@@ -34,10 +36,17 @@ class FakeLaneContext extends LaneContext {
     required FakeLaneShell shell,
     required FakeHttp http,
     required FakeLaneLogger logger,
+    required SecretsProvider secretsProvider,
   }) : _shell = shell,
        _http = http,
        _logger = logger,
-       super(args: args, shell: shell, http: http, logger: logger);
+       super(
+         args: args,
+         shell: shell,
+         http: http,
+         logger: logger,
+         secretsProvider: secretsProvider,
+       );
 
   final FakeLaneShell _shell;
   final FakeHttp _http;
