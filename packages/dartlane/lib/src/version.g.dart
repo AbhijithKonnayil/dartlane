@@ -5,7 +5,7 @@
 ///
 /// It is the version `dartlane --version` prints and the version the generated
 /// `dartlane/` package depends on.
-const dartlaneVersion = '0.0.1';
+const dartlaneVersion = '0.1.0-dev.1';
 
 /// The oldest Dart SDK that can run Dartlane: the lower bound of the `sdk`
 /// constraint in `pubspec.yaml`.

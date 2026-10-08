@@ -1,13 +1,16 @@
 name: dartlane_firebase
 description: Firebase App Distribution action for Dartlane.
-version: 0.0.1
+version: 0.1.0-dev.1
+homepage: https://dartlane.aioncw.com/
+repository: https://github.com/AbhijithKonnayil/dartlane/tree/dev/packages/dartlane_firebase
+issue_tracker: https://github.com/AbhijithKonnayil/dartlane/issues
 resolution: workspace
 
 environment:
   sdk: ^3.10.0
 
 dependencies:
-  dartlane_core: any
+  dartlane_core: ^0.1.0-dev.1
   googleapis_auth: ^2.0.0
   http: ^1.6.0
   path: ^1.9.1

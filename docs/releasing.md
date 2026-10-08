@@ -36,7 +36,7 @@ Use the package name as scope when a change touches one package, for example
 
 ```sh
 dart run melos version            # bump versions and changelogs from commits
-dart run melos version --no-git-tag-version --no-git-commit   # preview-style run
+dart run melos version --no-git-tag-version --no-git-commit-version   # preview-style run
 ```
 
 Melos bumps only packages that changed, and bumps dependents so the versions stay
