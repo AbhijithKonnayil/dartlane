@@ -8,3 +8,4 @@ export 'src/flutter_checks.dart';
 export 'src/flutter_flavors_check.dart';
 export 'src/flutter_gates.dart';
 export 'src/flutter_sdk_check.dart';
+export 'src/pubspec_version.dart';
