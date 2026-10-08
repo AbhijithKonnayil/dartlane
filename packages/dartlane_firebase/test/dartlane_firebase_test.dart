@@ -176,6 +176,97 @@ void main() {
     );
   });
 
+  group('from files', () {
+    FirebaseDistribute fromFiles({
+      String? notes,
+      String? notesFile,
+      String? testersFile,
+      String? groupsFile,
+      List<String> testers = const [],
+    }) => FirebaseDistribute(
+      apk,
+      app: _app,
+      releaseNotes: notes,
+      releaseNotesFile: notesFile,
+      testersFile: testersFile,
+      groupsFile: groupsFile,
+      testers: testers,
+      pollInterval: Duration.zero,
+      client: ctx.http,
+    );
+
+    String write(String name, String text) {
+      final path = '${dir.path}/$name';
+      File(path).writeAsStringSync(text);
+      return path;
+    }
+
+    test('reads notes, testers and groups from files', () async {
+      final result = await ctx.run(
+        fromFiles(
+          notesFile: write('notes.md', '\n# 1.2.3\n- fix\n\n'),
+          testersFile: write(
+            'testers.txt',
+            '# qa team\na@b.c, d@e.f\n\ng@h.i\r\n',
+          ),
+          groupsFile: write('groups.txt', 'qa\ndevs\n'),
+        ),
+      );
+
+      expect(result.distributed, isTrue);
+      final requests = ctx.http.requests;
+      expect(jsonDecode(requests[2].body), {
+        'releaseNotes': {'text': '# 1.2.3\n- fix'},
+      });
+      expect(jsonDecode(requests[3].body), {
+        'testerEmails': ['a@b.c', 'd@e.f', 'g@h.i'],
+        'groupAliases': ['qa', 'devs'],
+      });
+    });
+
+    test('inline testers and a file are merged without duplicates', () async {
+      await ctx.run(
+        fromFiles(
+          testers: ['a@b.c', 'x@y.z'],
+          testersFile: write('t.txt', 'a@b.c\nn@m.o'),
+        ),
+      );
+      expect(jsonDecode(ctx.http.requests.last.body), {
+        'testerEmails': ['a@b.c', 'x@y.z', 'n@m.o'],
+      });
+    });
+
+    test('inline notes still work', () async {
+      await ctx.run(fromFiles(notes: 'hi', testers: ['a@b.c']));
+      expect(jsonDecode(ctx.http.requests[2].body), {
+        'releaseNotes': {'text': 'hi'},
+      });
+    });
+
+    test('bad inputs fail before anything is sent', () async {
+      for (final action in [
+        fromFiles(notes: 'a', notesFile: write('n.txt', 'b')),
+        fromFiles(notesFile: '${dir.path}/none.md'),
+        fromFiles(testersFile: '${dir.path}/none.txt'),
+        fromFiles(testersFile: write('bad.txt', 'not-an-email')),
+      ]) {
+        await expectLater(ctx.run(action), throwsA(isA<UserError>()));
+      }
+      expect(ctx.http.requests, isEmpty);
+    });
+
+    test('dry run does not need the files yet', () async {
+      final dry = FakeLaneContext(dryRun: true);
+      final result = await dry.run(
+        fromFiles(
+          notesFile: '${dir.path}/later.md',
+          testersFile: '${dir.path}/later.txt',
+        ),
+      );
+      expect(result.distributed, isTrue);
+    });
+  });
+
   test('missing file and bad app id are UserErrors', () {
     expect(
       ctx.run(FirebaseDistribute('${dir.path}/none.apk', app: _app)),

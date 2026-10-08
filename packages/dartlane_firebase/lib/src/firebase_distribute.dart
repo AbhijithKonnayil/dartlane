@@ -84,6 +84,9 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
     this.groups = const [],
     this.testers = const [],
     this.releaseNotes,
+    this.releaseNotesFile,
+    this.testersFile,
+    this.groupsFile,
     this.uploadTimeout = const Duration(minutes: 5),
     this.pollInterval = const Duration(seconds: 2),
     this.serviceAccountFile,
@@ -103,7 +106,22 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
   final List<String> testers;
 
   /// Text shown to testers with the release.
+  ///
+  /// Give this or [releaseNotesFile], not both.
   final String? releaseNotes;
+
+  /// A text file whose contents are the release notes, for example a changelog
+  /// written by an earlier step.
+  final String? releaseNotesFile;
+
+  /// A file of tester emails, added to [testers].
+  ///
+  /// One per line or separated by commas. Blank lines and lines starting with
+  /// `#` are ignored.
+  final String? testersFile;
+
+  /// A file of group aliases, added to [groups]. Same format as [testersFile].
+  final String? groupsFile;
 
   /// How long the upload, and then the wait for Firebase to process it, may
   /// each take before the action fails.
@@ -140,7 +158,11 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
     return DistributionResult(
       releaseName: '${_appName()}/releases/dry-run',
       outcome: ReleaseOutcome.created,
-      distributed: groups.isNotEmpty || testers.isNotEmpty,
+      distributed:
+          groups.isNotEmpty ||
+          testers.isNotEmpty ||
+          groupsFile != null ||
+          testersFile != null,
     );
   }
 
@@ -148,12 +170,13 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
   Future<DistributionResult> run(LaneContext ctx) async {
     final appName = _appName();
     final file = _checkFile();
+    final inputs = _readInputs();
     final owned = client == null;
     final web =
         client ??
         await connectToFirebase(ctx, serviceAccountFile: serviceAccountFile);
     try {
-      return await _distribute(ctx, web, appName, file);
+      return await _distribute(ctx, web, appName, file, inputs);
     } finally {
       if (owned) web.close();
     }
@@ -164,6 +187,7 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
     http.Client web,
     String appName,
     File file,
+    _Inputs inputs,
   ) async {
     ctx.logger.info('  uploading ${p.basename(binary)}');
     final operation = await _upload(web, appName, file);
@@ -179,7 +203,7 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
       );
     }
 
-    final notes = releaseNotes;
+    final notes = inputs.notes;
     if (notes != null && notes.isNotEmpty) {
       await _json(
         web,
@@ -192,11 +216,11 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
       );
     }
 
-    final distribute = groups.isNotEmpty || testers.isNotEmpty;
+    final distribute = inputs.testers.isNotEmpty || inputs.groups.isNotEmpty;
     if (distribute) {
       await _json(web, 'POST', '$_host/v1/$name:distribute', {
-        if (testers.isNotEmpty) 'testerEmails': testers,
-        if (groups.isNotEmpty) 'groupAliases': groups,
+        if (inputs.testers.isNotEmpty) 'testerEmails': inputs.testers,
+        if (inputs.groups.isNotEmpty) 'groupAliases': inputs.groups,
       }, 'distribute the release');
     } else {
       ctx.logger.warn(
@@ -234,6 +258,62 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
     }
     return 'projects/${parts[1]}/apps/$app';
   }
+
+  /// The notes, testers and groups, with the files read and merged in.
+  ///
+  /// Read before signing in or uploading, so a bad file fails the lane early.
+  _Inputs _readInputs() {
+    if (releaseNotes != null && releaseNotesFile != null) {
+      throw const UserError(
+        'Both releaseNotes and releaseNotesFile were given.',
+        hint: 'Use one of them.',
+      );
+    }
+    final notesFile = releaseNotesFile;
+    final notes = notesFile == null
+        ? releaseNotes
+        : _readFile(notesFile, 'release notes').trim();
+
+    final testerFile = testersFile;
+    final fileTesters = testerFile == null
+        ? const <String>[]
+        : _readList(testerFile, 'testers');
+    for (final email in fileTesters) {
+      if (!email.contains('@')) {
+        throw UserError(
+          '$testerFile has "$email", which is not an email address.',
+          hint: 'List one tester email per line.',
+        );
+      }
+    }
+    final groupFile = groupsFile;
+    return _Inputs(
+      notes: notes,
+      testers: {...testers, ...fileTesters}.toList(),
+      groups: {
+        ...groups,
+        if (groupFile != null) ..._readList(groupFile, 'groups'),
+      }.toList(),
+    );
+  }
+
+  String _readFile(String path, String what) {
+    final file = File(path);
+    if (!file.existsSync()) {
+      throw UserError(
+        'The $what file $path does not exist.',
+        hint: 'Check the path, or write the file in an earlier step.',
+      );
+    }
+    return file.readAsStringSync();
+  }
+
+  List<String> _readList(String path, String what) => [
+    for (final line in _readFile(path, what).split(RegExp(r'\r?\n')))
+      if (!line.trim().startsWith('#'))
+        for (final item in line.split(','))
+          if (item.trim().isNotEmpty) item.trim(),
+  ];
 
   File _checkFile() {
     final file = File(binary);
@@ -349,4 +429,16 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
     '.ipa' => 'application/octet-stream',
     _ => 'application/octet-stream',
   };
+}
+
+class _Inputs {
+  const _Inputs({
+    required this.notes,
+    required this.testers,
+    required this.groups,
+  });
+
+  final String? notes;
+  final List<String> testers;
+  final List<String> groups;
 }
