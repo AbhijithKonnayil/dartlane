@@ -9,6 +9,8 @@ environment:
 
 dependencies:
   dartlane_core: any
+  http: ^1.6.0
+  path: ^1.9.1
 
 dev_dependencies:
   test: ^1.25.0
