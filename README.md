@@ -30,7 +30,7 @@ scripts. Dartlane aims to fix the pain points of that setup:
 - **Lane:** a workflow you write as a Dart function that calls actions in order and
   passes results between them.
 
-New here? Follow the [quick start](docs/quick-start.md).
+New here? Follow the [quick start](docs/quick-start.md), then read how to [write a lane and an action](docs/writing-lanes-and-actions.md).
 
 ## Planned usage
 
