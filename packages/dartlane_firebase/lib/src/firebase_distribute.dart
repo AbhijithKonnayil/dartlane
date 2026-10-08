@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dartlane_core/dartlane_core.dart';
+import 'package:dartlane_firebase/src/firebase_credentials.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
@@ -67,8 +68,9 @@ class DistributionResult {
 /// ```
 ///
 /// The file is always the one you pass, normally `BuildResult.path`; it is
-/// never searched for. Requests go through `ctx.http`, which must be
-/// authorized for the `cloud-platform` scope, or pass your own [client].
+/// never searched for. Before uploading it signs in with a service account
+/// file or Application Default Credentials (see [connectToFirebase]), so
+/// missing credentials fail the lane before anything is sent.
 ///
 /// Every failure throws: a missing file, a rejected upload or an operation that
 /// ends in an error is an `ActionFailed`, so the lane fails. Giving no testers
@@ -84,6 +86,7 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
     this.releaseNotes,
     this.uploadTimeout = const Duration(minutes: 5),
     this.pollInterval = const Duration(seconds: 2),
+    this.serviceAccountFile,
     this.client,
   });
 
@@ -109,7 +112,15 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
   /// How long to wait between checks of the processing status.
   final Duration pollInterval;
 
-  /// The HTTP client to use instead of `ctx.http`.
+  /// The service account JSON file to sign in with.
+  ///
+  /// Defaults to the `GOOGLE_APPLICATION_CREDENTIALS` environment variable, and
+  /// then to Application Default Credentials. See [connectToFirebase].
+  final String? serviceAccountFile;
+
+  /// An already authorized HTTP client to use instead of signing in.
+  ///
+  /// Mostly for tests. It is not closed by the action.
   final http.Client? client;
 
   @override
@@ -137,8 +148,23 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
   Future<DistributionResult> run(LaneContext ctx) async {
     final appName = _appName();
     final file = _checkFile();
-    final web = client ?? ctx.http;
+    final owned = client == null;
+    final web =
+        client ??
+        await connectToFirebase(ctx, serviceAccountFile: serviceAccountFile);
+    try {
+      return await _distribute(ctx, web, appName, file);
+    } finally {
+      if (owned) web.close();
+    }
+  }
 
+  Future<DistributionResult> _distribute(
+    LaneContext ctx,
+    http.Client web,
+    String appName,
+    File file,
+  ) async {
     ctx.logger.info('  uploading ${p.basename(binary)}');
     final operation = await _upload(web, appName, file);
     final done = await _waitFor(web, operation);

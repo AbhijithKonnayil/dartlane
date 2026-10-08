@@ -9,6 +9,7 @@ environment:
 
 dependencies:
   dartlane_core: any
+  googleapis_auth: ^2.0.0
   http: ^1.6.0
   path: ^1.9.1
 

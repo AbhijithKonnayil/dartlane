@@ -61,6 +61,7 @@ void main() {
     releaseNotes: notes,
     uploadTimeout: timeout,
     pollInterval: Duration.zero,
+    client: ctx.http,
   );
 
   test('uploads, sets notes and distributes', () async {
