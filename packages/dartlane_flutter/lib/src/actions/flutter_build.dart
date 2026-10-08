@@ -1,5 +1,5 @@
 import 'package:dartlane_core/dartlane_core.dart';
-import 'package:dartlane_flutter/src/build_result.dart';
+import 'package:dartlane_flutter/src/actions/build_result.dart';
 import 'package:path/path.dart' as p;
 
 /// What kind of file `flutter build` produces.

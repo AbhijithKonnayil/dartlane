@@ -1,4 +1,4 @@
-import 'package:dartlane_flutter/src/flutter_build.dart';
+import 'package:dartlane_flutter/src/actions/flutter_build.dart';
 
 /// What a [FlutterBuild] produced.
 class BuildResult {

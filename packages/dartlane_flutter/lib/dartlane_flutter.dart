@@ -1,11 +1,11 @@
 /// Flutter actions for Dartlane - build, analyze, test and version.
 library;
 
+export 'src/actions/build_result.dart';
+export 'src/actions/flutter_build.dart';
+export 'src/actions/flutter_gates.dart';
+export 'src/actions/pubspec_version.dart';
 export 'src/android_flavors.dart';
-export 'src/build_result.dart';
-export 'src/flutter_build.dart';
-export 'src/flutter_checks.dart';
-export 'src/flutter_flavors_check.dart';
-export 'src/flutter_gates.dart';
-export 'src/flutter_sdk_check.dart';
-export 'src/pubspec_version.dart';
+export 'src/checks/flutter_checks.dart';
+export 'src/checks/flutter_flavors_check.dart';
+export 'src/checks/flutter_sdk_check.dart';
