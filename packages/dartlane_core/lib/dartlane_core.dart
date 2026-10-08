@@ -2,6 +2,7 @@
 library;
 
 export 'src/doctor.dart';
+export 'src/dry_run.dart';
 export 'src/exit_codes.dart';
 export 'src/lane.dart';
 export 'src/lane_action.dart';

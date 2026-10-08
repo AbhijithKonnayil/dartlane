@@ -69,3 +69,49 @@ class RejectedAction extends LaneAction<void> {
   Future<void> run(LaneContext ctx) async =>
       throw const ActionFailed('Upload rejected with status 500');
 }
+
+/// An action with a side effect, to show that a dry run does not cause it.
+///
+/// [ran] becomes true when [run] is called.
+class RecordingAction extends LaneAction<void> {
+  /// Creates an action that has not run yet.
+  RecordingAction();
+
+  /// Whether [run] has been called.
+  bool ran = false;
+
+  @override
+  String describe() => 'record that it ran';
+
+  @override
+  Future<void> run(LaneContext ctx) async => ran = true;
+}
+
+/// An action that gives a placeholder in a dry run.
+///
+/// Returns `real` when run and `placeholder` in a dry run.
+class PlaceholderAction extends LaneAction<String> {
+  /// Creates the action.
+  const PlaceholderAction();
+
+  @override
+  String describe() => 'make a thing';
+
+  @override
+  Future<String> run(LaneContext ctx) async => 'real';
+
+  @override
+  String dryRunResult(LaneContext ctx) => 'placeholder';
+}
+
+/// An action whose result is nullable, so a dry run can return null for it.
+class NullableResultAction extends LaneAction<String?> {
+  /// Creates the action.
+  const NullableResultAction();
+
+  @override
+  String describe() => 'maybe make a thing';
+
+  @override
+  Future<String?> run(LaneContext ctx) async => 'real';
+}

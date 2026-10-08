@@ -134,18 +134,52 @@ class FlutterBuild extends LaneAction<BuildResult> {
       workingDirectory: workingDirectory,
     );
 
-    return BuildResult(
-      path: _builtPath(result.stdout),
-      target: target,
-      mode: mode,
-      flavor: flavor,
-      version: buildName == null
-          ? null
-          : buildNumber == null
-          ? buildName
-          : '$buildName+$buildNumber',
-    );
+    return _result(_builtPath(result.stdout));
   }
+
+  /// In a dry run: the result of a build that did not happen.
+  ///
+  /// Its `path` is where Flutter normally puts this build, so the steps after
+  /// it can describe themselves. The file does not exist. The options are
+  /// checked, so a dry run still catches a bad `--dart-define`.
+  @override
+  BuildResult dryRunResult(LaneContext ctx) {
+    _validate();
+    return _result(_withWorkingDirectory(_usualPath));
+  }
+
+  BuildResult _result(String path) => BuildResult(
+    path: path,
+    target: target,
+    mode: mode,
+    flavor: flavor,
+    version: buildName == null
+        ? null
+        : buildNumber == null
+        ? buildName
+        : '$buildName+$buildNumber',
+  );
+
+  /// Where Flutter puts this build unless the project changes it.
+  ///
+  /// Only used for a dry run. A real build reports its own path.
+  String get _usualPath {
+    final suffix = flavor == null ? mode.name : '$flavor-${mode.name}';
+    switch (target) {
+      case BuildTarget.apk:
+        return 'build/app/outputs/flutter-apk/app-$suffix.apk';
+      case BuildTarget.appbundle:
+        final folder = '${flavor ?? ''}${_capitalized(mode.name)}';
+        final directory = flavor == null ? mode.name : folder;
+        return 'build/app/outputs/bundle/$directory/app-$suffix.aab';
+    }
+  }
+
+  String _capitalized(String text) =>
+      '${text[0].toUpperCase()}${text.substring(1)}';
+
+  String _withWorkingDirectory(String path) =>
+      workingDirectory == null ? path : p.join(workingDirectory!, path);
 
   void _validate() {
     for (final define in dartDefines) {
@@ -182,6 +216,6 @@ class FlutterBuild extends LaneAction<BuildResult> {
       );
     }
     final path = match.group(1)!;
-    return workingDirectory == null ? path : p.join(workingDirectory!, path);
+    return _withWorkingDirectory(path);
   }
 }

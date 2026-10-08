@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dartlane_core/src/dry_run.dart';
 import 'package:http/http.dart';
 
 /// A request that a [FakeHttp] received.
@@ -43,7 +44,13 @@ class _Stub {
 /// lane calls a URL you did not expect.
 class FakeHttp extends BaseClient {
   /// Creates a fake client.
-  FakeHttp();
+  ///
+  /// With [dryRun] it behaves like the client of a dry run: a request that
+  /// would change something throws a [DryRunStopped] and is not recorded.
+  FakeHttp({this.dryRun = false});
+
+  /// Whether this client behaves like the client of a dry run.
+  final bool dryRun;
 
   final List<RecordedRequest> _requests = [];
   final Map<String, _Stub> _stubs = {};
@@ -65,6 +72,7 @@ class FakeHttp extends BaseClient {
 
   @override
   Future<StreamedResponse> send(BaseRequest request) async {
+    if (dryRun) DryRunClient.ensureReadOnly(request);
     final bytes = await request.finalize().toBytes();
     final recorded = RecordedRequest(
       method: request.method,

@@ -4,6 +4,14 @@ import 'package:test/test.dart';
 
 import 'support/sample_actions.dart';
 
+const _cannotMakeUp =
+    'warning: Dry run stopped: uppercase hi returns a result that a dry run '
+    'cannot make up. Override dryRunResult in the action to let a dry run '
+    'continue past it.';
+const _wontPost =
+    'warning: Dry run stopped: a dry run does not send POST '
+    'https://example.com/release.';
+
 void main() {
   late FakeLaneLogger logger;
 
@@ -143,6 +151,160 @@ void main() {
         github.lines,
         contains('::error::Upload rejected with status 500'),
       );
+    });
+  });
+
+  group('runLanes --dry-run', () {
+    final lane = Lane('Two steps', (ctx) async {
+      final made = await ctx.run(const PlaceholderAction());
+      ctx.logger.info('got $made');
+      await ctx.run(const FailingAction());
+    });
+
+    test('describes the steps instead of running them, and exits 0', () async {
+      final code = await runLanes(
+        ['go', '--dry-run'],
+        lanes: {'go': lane},
+        logger: logger,
+      );
+
+      expect(code, ExitCodes.success);
+      expect(logger.lines, [
+        'Dry run: the steps are described, not run.',
+        'Would run: make a thing',
+        'got placeholder',
+        'Would run: FailingAction',
+        'Dry run finished: 2 steps would run. Nothing was changed.',
+      ]);
+    });
+
+    test('is read anywhere and is not passed on to the lane', () async {
+      LaneContext? seen;
+
+      final code = await runLanes(
+        ['--dry-run', 'go', '--flavor=prod'],
+        lanes: {'go': Lane('Go', (ctx) => seen = ctx)},
+        logger: logger,
+      );
+
+      expect(code, ExitCodes.success);
+      expect(seen!.dryRun, isTrue);
+      expect(seen!.args.raw, ['--flavor=prod']);
+    });
+
+    test('the same lane really runs without it', () async {
+      final code = await runLanes(['go'], lanes: {'go': lane}, logger: logger);
+
+      expect(code, ExitCodes.failure);
+      expect(logger.lines, contains('got real'));
+      expect(
+        logger.lines,
+        isNot(contains('Dry run: the steps are described, not run.')),
+      );
+    });
+
+    test('says when it ran no steps', () async {
+      await runLanes(
+        ['go', '--dry-run'],
+        lanes: {'go': Lane('Go', (ctx) {})},
+        logger: logger,
+      );
+
+      expect(
+        logger.lines.last,
+        'Dry run finished: 0 steps would run. Nothing was changed.',
+      );
+    });
+
+    test('says "1 step" for one step', () async {
+      await runLanes(
+        ['go', '--dry-run'],
+        lanes: {'go': Lane('Go', (ctx) => ctx.run(RecordingAction()))},
+        logger: logger,
+      );
+
+      expect(
+        logger.lines.last,
+        'Dry run finished: 1 step would run. Nothing was changed.',
+      );
+    });
+
+    test('stops and says why at a step it cannot describe past', () async {
+      final code = await runLanes(
+        ['go', '--dry-run'],
+        lanes: {
+          'go': Lane('Go', (ctx) async {
+            await ctx.run(RecordingAction());
+            await ctx.run(const UppercaseAction('hi'));
+            await ctx.run(const PlaceholderAction()); // never reached
+          }),
+        },
+        logger: logger,
+      );
+
+      expect(code, ExitCodes.success);
+      expect(logger.lines, [
+        'Dry run: the steps are described, not run.',
+        'Would run: record that it ran',
+        'Would run: uppercase hi',
+        _cannotMakeUp,
+        'Dry run stopped after 2 steps. Nothing was changed.',
+      ]);
+    });
+
+    test('stops at a request that would change something', () async {
+      final code = await runLanes(
+        ['go', '--dry-run'],
+        lanes: {
+          'go': Lane('Go', (ctx) async {
+            await ctx.sh('git', ['tag', 'v1']);
+            await ctx.http.post(Uri.parse('https://example.com/release'));
+          }),
+        },
+        logger: logger,
+      );
+
+      expect(code, ExitCodes.success);
+      expect(
+        logger.lines,
+        containsAllInOrder([
+          'Would run: git tag v1',
+          _wontPost,
+          'Dry run stopped after 1 step. Nothing was changed.',
+        ]),
+      );
+    });
+
+    test('a user error in the lane is still an error', () async {
+      final code = await runLanes(
+        ['go', '--dry-run'],
+        lanes: {'go': Lane('Go', (ctx) => ctx.args.requireString('app'))},
+        logger: logger,
+      );
+
+      expect(code, ExitCodes.usage);
+      expect(logger.lines, contains('error: Missing required option --app.'));
+    });
+
+    test('an unexpected error in the lane is still an error', () async {
+      final code = await runLanes(
+        ['go', '--dry-run'],
+        lanes: {'go': Lane('Go', (ctx) => throw StateError('broken'))},
+        logger: logger,
+      );
+
+      expect(code, ExitCodes.failure);
+    });
+
+    test('works together with --list and --verbose', () async {
+      final code = await runLanes(
+        ['--dry-run', '--verbose', '--list'],
+        lanes: {'go': Lane('Go', (ctx) {})},
+        logger: logger,
+      );
+
+      expect(code, ExitCodes.success);
+      expect(logger.lines, contains('  go : Go'));
     });
   });
 

@@ -3,10 +3,12 @@ import 'package:dartlane_flutter/dartlane_flutter.dart';
 
 import 'config.dart';
 
-/// List the lanes, run one, and check your setup, from the project root:
+/// List the lanes, run one, preview one, and check your setup, from the project
+/// root:
 ///
 ///     dartlane list
 ///     dartlane run build
+///     dartlane run build --dry-run
 ///     dartlane doctor
 ///
 /// or without the dartlane command:
@@ -23,7 +25,10 @@ Future<void> main(List<String> args) => dartlane(
         ),
       );
 
-      ctx.logger.success('Built ${build.path}');
+      // In a dry run (`dartlane run build --dry-run`) nothing was built.
+      ctx.logger.success(
+        '${ctx.dryRun ? 'Would build' : 'Built'} ${build.path}',
+      );
     }),
     // Add your own lanes here.
   },

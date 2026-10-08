@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dartlane_core/src/doctor.dart';
+import 'package:dartlane_core/src/dry_run.dart';
 import 'package:dartlane_core/src/exit_codes.dart';
 import 'package:dartlane_core/src/lane.dart';
 import 'package:dartlane_core/src/lane_context.dart';
@@ -12,6 +13,13 @@ import 'package:dartlane_core/src/lane_logger.dart';
 /// It is read by the runner anywhere in the arguments and not passed on to
 /// the lane.
 const _verboseFlag = '--verbose';
+
+/// Option that makes the runner describe the steps of a lane without running
+/// them.
+///
+/// Like `--verbose` it is read anywhere in the arguments and not passed on to
+/// the lane, so a lane cannot use `--dry-run` for itself.
+const _dryRunFlag = '--dry-run';
 
 /// First word that makes the runner list the lanes instead of running one.
 ///
@@ -62,6 +70,13 @@ Future<void> dartlane(
 /// `--doctor` runs [checks] instead and returns [ExitCodes.success] if every
 /// required check passed, otherwise [ExitCodes.failure].
 ///
+/// `--dry-run` anywhere in [args] describes the steps of the lane instead of
+/// running them: each action prints its `describe()` line, nothing is run, and
+/// the exit code is [ExitCodes.success] unless the lane fails before it
+/// reaches a step. It is a best-effort preview. If it reaches something it
+/// cannot describe safely, such as an action with a result it cannot make up,
+/// it stops there and says so, still with [ExitCodes.success].
+///
 /// `--verbose` anywhere in [args] turns on detail logging and is not passed to
 /// the lane. Without a [logger], one is created from [env] (the process
 /// environment by default), so GitHub Actions gets annotations and CI never
@@ -75,9 +90,10 @@ Future<int> runLanes(
   Map<String, String>? env,
 }) async {
   final verbose = args.contains(_verboseFlag);
+  final dryRun = args.contains(_dryRunFlag);
   final laneArgs = [
     for (final arg in args)
-      if (arg != _verboseFlag) arg,
+      if (arg != _verboseFlag && arg != _dryRunFlag) arg,
   ];
 
   final log = logger ?? LaneLogger.fromEnvironment(env ?? Platform.environment);
@@ -111,9 +127,19 @@ Future<int> runLanes(
     return ExitCodes.usage;
   }
 
-  final ctx = LaneContext(args: laneArgs.sublist(1), env: env, logger: log);
+  final ctx = LaneContext(
+    args: laneArgs.sublist(1),
+    env: env,
+    logger: log,
+    dryRun: dryRun,
+  );
+  if (dryRun) log.info('Dry run: the steps are described, not run.');
   try {
     await selected.run(ctx);
+  } on DryRunStopped catch (stop) {
+    log.warn('Dry run stopped: ${stop.message}');
+    _printDryRunSummary(log, ctx.dryRunSteps.length, stopped: true);
+    return ExitCodes.success;
   } on LaneError catch (error, stackTrace) {
     log.error(error.message);
     if (error case UserError(:final hint?)) log.info('Hint: $hint');
@@ -127,8 +153,25 @@ Future<int> runLanes(
   } finally {
     ctx.close();
   }
-  log.success('Lane "$name" finished.');
+  if (dryRun) {
+    _printDryRunSummary(log, ctx.dryRunSteps.length, stopped: false);
+  } else {
+    log.success('Lane "$name" finished.');
+  }
   return ExitCodes.success;
+}
+
+void _printDryRunSummary(
+  LaneLogger log,
+  int steps, {
+  required bool stopped,
+}) {
+  final count = '$steps ${steps == 1 ? 'step' : 'steps'}';
+  log.info(
+    stopped
+        ? 'Dry run stopped after $count. Nothing was changed.'
+        : 'Dry run finished: $count would run. Nothing was changed.',
+  );
 }
 
 void _printLanes(LaneLogger log, Map<String, Lane> lanes) {

@@ -263,6 +263,16 @@ With `--dry-run`, `ctx.run` prints each step's `describe()` and skips side effec
 - Built-in actions implement `describe()`.
 - Documented as best-effort.
 
+**How it works**
+- `--dry-run` is a reserved option, read anywhere in the arguments (like `--verbose`) and not passed on to the lane. `dartlane run build --dry-run` reaches the lanes program unchanged. A lane can read `ctx.dryRun`.
+- In a dry run `ctx.run(action)` prints `Would run: <describe()>` and does not call `run`. It returns `action.dryRunResult(ctx)` instead, so the steps after it can still describe themselves.
+- `dryRunResult` is a new hook on `LaneAction`. The default returns null, which suits an action with no result (`void` or a nullable type). For any other result type there is nothing to return, so the dry run **stops** there with a clear message: "Dry run stopped: <action> returns a result that a dry run cannot make up. Override dryRunResult ...". Actions that return a value override it. `FlutterBuild` returns a `BuildResult` whose `path` is where Flutter usually puts that build, and it still checks its options, so a dry run catches a bad `--dart-define`.
+- Code in a lane that is not an action is covered where it can be: `ctx.sh` prints `Would run: <command>` and runs nothing (it returns a success with no output), and `ctx.http` only lets `GET` and `HEAD` through, so any other request stops the dry run. Anything else a lane does itself, such as writing a file, still happens. Check `ctx.dryRun` before that.
+- The output is an intro line, one `Would run:` line per step, and a summary: `Dry run finished: N steps would run. Nothing was changed.` (or `Dry run stopped after N steps.`).
+- Exit code: 0 when the dry run finishes or stops early, because it is a preview and not a check that the lane works. A user error or an unexpected error in the lane still exits non-zero.
+
+**Best effort.** A dry run shows what the lane's actions say they would do. It cannot know what a real run would find, such as the output of a command it skipped, so a step that depends on one may differ. The only built-in action today is `FlutterBuild`; `describe()` is part of every action and the Firebase and Flutter gate actions will implement `dryRunResult` where they return a value.
+
 #### #43 Core: secrets provider and log masking
 
 Labels: area:core,type:feature

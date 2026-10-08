@@ -18,6 +18,18 @@ import 'dart:io';
 
 import 'package:dartlane_core/dartlane_core.dart';
 
+/// An action with a side effect: it writes a file in the project folder.
+class _WriteFile extends LaneAction<void> {
+  const _WriteFile();
+
+  @override
+  String describe() => 'write written.txt';
+
+  @override
+  Future<void> run(LaneContext ctx) async =>
+      File('written.txt').writeAsStringSync('done');
+}
+
 class _AlwaysOk extends DoctorCheck {
   const _AlwaysOk();
 
@@ -63,6 +75,7 @@ Future<void> main(List<String> args) => dartlane(args, lanes: {
     final positional = ctx.args.positional.join(',');
     File('args.txt').writeAsStringSync('flavor=$flavor positional=$positional');
   }),
+  'write': Lane('Writes a file', (ctx) => ctx.run(const _WriteFile())),
   'fail': Lane('Always fails', (ctx) => throw const ActionFailed('nope')),
 }, checks: [_AlwaysOk(), _FlagFile(), _Optional()]);
 ''';
@@ -139,8 +152,9 @@ dependency_overrides:
 
     expect(result.exitCode, 0);
     expect(result.stdout, contains('Available lanes:'));
-    expect(result.stdout, contains('  ok   : Writes its arguments'));
-    expect(result.stdout, contains('  fail : Always fails'));
+    expect(result.stdout, contains('  ok    : Writes its arguments'));
+    expect(result.stdout, contains('  fail  : Always fails'));
+    expect(result.stdout, contains('  write : Writes a file'));
   });
 
   test('dartlane list exits 0 through the real launcher', () async {
@@ -193,6 +207,40 @@ dependency_overrides:
       flag().writeAsStringSync('');
 
       expect(await dartlane(['doctor']), ExitCodes.failure);
+    });
+  });
+
+  group('dry run', () {
+    File written() => File(p.join(project.path, 'written.txt'));
+
+    tearDown(() {
+      if (written().existsSync()) written().deleteSync();
+    });
+
+    test('describes the step and does not cause its side effect', () {
+      final result = Process.runSync(
+        Platform.resolvedExecutable,
+        ['run', 'dartlane/lanes.dart', 'write', '--dry-run'],
+        workingDirectory: project.path,
+      );
+
+      expect(result.exitCode, 0);
+      expect(result.stdout, contains('Would run: write written.txt'));
+      expect(
+        result.stdout,
+        contains('Dry run finished: 1 step would run. Nothing was changed.'),
+      );
+      expect(written().existsSync(), isFalse);
+    });
+
+    test('dartlane run --dry-run exits 0 and writes nothing', () async {
+      expect(await dartlane(['run', 'write', '--dry-run']), ExitCodes.success);
+      expect(written().existsSync(), isFalse);
+    });
+
+    test('the same lane without --dry-run does write the file', () async {
+      expect(await dartlane(['run', 'write']), ExitCodes.success);
+      expect(written().readAsStringSync(), 'done');
     });
   });
 

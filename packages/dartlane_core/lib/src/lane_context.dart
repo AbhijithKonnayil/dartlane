@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dartlane_core/src/dry_run.dart';
 import 'package:dartlane_core/src/lane_action.dart';
 import 'package:dartlane_core/src/lane_args.dart';
 import 'package:dartlane_core/src/lane_logger.dart';
@@ -35,10 +36,22 @@ class LaneContext {
   /// line. See [LaneArgs] for the accepted forms and the typed getters.
   final LaneArgs args;
 
-  /// Whether the run should only describe what it would do.
+  /// Whether this is a dry run: the steps are described, not executed.
   ///
-  /// The runner does not set this yet and [run] does not act on it yet.
+  /// Set by `--dry-run`. In a dry run [run] prints each action's
+  /// `LaneAction.describe` and returns its `LaneAction.dryRunResult` without
+  /// running it, [sh] runs nothing, and [http] refuses requests that would
+  /// change something. This is best effort: code in a lane that has side
+  /// effects some other way, such as writing a file, still runs. Check this
+  /// flag before doing anything like that.
   final bool dryRun;
+
+  final List<String> _dryRunSteps = [];
+
+  /// The steps a dry run has described so far, in order.
+  ///
+  /// Empty unless [dryRun] is true.
+  List<String> get dryRunSteps => List.unmodifiable(_dryRunSteps);
 
   /// Environment variables visible to the lane.
   final Map<String, String> env;
@@ -56,9 +69,20 @@ class LaneContext {
   ///
   /// A `package:http` [Client], so it can be wrapped, for example by
   /// `googleapis_auth`, or replaced with a fake in tests.
-  Client get http => _injectedHttp ?? (_ownHttp ??= Client());
+  ///
+  /// In a [dryRun] only requests that read (`GET` and `HEAD`) are sent; any
+  /// other request stops the dry run with a [DryRunStopped].
+  Client get http {
+    final client = _injectedHttp ?? (_ownHttp ??= Client());
+    return dryRun ? (_dryRunHttp ??= DryRunClient(client)) : client;
+  }
+
+  Client? _dryRunHttp;
 
   /// Runs [executable] with [arguments] and returns the result.
+  ///
+  /// In a [dryRun] the command is described and not run, and the result is a
+  /// success with no output.
   ///
   /// The command is logged at detail level, and its output is printed as it
   /// runs so a long build shows progress. Pass `streamOutput: false` for a
@@ -73,6 +97,10 @@ class LaneContext {
     bool streamOutput = true,
   }) async {
     final line = formatCommand(executable, arguments);
+    if (dryRun) {
+      _describeStep(line);
+      return const ShellResult(exitCode: 0);
+    }
     logger.detail(r'$ ' + line);
     final result = await shell.run(
       executable,
@@ -101,8 +129,15 @@ class LaneContext {
   ///
   /// This is the single place where a step is logged and timed. A failure is
   /// logged and rethrown, never swallowed.
+  ///
+  /// In a [dryRun] the action is not run: its line is printed and
+  /// `LaneAction.dryRunResult` is returned instead.
   Future<R> run<R>(LaneAction<R> action) async {
     final name = action.describe();
+    if (dryRun) {
+      _describeStep(name);
+      return action.dryRunResult(this);
+    }
     logger.info('> $name');
     final stopwatch = Stopwatch()..start();
     try {
@@ -113,6 +148,11 @@ class LaneContext {
       logger.error('$name failed ${_format(stopwatch.elapsed)}');
       rethrow;
     }
+  }
+
+  void _describeStep(String description) {
+    _dryRunSteps.add(description);
+    logger.info('Would run: $description');
   }
 
   static String _format(Duration elapsed) {

@@ -267,6 +267,115 @@ void main() {
     });
   });
 
+  group('in a dry run', () {
+    late FakeLaneContext dry;
+
+    setUp(() => dry = FakeLaneContext(dryRun: true));
+
+    test('prints the command and runs nothing', () async {
+      await dry.run(
+        const FlutterBuild(target: BuildTarget.apk, flavor: 'prod'),
+      );
+
+      expect(dry.shell.calls, isEmpty);
+      expect(dry.logger.lines, [
+        'Would run: flutter build apk --release --flavor=prod',
+      ]);
+    });
+
+    test('gives a result the next step can use', () async {
+      final result = await dry.run(
+        const FlutterBuild(target: BuildTarget.apk),
+      );
+
+      expect(result.path, 'build/app/outputs/flutter-apk/app-release.apk');
+      expect(result.target, BuildTarget.apk);
+      expect(result.mode, BuildMode.release);
+    });
+
+    test('the path is where Flutter usually puts each kind of build', () async {
+      const expected = {
+        (BuildTarget.apk, BuildMode.release, null):
+            'build/app/outputs/flutter-apk/app-release.apk',
+        (BuildTarget.apk, BuildMode.debug, null):
+            'build/app/outputs/flutter-apk/app-debug.apk',
+        (BuildTarget.apk, BuildMode.profile, null):
+            'build/app/outputs/flutter-apk/app-profile.apk',
+        (BuildTarget.apk, BuildMode.release, 'prod'):
+            'build/app/outputs/flutter-apk/app-prod-release.apk',
+        (BuildTarget.appbundle, BuildMode.release, null):
+            'build/app/outputs/bundle/release/app-release.aab',
+        (BuildTarget.appbundle, BuildMode.debug, null):
+            'build/app/outputs/bundle/debug/app-debug.aab',
+        (BuildTarget.appbundle, BuildMode.release, 'prod'):
+            'build/app/outputs/bundle/prodRelease/app-prod-release.aab',
+        (BuildTarget.appbundle, BuildMode.profile, 'dev'):
+            'build/app/outputs/bundle/devProfile/app-dev-profile.aab',
+      };
+
+      for (final MapEntry(key: (target, mode, flavor), value: path)
+          in expected.entries) {
+        final build = FlutterBuild(target: target, mode: mode, flavor: flavor);
+
+        expect(
+          (await dry.run(build)).path,
+          path,
+          reason: '$target $mode $flavor',
+        );
+      }
+    });
+
+    test(
+      'the path is relative to the working directory when one is given',
+      () async {
+        final result = await dry.run(
+          const FlutterBuild(target: BuildTarget.apk, workingDirectory: 'app'),
+        );
+
+        expect(
+          result.path,
+          'app/build/app/outputs/flutter-apk/app-release.apk',
+        );
+      },
+    );
+
+    test('carries the flavor and the version like a real build', () async {
+      final result = await dry.run(
+        const FlutterBuild(
+          target: BuildTarget.apk,
+          flavor: 'prod',
+          buildName: '1.2.3',
+          buildNumber: '45',
+        ),
+      );
+
+      expect(result.flavor, 'prod');
+      expect(result.version, '1.2.3+45');
+    });
+
+    test('still catches options that cannot work', () async {
+      await expectLater(
+        dry.run(
+          const FlutterBuild(target: BuildTarget.apk, dartDefines: ['ENV']),
+        ),
+        throwsA(isA<UserError>()),
+      );
+      await expectLater(
+        dry.run(const FlutterBuild(target: BuildTarget.apk, obfuscate: true)),
+        throwsA(isA<UserError>()),
+      );
+    });
+
+    test('does not need the real build to report a file', () async {
+      // A real build with no "Built" line is an error. A dry run never
+      // reads the output.
+      await expectLater(
+        dry.run(const FlutterBuild(target: BuildTarget.apk)),
+        completes,
+      );
+    });
+  });
+
   group('named constructors', () {
     test('FlutterBuild.apk builds an apk', () {
       const build = FlutterBuild.apk(flavor: 'prod', mode: BuildMode.debug);

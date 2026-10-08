@@ -23,7 +23,7 @@ class FakeLaneContext extends LaneContext {
          env: env,
          dryRun: dryRun,
          shell: FakeLaneShell(),
-         http: FakeHttp(),
+         http: FakeHttp(dryRun: dryRun),
          logger: FakeLaneLogger(verbose: verbose),
        );
 

@@ -115,7 +115,7 @@ void main(List<String> args) => dartlane(args, lanes: {
 | CLI-2 | `dartlane run <lane> [--key=value ...]` runs the lane and exits with the lane's exit code. |
 | CLI-3 | `dartlane list` shows lanes with their descriptions. |
 | CLI-4 | `dartlane doctor` checks the environment (Flutter and Dart SDKs, credentials present, flavors detected) and reports clear fixes. |
-| CLI-5 | `--dry-run` prints each planned step without executing side effects. `--verbose` shows executed commands. |
+| CLI-5 | `--dry-run` prints each planned step without executing side effects, as a best-effort preview that exits 0. `--verbose` shows executed commands. |
 | CLI-6 | `dartlane update` and an update notice via pub.dev. |
 
 ### 8.2 Runtime and API
@@ -123,7 +123,7 @@ void main(List<String> args) => dartlane(args, lanes: {
 |---|---|
 | RT-1 | Lanes are plain Dart functions; registration requires only a name and description. |
 | RT-2 | Actions are typed classes with a `run(LaneContext)` method, a `describe()` for dry-run, and a typed result. |
-| RT-3 | `ctx.run(action)` provides timing, logging, error mapping and dry-run uniformly. |
+| RT-3 | `ctx.run(action)` provides timing, logging, error mapping and dry-run uniformly. In a dry run it prints the action's `describe()` and returns its `dryRunResult()` instead of running it. |
 | RT-4 | Shell access goes through `LaneShell` and HTTP through a `package:http` `Client` (`ctx.shell`, `ctx.sh`, `ctx.http`); `dartlane_core/testing.dart` provides fakes. |
 | RT-5 | Secrets are read through `ctx.secrets` and masked in logs. |
 | RT-6 | Errors form a small hierarchy (user error with a hint, action failed) mapped to exit codes. |

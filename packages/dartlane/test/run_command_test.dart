@@ -61,6 +61,12 @@ void main() {
       ]);
     });
 
+    test('forwards --dry-run to the lanes program', () async {
+      await run(['run', 'beta', '--dry-run']);
+
+      expect(launcher.calls.single.arguments, ['beta', '--dry-run']);
+    });
+
     test('exits with the code of the lane', () async {
       for (final code in [0, 1, 7, 64]) {
         launcher.exitCode = code;

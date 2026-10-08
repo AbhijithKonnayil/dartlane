@@ -32,7 +32,7 @@ scripts. Dartlane aims to fix the pain points of that setup:
 
 ## Planned usage
 
-The API below is a proposal and names may change. `dartlane init`, `dartlane run`, `dartlane list`, `dartlane doctor` and `dartlane update` already work, and `dartlane --version` prints the version. Until the packages are published, `init` needs `--local-repo <path to this repo>`. `dartlane run <lane> [arguments]` starts `dartlane/lanes.dart`, passes the arguments through and exits with the lane's exit code; `dart run dartlane/lanes.dart <lane>` does the same without the CLI.
+The API below is a proposal and names may change. `dartlane init`, `dartlane run`, `dartlane list`, `dartlane doctor` and `dartlane update` already work, and `dartlane --version` prints the version. `dartlane run <lane> --dry-run` prints what a lane would do without doing it (a best-effort preview). Until the packages are published, `init` needs `--local-repo <path to this repo>`. `dartlane run <lane> [arguments]` starts `dartlane/lanes.dart`, passes the arguments through and exits with the lane's exit code; `dart run dartlane/lanes.dart <lane>` does the same without the CLI.
 
 ```dart
 void main(List<String> args) => dartlane(args, lanes: {
