@@ -121,5 +121,5 @@ dartlane run beta             # ship it
 
 ## Next
 
-- [Running lanes on CI](ci.md)
+- [Running lanes on CI](ci.md), with an [example GitHub Actions workflow](examples/github-actions-beta.yaml) for the `beta` lane
 - `dartlane run <lane> --verbose` shows the commands that are run.

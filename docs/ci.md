@@ -22,6 +22,16 @@ anywhere in the arguments and is not passed on to the lane:
 dart run dartlane/lanes.dart beta --verbose
 ```
 
+## Example: ship the beta lane from GitHub Actions
+
+[`examples/github-actions-beta.yaml`](examples/github-actions-beta.yaml) installs
+Java and Flutter, writes the Firebase key from a repository secret
+(`FIREBASE_SERVICE_ACCOUNT`) to a temporary file, and runs the `beta` lane from
+the [quick start](quick-start.md). It runs the lanes file directly with
+`dart run dartlane/lanes.dart beta`, so the Dartlane CLI does not need to be
+installed on CI. Copy it to `.github/workflows/beta.yaml` in your app and follow
+the setup notes at the top of the file.
+
 ## Supported platforms
 
 | Platform | No prompts | Annotations |
