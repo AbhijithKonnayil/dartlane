@@ -9,9 +9,11 @@
   A Dart-native alternative to fastlane: no Ruby, typed lanes, one command locally and on CI.
 </p>
 
-> **Status: planning / pre-alpha.** Nothing is published to pub.dev yet and the
-> packages are not in this repo yet. This README describes where the project is
-> heading. See the [PRD](docs/PRD.md) for the full plan.
+> **Status: early preview (`0.1.0-dev.1`).** All four packages are on
+> [pub.dev](https://pub.dev/packages/dartlane). Today Dartlane builds **Android**
+> APKs and app bundles and ships them to **Firebase App Distribution**. Play Store
+> and App Store publishing and iOS builds are not supported yet. APIs and names
+> may still change before `0.1.0`. Docs: <https://dartlane.aioncw.com>.
 
 ## Why Dartlane
 
@@ -32,26 +34,33 @@ scripts. Dartlane aims to fix the pain points of that setup:
 
 New here? Follow the [quick start](docs/quick-start.md), then read how to [write a lane and an action](docs/writing-lanes-and-actions.md).
 
-## Planned usage
-
-The API below is a proposal and names may change. `dartlane init`, `dartlane run`, `dartlane list`, `dartlane doctor` and `dartlane update` already work, and `dartlane --version` prints the version. `dartlane run <lane> --dry-run` prints what a lane would do without doing it (a best-effort preview). Until the packages are published, `init` needs `--local-repo <path to this repo>`. `dartlane run <lane> [arguments]` starts `dartlane/lanes.dart`, passes the arguments through and exits with the lane's exit code; `dart run dartlane/lanes.dart <lane>` does the same without the CLI.
-
-```dart
-void main(List<String> args) => dartlane(args, lanes: {
-  'beta': Lane('Build and ship to QA', (ctx) async {
-    await ctx.run(FlutterAnalyze());
-    final build = await ctx.run(FlutterBuild(target: BuildTarget.apk, flavor: 'prod'));
-    await ctx.run(FirebaseDistribute(build.path, app: Config.firebaseAppId, groups: ['qa']));
-  }),
-});
-```
+## Quick look
 
 ```sh
-dartlane init          # create a nested dartlane/ package in your app
+dart pub global activate dartlane   # installs the latest version, prereleases included
+dartlane init          # create a nested dartlane/ package in your Flutter app
 dartlane list          # show available lanes
-dartlane run beta      # run a lane
 dartlane doctor        # check your environment
-dartlane run beta --dry-run
+dartlane run beta      # run a lane
+dartlane run beta --dry-run   # preview what it would do (best effort)
+```
+
+`dartlane run <lane> [arguments]` starts `dartlane/lanes.dart`, passes the
+arguments through and exits with the lane's exit code. `dart run dartlane/lanes.dart <lane>`
+does the same without the CLI, which is what you want on CI.
+
+A lane is a Dart function in `dartlane/lanes.dart`:
+
+```dart
+Future<void> main(List<String> args) => dartlane(args, lanes: {
+  'beta': Lane('Build and ship to QA', (ctx) async {
+    await ctx.run(const FlutterAnalyze());
+    final build = await ctx.run(FlutterBuild.apk(flavor: Config.flavor));
+    await ctx.run(
+      FirebaseDistribute(build.path, app: Config.firebaseAppId, groups: ['qa']),
+    );
+  }),
+});
 ```
 
 ## Ready-made lanes
@@ -63,28 +72,30 @@ dartlane run flutter_build_apk --flavor=prod --mode=release
 dartlane run firebase_distribute --app=<id> --file=app.apk --groups=qa
 ```
 
-Lanes: `flutter_build_apk`, `flutter_build_appbundle`, `flutter_pub_get`, `flutter_analyze`, `flutter_test` and `firebase_distribute`. Run `dartlane list` for their options. They replace the old `flutterBuildApk` and `flutterBuildAppBundle` lanes.
+Lanes: `flutter_build_apk`, `flutter_build_appbundle`, `flutter_pub_get`, `flutter_analyze`, `flutter_test` and `firebase_distribute`. Run `dartlane list` for their options.
 
 ## Roadmap
 
 | Release | Scope |
 |---|---|
-| **0.1.0** (preview) | CLI (`init`, `run`, `list`, `doctor`, `update`), Flutter build/analyze/test/version actions, Firebase App Distribution, `--dry-run`, correct exit codes. Android and Firebase only. |
+| **0.1.0** (preview, `dev.1` published) | CLI (`init`, `run`, `list`, `doctor`, `update`), Flutter build/analyze/test/version actions, Firebase App Distribution, `--dry-run`, correct exit codes. Android and Firebase only. |
 | **0.2** | Git tag and changelog, Slack/Discord notify, compile cache, action scaffolder, lane hooks. |
 | **Later** | Google Play, then iOS via the App Store Connect API, fastlane migration helper. |
 
 iOS signing and App Store Connect are not part of 0.1.0.
 
-## Planned packages
+## Packages
 
-The repo will be a pub workspace (Dart 3.10+) with four packages:
+A pub workspace (Dart 3.10+) with four packages, all at `0.1.0-dev.1`:
 
 | Package | Purpose |
 |---|---|
-| `dartlane_core` | LaneAction, LaneContext, runner, Shell/HTTP/secrets interfaces, errors, test fakes |
-| `dartlane_flutter` | Build, pub get, analyze, test and version actions |
-| `dartlane_firebase` | `FirebaseDistribute`, upload, auth |
-| `dartlane` | The CLI |
+| [`dartlane_core`](https://pub.dev/packages/dartlane_core) | `LaneAction`, `LaneContext`, runner, shell/HTTP/secrets interfaces, errors, test fakes |
+| [`dartlane_flutter`](https://pub.dev/packages/dartlane_flutter) | Build, pub get, analyze, test and version actions |
+| [`dartlane_firebase`](https://pub.dev/packages/dartlane_firebase) | `FirebaseDistribute`, upload, auth |
+| [`dartlane`](https://pub.dev/packages/dartlane) | The CLI |
+
+Want to add your own? See [writing lanes and actions](docs/writing-lanes-and-actions.md).
 
 ## Repository layout
 
@@ -92,13 +103,14 @@ The repo will be a pub workspace (Dart 3.10+) with four packages:
 packages/  dartlane_core, dartlane_flutter, dartlane_firebase and the dartlane CLI
 example/   a Flutter app used to try Dartlane end to end
 assets/    logo and images
-docs/      quick start, PRD and the GitHub issue plan
+docs/      guides, PRD and the GitHub issue plan
+website/   the landing page and docs site (Astro Starlight)
 tool/      maintenance scripts
 ```
 
 ## Try it from source
 
-The example app's `dartlane/` folder is generated and git-ignored. Recreate it
+For contributors. To use Dartlane, install it from pub.dev as above. The example app's `dartlane/` folder is generated and git-ignored. Recreate it
 from the current code whenever the CLI or the templates change:
 
 ```sh
@@ -125,9 +137,9 @@ Re-running is safe: issues whose title already exists are skipped.
 
 ## Contributing
 
-The project is at an early stage. Check the open issues, especially those labelled
+The project is at an early stage. Releasing is described in [docs/releasing.md](docs/releasing.md). Check the open issues, especially those labelled
 `good first issue`, and open an issue before starting larger changes.
 
 ## License
 
-The CLI and core are intended to be MIT licensed. A `LICENSE` file has not been added yet.
+BSD 3-Clause. See [LICENSE](LICENSE).

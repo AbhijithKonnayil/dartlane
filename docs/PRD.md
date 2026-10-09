@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| **Status** | Draft v0.1 |
+| **Status** | v0.1 in progress: `0.1.0-dev.1` published, stable `0.1.0` pending |
 | **Owner** | Abhijith Konnayil |
-| **Last updated** | 2026-10-06 |
+| **Last updated** | 2026-10-09 |
 | **Repo** | https://github.com/AbhijithKonnayil/dartlane |
 
 > Items marked **(decided)** were chosen by the maintainer. Items marked **(proposed)** are recommendations that are still open for confirmation.
@@ -155,9 +155,10 @@ packages/
   dartlane_flutter/    # build, pub get, analyze, test, version actions
   dartlane_firebase/   # FirebaseDistribute, upload/polling, auth, client
   dartlane/            # CLI: init, run, list, doctor, update, launcher
-examples/flutter_app/
+example/flutter_app/
 docs/
-tool/                  # publish-in-dependency-order script, check script
+website/               # landing page and docs site (Astro Starlight)
+tool/                  # dependency check, GitHub issue and example reset scripts
 ```
 
 Dependency direction: the CLI and both action packages depend on `dartlane_core`; actions do not depend on each other, and the CLI does not depend on the action packages. This removes the current package cycle.
@@ -178,7 +179,7 @@ Client project layout: the app stays clean; Dartlane lives in a nested `dartlane
 Proposed; confirm targets before launch.
 
 - Time from `dartlane init` to first successful lane run: under 2 minutes **(decided goal)**.
-- 0.1.0 published on pub.dev with all four packages.
+- 0.1.0 published on pub.dev with all four packages (`0.1.0-dev.1` is out; the stable release is pending).
 - Adoption signals tracked monthly: pub.dev downloads, GitHub stars, number of external issues and PRs, and number of public repos using Dartlane in CI.
 - At least three outside users try 0.1.0 and report feedback.
 - A defined stop/continue review at a set date (for example 3 months after launch), decided by the maintainer.
@@ -187,18 +188,19 @@ Proposed; confirm targets before launch.
 
 - First 100 users via Flutter community channels (r/FlutterDev, Flutter Discord, X, newsletters) **(decided)**.
 - Launch assets: 2-minute demo, "Ship your Flutter app to Firebase in one command" post, example GitHub Actions workflow, honest README stating Android/Firebase scope and the roadmap.
-- Sustainability paths all stay open **(decided)**: GitHub Sponsors, possible open-core features, portfolio value, and possible acquisition or foundation home. The CLI and core stay MIT licensed.
+- Sustainability paths all stay open **(decided)**: GitHub Sponsors, possible open-core features, portfolio value, and possible acquisition or foundation home. The packages are BSD 3-Clause licensed.
 
 ## 13. Milestones
 
 Capacity: serious part-time, about 15 hrs/week **(decided)**.
 
-| When | Milestone |
-|---|---|
-| Spike (first 1 to 2 days) | Vertical slice: core interfaces, `FlutterBuild`, `FirebaseDistribute`, `beta` lane via plain `dart run`. Validates the workspace setup, the `ctx.run` ergonomics and an end-to-end Firebase upload. |
-| Week 1 | Remove `publish_to: none`, fix package structure, `init` on the nested package, `doctor`, `--dry-run`, correct exit codes, docs matching reality. |
-| Week 2 | GitHub Actions example, demo recording, launch post, publish 0.1.0, post to community channels. |
-| After launch | 0.2 scope (git tag/changelog, notify, compile cache, scaffolder), then Google Play and iOS. |
+| When | Milestone | Status |
+|---|---|---|
+| Spike | Vertical slice: core interfaces, `FlutterBuild`, `FirebaseDistribute`, `beta` lane via plain `dart run`. | Done |
+| Week 1 | Package structure, `init` on the nested package, `doctor`, `--dry-run`, correct exit codes, docs matching reality. | Done |
+| Week 2 | GitHub Actions example, landing page and docs site, `0.1.0-dev.1` on pub.dev. | Done (2026-10-09) |
+| Next | Try `dev.1` on a clean machine, then `rc.1`, demo recording, launch post, stable `0.1.0` and community announcement. | Open (M3 issues) |
+| After launch | 0.2 scope (git tag/changelog, notify, compile cache, scaffolder), then Google Play and iOS. | Planned |
 
 ## 14. Risks and mitigations
 
@@ -217,23 +219,10 @@ Capacity: serious part-time, about 15 hrs/week **(decided)**.
 
 ## 15. Open questions
 
-1. Compiled binary or pub.dev package first for the install story?
+1. ~~Compiled binary or pub.dev package first for the install story?~~ Decided: pub.dev (`dart pub global activate dartlane`). A compiled binary is not planned.
 2. Which three people or teams will try 0.1.0 and report what breaks?
 3. What would make the maintainer stop (adoption threshold after N months, or an official Flutter tool)?
-4. Is `describe()` required or optional for custom actions?
+4. ~~Is `describe()` required or optional for custom actions?~~ Decided: optional; it defaults to the class name.
 5. Ship a `dartlane create action` scaffolder before 0.1.0 or after?
 6. Final confirmation of release-automation-layer positioning, plugin-as-package, and env-vars-plus-`.env` for secrets.
 7. ~~How do existing lane names and the legacy `key:value` argument format migrate?~~ Decided: lane names migrate as ready-made lanes exported by the action packages and registered by `init` (see 8.4). The `key:value` format is dropped: it is ambiguous with values that contain colons, and arguments never reached lanes in the old code (see RT-7).
-
-## 16. Known issues in the current code (input to the refactor)
-
-Observed on branch `old-tuf` of the local checkout:
-
-- Arguments are dropped between `run` and the lane (`Lanes.runLane` calls `execute({})`).
-- Package cycle: lanes in `dartlane_core` import `package:dartlane/...`, and `dartlane_core`'s pubspec lacks the dependencies those lanes need.
-- Flutter build and Firebase lanes catch and log errors instead of failing, so failures can exit with code 0.
-- `init` hardcodes `--path=../` dev paths and edits the app's pubspec.
-- Static lane registry; unused isolate code in `Lane`; empty `executeT` stubs.
-- `exeType` is used for both the target type and the build mode argument.
-- Firebase lane finds the binary with an unordered directory listing; AAB branch is unreachable; upload timeout is unused; the whole file is read into memory.
-- Package `publish_to: none`; README promises `dart pub global activate dartlane`; CLI description still says "A Very Good Project created by Very Good CLI".
