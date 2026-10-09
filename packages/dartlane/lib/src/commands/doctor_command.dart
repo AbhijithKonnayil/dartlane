@@ -71,7 +71,7 @@ class DoctorCommand extends Command<int> {
 
       // The program prints its own results and the summary, and its exit code
       // says whether a required check failed.
-      return LanesProgram(
+      return await LanesProgram(
         projectRoot: workingDirectory,
         launcher: launcher,
       ).run(const ['--doctor']);
