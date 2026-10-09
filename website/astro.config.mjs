@@ -9,7 +9,7 @@ export default defineConfig({
       title: 'Dartlane',
       description: 'Release automation for Flutter and Dart, written in Dart.',
       logo: { src: './src/assets/logo.png' },
-      favicon: '/favicon.svg',
+      favicon: '/favicon.png',
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/AbhijithKonnayil/dartlane' },
       ],
