@@ -648,6 +648,8 @@ const stars = await readStars();
         const st = {
           gen: 0, p: 0, mix: 0, on: false, geo: null, raf: 0, home: true, behindOK: false, behind: 0,
           tilt: { x: 0, y: 0 }, mouse: { x: 0, y: 0 },
+          startTime: 0, duration: 4000, onLand: null, landed: false, resolveRun: null,
+          lastRawHeading: null, heading: TIP,
         };
         const RAD = Math.PI / 180;
 
@@ -674,27 +676,39 @@ const stars = await readStars();
         function measure() {
           const sr = logo.getBoundingClientRect();
           const tr = win.getBoundingClientRect();
-          const k = 720 / sr.width;
+          const k = 720 / (sr.width || 176);
           const cx = ((tr.left + tr.right) / 2 - sr.left) * k;
           const cy = ((tr.top + tr.bottom) / 2 - sr.top) * k;
           const tx = C.x - cx, ty = C.y - cy;     // centre -> top right
-          const len = Math.hypot(tx, ty);
+          const len = Math.hypot(tx, ty) || 1;
           st.geo = {
             cx, cy, tx, ty,
-            bx: -1.1 * tx, by: -1.1 * ty,        // centre -> bottom left
-            nx: -ty / len, ny: tx / len,           // bows toward bottom right
-            bow: 0.34 * len,
+            nx: -ty / len, ny: tx / len,           // perpendicular
+            // A wider ellipse gives the dart a gentler radius as it leaves
+            // and returns to the top-right point of the orbit.
+            bow: 0.52 * len,
             hw: (tr.width / 2) * k, hh: (tr.height / 2) * k,
             rz: 220 * k, f: PERSPECTIVE * k, k,
+            holeX: ((tr.left - sr.left) * k).toFixed(1),
+            holeY: ((tr.top - sr.top) * k).toFixed(1),
+            holeW: (tr.width * k).toFixed(1),
+            holeH: (tr.height * k).toFixed(1),
+            holeRx: (14 * k).toFixed(1),
           };
+          hole.setAttribute('x', st.geo.holeX);
+          hole.setAttribute('y', st.geo.holeY);
+          hole.setAttribute('width', st.geo.holeW);
+          hole.setAttribute('height', st.geo.holeH);
+          hole.setAttribute('rx', st.geo.holeRx);
         }
 
         function ring(p) {
           const g = st.geo;
           const a = p * 2 * Math.PI, c = Math.cos(a), sn = Math.sin(a);
-          const along = c >= 0 ? [g.tx * c, g.ty * c] : [g.bx * -c, g.by * -c];
-          const x = along[0] + g.nx * g.bow * sn;
-          const y = along[1] + g.ny * g.bow * sn;
+          // Continuous reach modulation without derivative cusps:
+          const reach = 1 + 0.1 * ((1 - c) * 0.5);
+          const x = g.tx * c * reach + g.nx * g.bow * sn;
+          const y = g.ty * c * reach + g.ny * g.bow * sn;
           const z = -g.rz * sn;                    // in front on the way down
           const d = g.f / (g.f + z);
           return { x: g.cx + x * d, y: g.cy + y * d, z, d, X: x, Y: y };
@@ -702,18 +716,30 @@ const stars = await readStars();
 
         function pose() {
           const g = st.geo, mix = st.mix;
-          const a = ring(st.p), b = ring(st.p + 0.002);
-          // Heading on screen, and how much of the motion is toward or away
-          // from us (the dart foreshortens when it flies along the view axis).
-          let heading = (Math.atan2(b.y - a.y, b.x - a.x) / RAD);
-          heading = ((heading + 180) % 360 + 360) % 360 - 180;
+          const a = ring(st.p);
+          const b = ring(st.p + 0.002);
+
+          // Continuous unwrapped heading to prevent branch-cut angular snap:
+          const raw = (Math.atan2(b.y - a.y, b.x - a.x) / RAD);
+          if (st.lastRawHeading !== null) {
+            const delta = ((raw - st.lastRawHeading) % 360 + 540) % 360 - 180;
+            st.heading += delta;
+          } else {
+            st.heading = raw;
+          }
+          st.lastRawHeading = raw;
+
+          // Shortest-arc blend from resting TIP (141.8) into trajectory heading:
+          const angleDiff = ((st.heading - TIP) % 360 + 540) % 360 - 180;
+          const currentH = TIP + angleDiff * mix;
+
           const real = Math.hypot(b.X - a.X, b.Y - a.Y, (b.z - a.z));
-          const seen = Math.hypot(b.x - a.x, b.y - a.y) / a.d;
-          const fore = Math.min(1, Math.max(0.3, seen / (real || 1)));
+          const seen = Math.hypot(b.x - a.x, b.y - a.y) / (a.d || 1);
+          const fore = Math.min(1, Math.max(0.35, seen / (real || 1)));
           return {
             x: C.x + (a.x - C.x) * mix,
             y: C.y + (a.y - C.y) * mix,
-            h: TIP + mix * (heading - TIP),
+            h: currentH,
             fx: 1 + mix * (fore - 1),
             s: 1 + (FLY_SCALE * a.d - 1) * mix,
             z: a.z, d: a.d, X: a.X, Y: a.Y,
@@ -721,15 +747,28 @@ const stars = await readStars();
         }
 
         function ribbon(pts, w) {
-          const L = [], R = [];
-          pts.forEach((q, i) => {
-            const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
-            const dx = b[0] - a[0], dy = b[1] - a[1], n = Math.hypot(dx, dy) || 1;
-            const h = w[i] / 2;
-            L.push(`${(q[0] - (dy / n) * h).toFixed(1)} ${(q[1] + (dx / n) * h).toFixed(1)}`);
-            R.push(`${(q[0] + (dy / n) * h).toFixed(1)} ${(q[1] - (dx / n) * h).toFixed(1)}`);
-          });
-          return `M${L.join('L')}L${R.reverse().join('L')}Z`;
+          const nPts = pts.length;
+          let leftPath = '';
+          let rightPath = '';
+          for (let i = 0; i < nPts; i++) {
+            const a = pts[i === 0 ? 0 : i - 1];
+            const b = pts[i === nPts - 1 ? nPts - 1 : i + 1];
+            const dx = b[0] - a[0], dy = b[1] - a[1];
+            const n = Math.hypot(dx, dy) || 1;
+            const h = w[i] * 0.5;
+            const q = pts[i];
+            const lx = (q[0] - (dy / n) * h).toFixed(1);
+            const ly = (q[1] + (dx / n) * h).toFixed(1);
+            const rx = (q[0] + (dy / n) * h).toFixed(1);
+            const ry = (q[1] - (dx / n) * h).toFixed(1);
+            if (i === 0) {
+              leftPath += `M${lx} ${ly}`;
+            } else {
+              leftPath += `L${lx} ${ly}`;
+            }
+            rightPath = `L${rx} ${ry}` + rightPath;
+          }
+          return leftPath + rightPath + 'Z';
         }
 
         // Where a point fixed to the dart (logo units at rest) is now.
@@ -757,10 +796,9 @@ const stars = await readStars();
           const lengthScale = o.s * (1 + 1.6 * m);
           const widthScale = o.s * (1 + 0.5 * m);
           streaks.forEach((sk, k) => {
-            // Move the head in small steps, so the rope follows the path the
-            // dart actually took instead of cutting straight to it.
             const from = sk.head || sk.pts[0], to = toWorld(sk.rest[0], o);
-            const steps = Math.max(1, Math.min(80, Math.ceil(Math.hypot(to[0] - from[0], to[1] - from[1]) / 4)));
+            const dist = Math.hypot(to[0] - from[0], to[1] - from[1]);
+            const steps = Math.min(6, Math.max(1, Math.ceil(dist / 14)));
             for (let j = 1; j <= steps; j++) {
               const u = j / steps;
               sk.pts[0] = [from[0] + (to[0] - from[0]) * u, from[1] + (to[1] - from[1]) * u];
@@ -774,12 +812,10 @@ const stars = await readStars();
             sk.head = to;
             const last = sk.pts.length - 1;
             const mixed = sk.pts.map((q, i) => [q[0] + (sk.rest[i][0] - q[0]) * home, q[1] + (sk.rest[i][1] - q[1]) * home]);
-            // One light smoothing pass takes out any remaining kinks.
             const pts = mixed.map((q, i) => (i === 0 || i === last ? q : [
-              (mixed[i - 1][0] + 2 * q[0] + mixed[i + 1][0]) / 4,
-              (mixed[i - 1][1] + 2 * q[1] + mixed[i + 1][1]) / 4,
+              (mixed[i - 1][0] + 2 * q[0] + mixed[i + 1][0]) * 0.25,
+              (mixed[i - 1][1] + 2 * q[1] + mixed[i + 1][1]) * 0.25,
             ]));
-            // The waves are fat in the middle; a trail is fat at the head.
             const width = sk.width.map((w, i) => {
               const comet = 46 * Math.pow(1 - i / last, 1.3);
               return (w + (comet - w) * m) * widthScale;
@@ -800,8 +836,8 @@ const stars = await readStars();
           const fy = g ? Math.max(-1, Math.min(1, o.Y / g.hh)) * 3.5 : 0;
           const tx = st.mix * -fx + (1 - st.mix) * st.mouse.x * 6;
           const ty = st.mix * fy + (1 - st.mix) * -st.mouse.y * 4;
-          st.tilt.x += (tx - st.tilt.x) * 0.1;
-          st.tilt.y += (ty - st.tilt.y) * 0.1;
+          st.tilt.x += (tx - st.tilt.x) * 0.12;
+          st.tilt.y += (ty - st.tilt.y) * 0.12;
           const still = Math.abs(tx - st.tilt.x) < 0.02 && Math.abs(ty - st.tilt.y) < 0.02;
           win.style.transform = still && !tx && !ty
             ? ''
@@ -811,30 +847,61 @@ const stars = await readStars();
 
         function frame(now) {
           if (!st.geo) measure();
+
+          if (st.on) {
+            const elapsed = now - st.startTime;
+            const u = Math.min(1, Math.max(0, elapsed / st.duration));
+
+            // Smooth C^1 sinusoidal velocity curve with continuous acceleration:
+            // Give the dart longer to blend from its resting heading into
+            // the orbit tangent at the top-right launch point.
+            const A = 0.28, B = 0.28;
+            const Vmax = 1 / (1 - (A + B) * 0.5);
+            if (u <= A) {
+              st.p = Vmax * (u * 0.5 - (A * Math.sin((Math.PI * u) / A)) / (2 * Math.PI));
+              st.mix = 0.5 - 0.5 * Math.cos((Math.PI * u) / A);
+            } else if (u > 1 - B) {
+              const w = (1 - u) / B;
+              st.p = 1 - Vmax * ((B * w) * 0.5 - (B * Math.sin(Math.PI * w)) / (2 * Math.PI));
+              st.mix = 0.5 - 0.5 * Math.cos(Math.PI * w);
+              if (!st.landed && st.onLand) {
+                st.landed = true;
+                st.onLand();
+              }
+            } else {
+              st.p = Vmax * (A * 0.5 + (u - A));
+              st.mix = 1;
+            }
+
+            if (u >= 1) {
+              st.p = 1;
+              st.mix = 0;
+              st.on = false;
+              win.classList.remove('orbiting');
+              if (st.resolveRun) {
+                const res = st.resolveRun;
+                st.resolveRun = null;
+                res();
+              }
+            }
+          }
+
           const o = pose();
           fly.setAttribute(
             'transform',
             `translate(${o.x.toFixed(1)} ${o.y.toFixed(1)}) rotate(${o.h.toFixed(1)}) scale(${o.fx.toFixed(3)} 1) rotate(${-TIP}) scale(${o.s.toFixed(3)}) translate(${-C.x} ${-C.y})`,
           );
-          const far = Math.max(0, o.z / st.geo.rz);
+          const far = Math.max(0, o.z / (st.geo ? st.geo.rz : 220));
           fly.style.opacity = (1 - st.mix * 0.4 * far).toFixed(2);
-          // Going behind the terminal: while the dart is on the far side of its
-          // loop, the part of it that overlaps the terminal is masked out. It
-          // fades in and out, so nothing ever pops between in front and behind.
+
           if (st.mix > 0.95) st.behindOK = true;
           else if (st.mix < 0.5) st.behindOK = false;
           st.behind += ((st.behindOK && o.z > 0 ? 1 : 0) - st.behind) * 0.2;
-          if (st.behind > 0.005) {
-            const sr = logo.getBoundingClientRect(), tr = win.getBoundingClientRect(), k = st.geo.k;
-            hole.setAttribute('x', ((tr.left - sr.left) * k).toFixed(1));
-            hole.setAttribute('y', ((tr.top - sr.top) * k).toFixed(1));
-            hole.setAttribute('width', (tr.width * k).toFixed(1));
-            hole.setAttribute('height', (tr.height * k).toFixed(1));
-            hole.setAttribute('rx', (14 * k).toFixed(1));
-          }
           hole.setAttribute('fill-opacity', st.behind.toFixed(3));
+
           if (st.on || st.mix > 0.001) moveStreaks(o);
           else if (!st.home) setHome();
+
           const leaning = leanTerminal(o);
           st.raf = st.on || !st.home || st.behind > 0.005 || leaning ? requestAnimationFrame(frame) : 0;
         }
@@ -842,19 +909,6 @@ const stars = await readStars();
         function kick() {
           if (!st.raf) st.raf = requestAnimationFrame(frame);
         }
-
-        function tween(ms, fn, my) {
-          return new Promise((res) => {
-            const t0 = performance.now();
-            (function step(now) {
-              if (my !== st.gen) return res();
-              const u = Math.min(1, (now - t0) / ms);
-              fn(u);
-              if (u < 1) requestAnimationFrame(step); else res();
-            })(t0);
-          });
-        }
-        const ease = (u) => (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2);
 
         hero.addEventListener('pointermove', (e) => {
           if (!flightOK() || e.pointerType === 'touch') return;
@@ -874,6 +928,12 @@ const stars = await readStars();
           reset() {
             st.gen++;
             st.p = 0; st.mix = 0; st.on = false; st.geo = null; st.behindOK = false; st.behind = 0;
+            st.lastRawHeading = null;
+            if (st.resolveRun) {
+              const res = st.resolveRun;
+              st.resolveRun = null;
+              res();
+            }
             win.classList.remove('orbiting');
             hole.setAttribute('fill-opacity', '0');
             pulses.replaceChildren();
@@ -886,30 +946,19 @@ const stars = await readStars();
             if (on) streakGroup.setAttribute('mask', 'url(#hl-streak-mask)');
             else streakGroup.removeAttribute('mask');
           },
-          // One continuous flight: speed up out of the corner, cruise, then slow
-          // into the corner while the dart turns back into its resting pose.
-          // The steps in the terminal just line up with it.
-          async run(total, onLand) {
-            const my = st.gen;
+          run(total, onLand) {
             measure();
             st.on = true;
+            st.startTime = performance.now();
+            st.duration = total || 4000;
+            st.onLand = onLand;
+            st.landed = false;
+            st.lastRawHeading = null;
             win.classList.add('orbiting');
             kick();
-            const A = 0.1, B = 0.3, vmax = 1 / (1 - (A + B) / 2);
-            let landed = false;
-            await tween(total, (u) => {
-              st.p = u < A ? (vmax * u * u) / (2 * A)
-                : u > 1 - B ? 1 - (vmax * (1 - u) * (1 - u)) / (2 * B)
-                : vmax * (A / 2 + (u - A));
-              const out = ease(Math.min(1, u / 0.14));
-              const home = u > 1 - B ? ease((u - (1 - B)) / B) : 0;
-              st.mix = out * (1 - home);
-              if (u > 1 - B && !landed) { landed = true; if (onLand) onLand(); }
-            }, my);
-            if (my === st.gen) {
-              st.p = 1; st.mix = 0; st.on = false;
-              win.classList.remove('orbiting');
-            }
+            return new Promise((res) => {
+              st.resolveRun = res;
+            });
           },
           pulse() {
             const o = pose();

@@ -1484,6 +1484,20 @@ button {
 /* Orbit mode (desktop): the dart leaves the corner and circles the terminal */
 .hero-logo {
   overflow: visible;
+  will-change: transform;
+}
+
+.hero-logo.flying {
+  animation-play-state: paused;
+}
+
+.hl-fly {
+  will-change: transform, opacity;
+}
+
+.terminal-window {
+  will-change: transform;
+  transform-style: preserve-3d;
 }
 
 .hl-core {
