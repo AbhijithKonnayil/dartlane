@@ -1290,3 +1290,255 @@ button {
     flex-direction: row;
   }
 }
+
+/* Hero terminal animation (enabled by script, skipped for reduced motion) */
+.terminal-body.is-animating [data-step] {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.terminal-body.is-animating [data-step].show {
+  opacity: 1;
+  transform: none;
+}
+
+.terminal-body.is-animating [data-type].typing::after {
+  content: '';
+  display: inline-block;
+  width: 0.55ch;
+  height: 1.1em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  background: var(--dl-primary);
+  animation: term-blink 0.9s steps(2, start) infinite;
+}
+
+.status-badge.running {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fbbf24;
+}
+
+.status-badge.running::before {
+  content: '';
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-right: 0.4em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -0.05em;
+  animation: term-spin 0.7s linear infinite;
+}
+
+@keyframes term-blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+@keyframes term-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hero logo: sits on the terminal's top-right corner and reacts to the lane */
+.hero-right {
+  position: relative;
+}
+
+.hero-logo {
+  display: block;
+  width: 8rem;
+  height: 8rem;
+  margin: 0 auto -1rem;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 0 18px rgba(0, 198, 207, 0.35));
+  animation: hl-float 6s ease-in-out infinite;
+}
+
+@media (min-width: 1024px) {
+  .hero-logo {
+    position: absolute;
+    top: -5.75rem;
+    right: -1rem;
+    width: 11rem;
+    height: 11rem;
+    margin: 0;
+  }
+}
+
+.hl-target {
+  fill: none;
+  stroke: #22c55e;
+  stroke-width: 6;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.hl-reveal {
+  transform-box: fill-box;
+  transform-origin: right center;
+}
+
+.hl-dart,
+.hl-body,
+.hl-blue,
+.hl-navy {
+  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.hero-logo.is-animating.fly .hl-reveal {
+  transform: scaleX(0.02);
+  transition: transform 0.7s ease-in;
+}
+
+.hero-logo.is-animating.fly.go .hl-reveal {
+  transform: scaleX(1);
+  transition: transform 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.hero-logo.nudge .hl-dart {
+  transform: translate(-18px, 14px);
+}
+
+.hero-logo.fly .hl-spark {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.hero-logo.is-animating.burst .hl-spark {
+  animation: hl-spark 1s ease-out forwards;
+  animation-delay: calc(var(--i) * 70ms);
+}
+
+.hero-logo.is-animating.hit .hl-spark {
+  animation: none;
+  opacity: 1;
+}
+
+.hero-logo.s1 .hl-body {
+  animation: hl-glow 0.9s ease-out;
+}
+
+.hero-logo.s2 .hl-blue {
+  animation: hl-glow 0.9s ease-out;
+}
+
+.hero-logo.s3 .hl-navy {
+  animation: hl-glow 0.9s ease-out;
+}
+
+.hero-logo.hit .hl-target {
+  animation: hl-ring 1.2s ease-out;
+}
+
+@keyframes hl-float {
+  50% {
+    translate: 0 -6px;
+  }
+}
+
+@keyframes hl-glow {
+  35% {
+    filter: brightness(1.7) saturate(1.2);
+  }
+}
+
+@keyframes hl-spark {
+  0% {
+    opacity: 0;
+    transform: translate(-14px, 10px);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(26px, -20px);
+  }
+}
+
+@keyframes hl-ring {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-logo {
+    animation: none;
+  }
+}
+
+/* Orbit mode (desktop): the dart leaves the corner and circles the terminal */
+.hero-logo {
+  overflow: visible;
+  will-change: transform;
+}
+
+.hero-logo.flying {
+  animation-play-state: paused;
+}
+
+.hl-fly {
+  will-change: transform, opacity;
+}
+
+.terminal-window {
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+
+.hl-core {
+  fill: #ffe3c8;
+  opacity: 0;
+}
+
+.hero-logo.flying .hl-spark {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.hl-pulse {
+  fill: none;
+  stroke: var(--dl-primary);
+  stroke-width: 5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hl-pulse 0.9s ease-out forwards;
+}
+
+.terminal-window.orbiting {
+  border-color: rgba(0, 198, 207, 0.45);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 48px -6px rgba(0, 198, 207, 0.3);
+}
+
+.terminal-window {
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+@keyframes hl-pulse {
+  from {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+.terminal-window {
+  will-change: transform;
+}

@@ -1,5 +1,6 @@
 ---
 import Landing from '../layouts/Landing.astro';
+import HeroLogo from '../components/HeroLogo.astro';
 import { readStars, readVersion, site } from '../site';
 
 const version = readVersion();
@@ -97,6 +98,7 @@ const stars = await readStars();
 
         <!-- Right: Interactive CLI Terminal Mockup -->
         <div class="hero-right">
+          <HeroLogo />
           <div class="terminal-window">
             <div class="terminal-titlebar">
               <div class="terminal-dots">
@@ -108,56 +110,55 @@ const stars = await readStars();
                 <span class="material-symbols-outlined" style="font-size: 14px;">terminal</span>
                 <span>dartlane-cli — zsh</span>
               </div>
-              <div class="terminal-dim">80x24</div>
             </div>
 
-            <div class="terminal-body">
-              <div class="cli-row">
+            <div class="terminal-body" id="hero-terminal">
+              <div class="cli-row" data-step>
                 <span class="cli-lambda">λ</span>
                 <span style="color: #cbd5e1;">project-flutter</span>
                 <span style="color: #64748b;">$</span>
-                <span class="cli-cmd">{site.installCommand}</span>
+                <span class="cli-cmd" data-type>{site.installCommand}</span>
               </div>
-              <div style="color: #94a3b8; font-size: 0.8125rem; padding-left: 1rem;">
+              <div data-step style="color: #94a3b8; font-size: 0.8125rem; padding-left: 1rem;">
                 Activated dartlane{version && ` ${version}`}.
               </div>
 
-              <div class="cli-row" style="padding-top: 0.25rem;">
+              <div class="cli-row" data-step data-launch style="padding-top: 0.25rem;">
                 <span class="cli-lambda">λ</span>
                 <span style="color: #cbd5e1;">project-flutter</span>
                 <span style="color: #64748b;">$</span>
-                <span style="color: #f8fafc; font-weight: 600;">dartlane run beta</span>
+                <span data-type style="color: #f8fafc; font-weight: 600;">dartlane run beta</span>
               </div>
 
               <!-- Execution Steps -->
               <div style="display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.25rem; min-width: 0;">
-                <div class="cli-step">
+                <div class="cli-step" data-step data-run>
                   <div class="cli-step-info">
                     <span style="color: #64748b; font-size: 0.75rem; flex-shrink: 0;">[1/3]</span>
                     <span class="cli-step-text" style="color: #f1f5f9;">flutter analyze</span>
                   </div>
-                  <span class="status-badge">PASSED</span>
+                  <span class="status-badge" data-final="PASSED">PASSED</span>
                 </div>
 
-                <div class="cli-step">
+                <div class="cli-step" data-step data-run>
                   <div class="cli-step-info">
                     <span style="color: #64748b; font-size: 0.75rem; flex-shrink: 0;">[2/3]</span>
                     <span class="cli-step-text" style="color: #f1f5f9;">flutter build apk --release</span>
                   </div>
-                  <span class="status-badge">DONE</span>
+                  <span class="status-badge" data-final="DONE">DONE</span>
                 </div>
 
-                <div class="cli-step">
+                <div class="cli-step" data-step data-run>
                   <div class="cli-step-info">
                     <span style="color: #64748b; font-size: 0.75rem; flex-shrink: 0;">[3/3]</span>
                     <span class="cli-step-text" style="color: #f1f5f9;">Firebase App Distribution upload</span>
                   </div>
-                  <span class="status-badge status-upload">UPLOADED</span>
+                  <span class="status-badge status-upload" data-final="UPLOADED">UPLOADED</span>
                 </div>
               </div>
 
               <!-- Success Ribbon -->
-              <div class="success-ribbon">
+              <div class="success-ribbon" data-step>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <span class="material-symbols-outlined" style="font-size: 20px; font-variation-settings: 'FILL' 1;">check_circle</span>
                   <span>Lane 'beta' completed successfully</span>
@@ -607,6 +608,453 @@ const stars = await readStars();
 
   <!-- Interactive Scripts (Theme toggle, Copy button) -->
   <script is:inline>
+    // Hero terminal: type the commands, run each step, then loop.
+    (function () {
+      const term = document.getElementById('hero-terminal');
+      if (!term || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const steps = [...term.querySelectorAll('[data-step]')];
+      const typed = [...term.querySelectorAll('[data-type]')];
+      const texts = new Map(typed.map((el) => [el, el.textContent]));
+      const badges = new Map(
+        [...term.querySelectorAll('[data-final]')].map((el) => [el, el.dataset.final]),
+      );
+      const logo = document.querySelector('.hero-logo');
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      let token = 0;
+      let done = 0;
+
+
+      // 3D orbit (desktop only): the dart circles the terminal on a tilted
+      // ring, passing in front of it at the bottom and behind it at the top,
+      // one third of a lap per step. The terminal leans as the dart passes.
+      const SVG = 'http://www.w3.org/2000/svg';
+      const flightOK = () => window.matchMedia('(min-width: 1024px)').matches;
+      const C = { x: 410, y: 305 };       // centre of the dart in logo units
+      const TAIL = { x: 600, y: 250 };    // where the trail attaches
+      const TIP = 141.8;                  // heading of the dart at rest (deg)
+      const FLY_SCALE = 0.55;
+      const PERSPECTIVE = 900;            // px
+
+      const flight = (() => {
+        if (!logo) return null;
+        const fly = logo.querySelector('.hl-fly');
+        const core = logo.querySelector('.hl-core');
+        const streakGroup = logo.querySelector('.hl-streaks');
+        const hole = logo.querySelector('.hl-hole');
+        const pulses = logo.querySelector('.hl-pulses');
+        const win = term.closest('.terminal-window');
+        const hero = win.parentElement;
+        const st = {
+          gen: 0, p: 0, mix: 0, on: false, geo: null, raf: 0, home: true, behindOK: false, behind: 0,
+          tilt: { x: 0, y: 0 }, mouse: { x: 0, y: 0 },
+          startTime: 0, duration: 4000, onLand: null, landed: false, resolveRun: null,
+          lastRawHeading: null, heading: TIP,
+        };
+        const RAD = Math.PI / 180;
+
+        // The orange streaks are ropes: the head is pinned to the dart, and
+        // every point follows the one before it. At rest they are the logo's
+        // waves; in flight they stretch into the motion trail; on landing
+        // they flow back into the waves.
+        const streaks = [...logo.querySelectorAll('.hl-streak')].map((el) => {
+          const rest = JSON.parse(el.dataset.pts);
+          const width = JSON.parse(el.dataset.w);
+          return {
+            el, rest, width,
+            home: el.getAttribute('d'),
+            seg: rest.slice(1).map((q, i) => Math.hypot(q[0] - rest[i][0], q[1] - rest[i][1])),
+            pts: rest.map((q) => q.slice()),
+          };
+        });
+
+        // The flight path, in logo units, with z > 0 away from us. It is a
+        // tilted loop on the diagonal from the dart's corner (top right)
+        // to the opposite corner (bottom left): the dart sweeps down in
+        // front of the terminal, turns at the bottom left, and returns
+        // behind it.
+        function measure() {
+          const sr = logo.getBoundingClientRect();
+          const tr = win.getBoundingClientRect();
+          const k = 720 / (sr.width || 176);
+          const cx = ((tr.left + tr.right) / 2 - sr.left) * k;
+          const cy = ((tr.top + tr.bottom) / 2 - sr.top) * k;
+          const tx = C.x - cx, ty = C.y - cy;     // centre -> top right
+          const len = Math.hypot(tx, ty) || 1;
+          st.geo = {
+            cx, cy, tx, ty,
+            nx: -ty / len, ny: tx / len,           // perpendicular
+            // A wider ellipse gives the dart a gentler radius as it leaves
+            // and returns to the top-right point of the orbit.
+            bow: 0.52 * len,
+            hw: (tr.width / 2) * k, hh: (tr.height / 2) * k,
+            rz: 220 * k, f: PERSPECTIVE * k, k,
+            holeX: ((tr.left - sr.left) * k).toFixed(1),
+            holeY: ((tr.top - sr.top) * k).toFixed(1),
+            holeW: (tr.width * k).toFixed(1),
+            holeH: (tr.height * k).toFixed(1),
+            holeRx: (14 * k).toFixed(1),
+          };
+          hole.setAttribute('x', st.geo.holeX);
+          hole.setAttribute('y', st.geo.holeY);
+          hole.setAttribute('width', st.geo.holeW);
+          hole.setAttribute('height', st.geo.holeH);
+          hole.setAttribute('rx', st.geo.holeRx);
+        }
+
+        function ring(p) {
+          const g = st.geo;
+          const a = p * 2 * Math.PI, c = Math.cos(a), sn = Math.sin(a);
+          // Continuous reach modulation without derivative cusps:
+          const reach = 1 + 0.1 * ((1 - c) * 0.5);
+          const x = g.tx * c * reach + g.nx * g.bow * sn;
+          const y = g.ty * c * reach + g.ny * g.bow * sn;
+          const z = -g.rz * sn;                    // in front on the way down
+          const d = g.f / (g.f + z);
+          return { x: g.cx + x * d, y: g.cy + y * d, z, d, X: x, Y: y };
+        }
+
+        function pose() {
+          const g = st.geo, mix = st.mix;
+          const a = ring(st.p);
+          const b = ring(st.p + 0.002);
+
+          // Continuous unwrapped heading to prevent branch-cut angular snap:
+          const raw = (Math.atan2(b.y - a.y, b.x - a.x) / RAD);
+          if (st.lastRawHeading !== null) {
+            const delta = ((raw - st.lastRawHeading) % 360 + 540) % 360 - 180;
+            st.heading += delta;
+          } else {
+            st.heading = raw;
+          }
+          st.lastRawHeading = raw;
+
+          // Shortest-arc blend from resting TIP (141.8) into trajectory heading:
+          const angleDiff = ((st.heading - TIP) % 360 + 540) % 360 - 180;
+          const currentH = TIP + angleDiff * mix;
+
+          const real = Math.hypot(b.X - a.X, b.Y - a.Y, (b.z - a.z));
+          const seen = Math.hypot(b.x - a.x, b.y - a.y) / (a.d || 1);
+          const fore = Math.min(1, Math.max(0.35, seen / (real || 1)));
+          return {
+            x: C.x + (a.x - C.x) * mix,
+            y: C.y + (a.y - C.y) * mix,
+            h: currentH,
+            fx: 1 + mix * (fore - 1),
+            s: 1 + (FLY_SCALE * a.d - 1) * mix,
+            z: a.z, d: a.d, X: a.X, Y: a.Y,
+          };
+        }
+
+        function ribbon(pts, w) {
+          const nPts = pts.length;
+          let leftPath = '';
+          let rightPath = '';
+          for (let i = 0; i < nPts; i++) {
+            const a = pts[i === 0 ? 0 : i - 1];
+            const b = pts[i === nPts - 1 ? nPts - 1 : i + 1];
+            const dx = b[0] - a[0], dy = b[1] - a[1];
+            const n = Math.hypot(dx, dy) || 1;
+            const h = w[i] * 0.5;
+            const q = pts[i];
+            const lx = (q[0] - (dy / n) * h).toFixed(1);
+            const ly = (q[1] + (dx / n) * h).toFixed(1);
+            const rx = (q[0] + (dy / n) * h).toFixed(1);
+            const ry = (q[1] - (dx / n) * h).toFixed(1);
+            if (i === 0) {
+              leftPath += `M${lx} ${ly}`;
+            } else {
+              leftPath += `L${lx} ${ly}`;
+            }
+            rightPath = `L${rx} ${ry}` + rightPath;
+          }
+          return leftPath + rightPath + 'Z';
+        }
+
+        // Where a point fixed to the dart (logo units at rest) is now.
+        function toWorld(q, o) {
+          let vx = (q[0] - C.x) * o.s, vy = (q[1] - C.y) * o.s;
+          const t = -TIP * RAD, h = o.h * RAD;
+          [vx, vy] = [vx * Math.cos(t) - vy * Math.sin(t), vx * Math.sin(t) + vy * Math.cos(t)];
+          vx *= o.fx;
+          return [o.x + vx * Math.cos(h) - vy * Math.sin(h), o.y + vx * Math.sin(h) + vy * Math.cos(h)];
+        }
+
+        function setHome() {
+          streaks.forEach((sk) => {
+            sk.pts = sk.rest.map((q) => q.slice());
+            sk.head = null;
+            sk.el.setAttribute('d', sk.home);
+          });
+          core.setAttribute('d', '');
+          st.home = true;
+        }
+
+        function moveStreaks(o) {
+          const m = st.mix;
+          const home = 1 - Math.min(1, m / 0.7);            // 1 once fully back in the logo
+          const lengthScale = o.s * (1 + 1.6 * m);
+          const widthScale = o.s * (1 + 0.5 * m);
+          streaks.forEach((sk, k) => {
+            const from = sk.head || sk.pts[0], to = toWorld(sk.rest[0], o);
+            const dist = Math.hypot(to[0] - from[0], to[1] - from[1]);
+            const steps = Math.min(6, Math.max(1, Math.ceil(dist / 14)));
+            for (let j = 1; j <= steps; j++) {
+              const u = j / steps;
+              sk.pts[0] = [from[0] + (to[0] - from[0]) * u, from[1] + (to[1] - from[1]) * u];
+              for (let i = 1; i < sk.pts.length; i++) {
+                const a = sk.pts[i - 1], b = sk.pts[i];
+                const dx = b[0] - a[0], dy = b[1] - a[1], n = Math.hypot(dx, dy) || 1;
+                const len = sk.seg[i - 1] * lengthScale;
+                sk.pts[i] = [a[0] + (dx / n) * len, a[1] + (dy / n) * len];
+              }
+            }
+            sk.head = to;
+            const last = sk.pts.length - 1;
+            const mixed = sk.pts.map((q, i) => [q[0] + (sk.rest[i][0] - q[0]) * home, q[1] + (sk.rest[i][1] - q[1]) * home]);
+            const pts = mixed.map((q, i) => (i === 0 || i === last ? q : [
+              (mixed[i - 1][0] + 2 * q[0] + mixed[i + 1][0]) * 0.25,
+              (mixed[i - 1][1] + 2 * q[1] + mixed[i + 1][1]) * 0.25,
+            ]));
+            const width = sk.width.map((w, i) => {
+              const comet = 46 * Math.pow(1 - i / last, 1.3);
+              return (w + (comet - w) * m) * widthScale;
+            });
+            sk.el.setAttribute('d', ribbon(pts, width));
+            if (k === 0) {
+              core.setAttribute('d', ribbon(pts, width.map((w, i) => (i / last < 0.85 ? w * 0.3 : 0))));
+              core.style.opacity = (m * 0.9).toFixed(2);
+            }
+          });
+          st.home = false;
+        }
+
+        function leanTerminal(o) {
+          const g = st.geo;
+          // While flying the terminal leans toward the dart; otherwise it follows the pointer.
+          const fx = g ? Math.max(-1, Math.min(1, o.X / g.hw)) * 7 : 0;
+          const fy = g ? Math.max(-1, Math.min(1, o.Y / g.hh)) * 3.5 : 0;
+          const tx = st.mix * -fx + (1 - st.mix) * st.mouse.x * 6;
+          const ty = st.mix * fy + (1 - st.mix) * -st.mouse.y * 4;
+          st.tilt.x += (tx - st.tilt.x) * 0.12;
+          st.tilt.y += (ty - st.tilt.y) * 0.12;
+          const still = Math.abs(tx - st.tilt.x) < 0.02 && Math.abs(ty - st.tilt.y) < 0.02;
+          win.style.transform = still && !tx && !ty
+            ? ''
+            : `perspective(${PERSPECTIVE * 1.6}px) rotateY(${st.tilt.x.toFixed(2)}deg) rotateX(${st.tilt.y.toFixed(2)}deg)`;
+          return !still;
+        }
+
+        function frame(now) {
+          if (!st.geo) measure();
+
+          if (st.on) {
+            const elapsed = now - st.startTime;
+            const u = Math.min(1, Math.max(0, elapsed / st.duration));
+
+            // Smooth C^1 sinusoidal velocity curve with continuous acceleration:
+            // Give the dart longer to blend from its resting heading into
+            // the orbit tangent at the top-right launch point.
+            const A = 0.28, B = 0.28;
+            const Vmax = 1 / (1 - (A + B) * 0.5);
+            if (u <= A) {
+              st.p = Vmax * (u * 0.5 - (A * Math.sin((Math.PI * u) / A)) / (2 * Math.PI));
+              st.mix = 0.5 - 0.5 * Math.cos((Math.PI * u) / A);
+            } else if (u > 1 - B) {
+              const w = (1 - u) / B;
+              st.p = 1 - Vmax * ((B * w) * 0.5 - (B * Math.sin(Math.PI * w)) / (2 * Math.PI));
+              st.mix = 0.5 - 0.5 * Math.cos(Math.PI * w);
+              if (!st.landed && st.onLand) {
+                st.landed = true;
+                st.onLand();
+              }
+            } else {
+              st.p = Vmax * (A * 0.5 + (u - A));
+              st.mix = 1;
+            }
+
+            if (u >= 1) {
+              st.p = 1;
+              st.mix = 0;
+              st.on = false;
+              win.classList.remove('orbiting');
+              if (st.resolveRun) {
+                const res = st.resolveRun;
+                st.resolveRun = null;
+                res();
+              }
+            }
+          }
+
+          const o = pose();
+          fly.setAttribute(
+            'transform',
+            `translate(${o.x.toFixed(1)} ${o.y.toFixed(1)}) rotate(${o.h.toFixed(1)}) scale(${o.fx.toFixed(3)} 1) rotate(${-TIP}) scale(${o.s.toFixed(3)}) translate(${-C.x} ${-C.y})`,
+          );
+          const far = Math.max(0, o.z / (st.geo ? st.geo.rz : 220));
+          fly.style.opacity = (1 - st.mix * 0.4 * far).toFixed(2);
+
+          if (st.mix > 0.95) st.behindOK = true;
+          else if (st.mix < 0.5) st.behindOK = false;
+          st.behind += ((st.behindOK && o.z > 0 ? 1 : 0) - st.behind) * 0.2;
+          hole.setAttribute('fill-opacity', st.behind.toFixed(3));
+
+          if (st.on || st.mix > 0.001) moveStreaks(o);
+          else if (!st.home) setHome();
+
+          const leaning = leanTerminal(o);
+          st.raf = st.on || !st.home || st.behind > 0.005 || leaning ? requestAnimationFrame(frame) : 0;
+        }
+
+        function kick() {
+          if (!st.raf) st.raf = requestAnimationFrame(frame);
+        }
+
+        hero.addEventListener('pointermove', (e) => {
+          if (!flightOK() || e.pointerType === 'touch') return;
+          const r = hero.getBoundingClientRect();
+          st.mouse.x = ((e.clientX - r.left) / r.width - 0.5) * 2;
+          st.mouse.y = ((e.clientY - r.top) / r.height - 0.5) * 2;
+          if (!st.geo) measure();
+          kick();
+        });
+        hero.addEventListener('pointerleave', () => {
+          st.mouse.x = 0; st.mouse.y = 0;
+          kick();
+        });
+        window.addEventListener('resize', () => { st.geo = null; });
+
+        return {
+          reset() {
+            st.gen++;
+            st.p = 0; st.mix = 0; st.on = false; st.geo = null; st.behindOK = false; st.behind = 0;
+            st.lastRawHeading = null;
+            if (st.resolveRun) {
+              const res = st.resolveRun;
+              st.resolveRun = null;
+              res();
+            }
+            win.classList.remove('orbiting');
+            hole.setAttribute('fill-opacity', '0');
+            pulses.replaceChildren();
+            fly.removeAttribute('transform');
+            fly.style.opacity = '';
+            setHome();
+            kick();
+          },
+          mask(on) {
+            if (on) streakGroup.setAttribute('mask', 'url(#hl-streak-mask)');
+            else streakGroup.removeAttribute('mask');
+          },
+          run(total, onLand) {
+            measure();
+            st.on = true;
+            st.startTime = performance.now();
+            st.duration = total || 4000;
+            st.onLand = onLand;
+            st.landed = false;
+            st.lastRawHeading = null;
+            win.classList.add('orbiting');
+            kick();
+            return new Promise((res) => {
+              st.resolveRun = res;
+            });
+          },
+          pulse() {
+            const o = pose();
+            const c = document.createElementNS(SVG, 'circle');
+            c.setAttribute('class', 'hl-pulse');
+            c.setAttribute('cx', o.x.toFixed(1));
+            c.setAttribute('cy', o.y.toFixed(1));
+            c.setAttribute('r', (70 * o.d).toFixed(1));
+            c.addEventListener('animationend', () => c.remove());
+            pulses.appendChild(c);
+          },
+        };
+      })();
+
+      function burst() {
+        if (!logo) return;
+        logo.classList.remove('burst');
+        void logo.getBoundingClientRect();
+        logo.classList.add('burst');
+      }
+
+      function reset() {
+        steps.forEach((el) => el.classList.remove('show'));
+        typed.forEach((el) => { el.textContent = ''; el.classList.remove('typing'); });
+        badges.forEach((_, el) => el.classList.remove('running'));
+        done = 0;
+        if (flight) flight.reset();
+        if (logo) logo.setAttribute('class', 'hero-logo is-animating');
+      }
+
+      async function type(el) {
+        const text = texts.get(el);
+        el.classList.add('typing');
+        for (let i = 1; i <= text.length; i++) {
+          el.textContent = text.slice(0, i);
+          await wait(35 + Math.random() * 35);
+        }
+        el.classList.remove('typing');
+      }
+
+      async function play(my) {
+        const alive = () => my === token;
+        reset();
+        const orbit = !!flight && flightOK();
+        if (flight) flight.mask(!orbit);
+        await wait(600);
+        for (const el of steps) {
+          if (!alive()) return;
+          el.classList.add('show');
+          const cmd = el.querySelector('[data-type]');
+          const badge = el.querySelector('[data-final]');
+          if (cmd) {
+            await type(cmd);
+            await wait(350);
+            // Pressing enter on the lane command sends the dart off.
+            if (el.hasAttribute('data-launch') && logo) {
+              if (orbit) { logo.classList.add('flying'); flight.run(4000, () => logo.classList.add('go')); }
+              else {
+                logo.classList.add('fly', 'nudge');
+                setTimeout(() => alive() && logo.classList.add('go'), 700);
+              }
+            }
+          }
+          else if (badge) {
+            badge.textContent = 'running';
+            badge.classList.add('running');
+            const last = done === 2;
+            if (orbit) await wait(last ? 1500 : 1100);
+            else await wait(900 + Math.random() * 500);
+            if (!alive()) return;
+            badge.classList.remove('running');
+            badge.textContent = badges.get(badge);
+            if (logo) logo.classList.add('s' + ++done);
+            if (orbit) { if (!last) flight.pulse(); } else burst();
+            await wait(150);
+          } else {
+            if (logo && el.classList.contains('success-ribbon')) {
+              logo.classList.add('hit');
+            }
+            await wait(450);
+          }
+        }
+        await wait(5000);
+        if (alive()) play(my);
+      }
+
+      term.classList.add('is-animating');
+      if (logo) logo.classList.add('is-animating');
+      // Only animate while visible, and restart cleanly when it comes back.
+      new IntersectionObserver((entries) => {
+        const visible = entries.some((e) => e.isIntersecting);
+        token++;
+        if (visible) play(token);
+      }, { threshold: 0.3 }).observe(term);
+    })();
+
     // Copy Command logic
     const copyBtn = document.getElementById('copy-cmd-btn');
     const copyText = document.getElementById('copy-text');
