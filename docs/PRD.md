@@ -70,17 +70,17 @@ Dartlane is a **release-automation layer** that runs inside any CI and locally *
 ## 7. Product scope
 
 ### 7.1 Concepts
-- **Action:** one reusable, typed step (for example `FlutterBuild`, `FirebaseDistribute`). Takes typed params, returns a typed result, can describe itself for dry-run.
+- **Action:** one reusable, typed step (for example `FlutterBuild`, `FirebaseDistribute`). Takes typed parameters as plain constructor fields (`LaneAction<R>`, no separate params object), returns a typed result, can describe itself for dry-run.
 - **Lane:** a workflow defined by the user as a Dart function that calls actions in order and passes results between them.
 
 Example (proposed API, names may change):
 
 ```dart
 void main(List<String> args) => dartlane(args, lanes: {
-  'beta': lane('Build and ship to QA', (ctx) async {
+  'beta': Lane('Build and ship to QA', (ctx) async {
     await ctx.run(FlutterAnalyze());
-    final build = await ctx.run(FlutterBuild(target: Target.apk, flavor: 'prod'));
-    await ctx.run(FirebaseDistribute(build.artifact, app: Config.firebaseAppId, groups: ['qa']));
+    final build = await ctx.run(FlutterBuild(target: BuildTarget.apk, flavor: 'prod'));
+    await ctx.run(FirebaseDistribute(build.path, app: Config.firebaseAppId, groups: ['qa']));
   }),
 });
 ```
@@ -90,7 +90,7 @@ void main(List<String> args) => dartlane(args, lanes: {
 **0.1.0 preview (target: ~2 weeks)**
 - CLI: `init`, `run`, `list`, `doctor` (basic), `update`.
 - Actions: `FlutterBuild` (apk, appbundle; modes; flavor; dart-define; build name/number), `FlutterPubGet`, `FlutterAnalyze`, `FlutterTest`, pubspec version read/bump, `FirebaseDistribute` (APK upload, release notes, testers, groups).
-- Typed `BuildResult` handed from build to Firebase; optional explicit path override.
+- Typed `BuildResult` from the build; its `path` is passed to Firebase (`dartlane_firebase` does not depend on `dartlane_flutter`, so it takes a path); optional explicit path override.
 - Service-account-file authentication for Firebase **(decided)**, with Application Default Credentials as a fallback **(proposed, low cost)**.
 - `--dry-run` that prints the planned steps.
 - Correct non-zero exit codes on failure.
@@ -115,42 +115,43 @@ void main(List<String> args) => dartlane(args, lanes: {
 | CLI-2 | `dartlane run <lane> [--key=value ...]` runs the lane and exits with the lane's exit code. |
 | CLI-3 | `dartlane list` shows lanes with their descriptions. |
 | CLI-4 | `dartlane doctor` checks the environment (Flutter and Dart SDKs, credentials present, flavors detected) and reports clear fixes. |
-| CLI-5 | `--dry-run` prints each planned step without executing side effects. `--verbose` shows executed commands. |
+| CLI-5 | `--dry-run` prints each planned step without executing side effects, as a best-effort preview that exits 0. `--verbose` shows executed commands. |
 | CLI-6 | `dartlane update` and an update notice via pub.dev. |
 
 ### 8.2 Runtime and API
 | ID | Requirement |
 |---|---|
 | RT-1 | Lanes are plain Dart functions; registration requires only a name and description. |
-| RT-2 | Actions are typed classes with a `run(Context)` method, a `describe()` for dry-run, and a typed result. |
-| RT-3 | `ctx.run(action)` provides timing, logging, error mapping and dry-run uniformly. |
-| RT-4 | Shell and HTTP access go through interfaces; `dartlane_core/testing.dart` provides fakes. |
+| RT-2 | Actions are typed classes with a `run(LaneContext)` method, a `describe()` for dry-run, and a typed result. |
+| RT-3 | `ctx.run(action)` provides timing, logging, error mapping and dry-run uniformly. In a dry run it prints the action's `describe()` and returns its `dryRunResult()` instead of running it. |
+| RT-4 | Shell access goes through `LaneShell` and HTTP through a `package:http` `Client` (`ctx.shell`, `ctx.sh`, `ctx.http`); `dartlane_core/testing.dart` provides fakes. |
 | RT-5 | Secrets are read through `ctx.secrets` and masked in logs. |
 | RT-6 | Errors form a small hierarchy (user error with a hint, action failed) mapped to exit codes. |
-| RT-7 | Arguments accept `--key=value` (and the legacy `key:value` form if cheap to keep). |
+| RT-7 | Arguments accept `--key=value`, `--flag` and `--no-flag`, read through typed getters on `ctx.args` (`LaneArgs`). The legacy `key:value` form is dropped. |
 
 ### 8.3 Built-in actions
 | ID | Requirement |
 |---|---|
-| ACT-1 | `FlutterBuild`: one action with typed params (`target`, `mode`, `flavor`, `dartDefines` as a list/map, `buildName`, `buildNumber`, `obfuscate` with `splitDebugInfo`), returns `BuildResult(path, version, mode, flavor)`. Convenience aliases (e.g. `flutterBuildApk`) keep existing lane names working. |
+| ACT-1 | `FlutterBuild`: one action with typed params (`target`, `mode`, `flavor`, `dartDefines` as a list/map, `buildName`, `buildNumber`, `obfuscate` with `splitDebugInfo`), returns `BuildResult(path, target, mode, flavor, version)`. Named constructors `FlutterBuild.apk(...)` and `FlutterBuild.appBundle(...)` are shortcuts. The old lane names (for example `flutterBuildApk`) return as ready-made lanes. |
 | ACT-2 | `FlutterAnalyze`, `FlutterTest`, `FlutterPubGet` as gate steps. |
 | ACT-3 | Version action reads and bumps `version:` and build number in `pubspec.yaml`. (The separate `fastlane-plugin-flutter_versioner` project stays independent **(decided)**.) |
 | ACT-4 | `FirebaseDistribute`: uploads an APK, polls the operation, sets release notes, and distributes to testers and groups; supports notes and testers from a file. |
 | ACT-5 | `FirebaseDistribute` fails the lane on any error, and treats "no testers or groups" as a clearly reported outcome that does not contradict its own message. |
-| ACT-6 | Binary location comes from `BuildResult` or an explicit override, not from guessing in `build/` output folders. |
+| ACT-6 | Binary location comes from `BuildResult.path`, which is read from Flutter's own `Built <path>` output line, or from an explicit override. It is never guessed from the `build/` folder layout. |
 
 ### 8.4 Extensibility
 - A custom lane is a function in the user's `lanes.dart`.
 - A custom action is a class in the user's `dartlane/` package, or a pub.dev package depending only on `dartlane_core` (convention: `dartlane_<name>`).
 - No registry or manifest in 0.1.0.
+- First-party action packages export ready-made lanes (for example a Firebase distribute lane) built from arguments. `dartlane init` registers them in `lanes.dart`, so common steps run with no custom lane. `dartlane_core` never pre-registers them, to keep it independent of the action packages.
 
 ## 9. Architecture summary (proposed)
 
-Repo is a pub workspace (Dart 3.6+), fully split into four packages **(decided)**:
+Repo is a pub workspace (Dart 3.10+), fully split into four packages **(decided)**:
 
 ```text
 packages/
-  dartlane_core/       # Action, Context, runner, Shell/HTTP/secrets interfaces, errors, testing fakes
+  dartlane_core/       # LaneAction, LaneContext, runner, Shell/HTTP/secrets interfaces, errors, testing fakes
   dartlane_flutter/    # build, pub get, analyze, test, version actions
   dartlane_firebase/   # FirebaseDistribute, upload/polling, auth, client
   dartlane/            # CLI: init, run, list, doctor, update, launcher
@@ -207,7 +208,7 @@ Capacity: serious part-time, about 15 hrs/week **(decided)**.
 | Store API and iOS signing depth | Defer iOS; ship Android/Firebase first; plan Google Play before iOS. |
 | Competition from Google/Flutter or CI vendors | Run inside any CI; stay pluggable so vendors can embed Dartlane. |
 | Time and burnout (solo maintainer, four packages) | Thin vertical slice first; workspace plus publish script; defer nice-to-haves; seek co-maintainers after launch. |
-| `Context` grows into a god object | Keep it small or split into narrow interfaces. |
+| `LaneContext` grows into a god object | Keep it small or split into narrow interfaces. |
 | `ctx.run` can be bypassed | Document the convention; lint first-party actions. |
 | Dry-run drifts from real behaviour | Treat it as best-effort and say so. |
 | Compile cache bugs | Start with plain `dart run`; add the cache only after it is proven. |
@@ -222,7 +223,7 @@ Capacity: serious part-time, about 15 hrs/week **(decided)**.
 4. Is `describe()` required or optional for custom actions?
 5. Ship a `dartlane create action` scaffolder before 0.1.0 or after?
 6. Final confirmation of release-automation-layer positioning, plugin-as-package, and env-vars-plus-`.env` for secrets.
-7. How exactly do existing lane names and the legacy `key:value` argument format migrate, if at all?
+7. ~~How do existing lane names and the legacy `key:value` argument format migrate?~~ Decided: lane names migrate as ready-made lanes exported by the action packages and registered by `init` (see 8.4). The `key:value` format is dropped: it is ambiguous with values that contain colons, and arguments never reached lanes in the old code (see RT-7).
 
 ## 16. Known issues in the current code (input to the refactor)
 

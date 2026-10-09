@@ -30,16 +30,18 @@ scripts. Dartlane aims to fix the pain points of that setup:
 - **Lane:** a workflow you write as a Dart function that calls actions in order and
   passes results between them.
 
+New here? Follow the [quick start](docs/quick-start.md), then read how to [write a lane and an action](docs/writing-lanes-and-actions.md).
+
 ## Planned usage
 
-The API below is a proposal and names may change.
+The API below is a proposal and names may change. `dartlane init`, `dartlane run`, `dartlane list`, `dartlane doctor` and `dartlane update` already work, and `dartlane --version` prints the version. `dartlane run <lane> --dry-run` prints what a lane would do without doing it (a best-effort preview). Until the packages are published, `init` needs `--local-repo <path to this repo>`. `dartlane run <lane> [arguments]` starts `dartlane/lanes.dart`, passes the arguments through and exits with the lane's exit code; `dart run dartlane/lanes.dart <lane>` does the same without the CLI.
 
 ```dart
 void main(List<String> args) => dartlane(args, lanes: {
-  'beta': lane('Build and ship to QA', (ctx) async {
+  'beta': Lane('Build and ship to QA', (ctx) async {
     await ctx.run(FlutterAnalyze());
-    final build = await ctx.run(FlutterBuild(target: Target.apk, flavor: 'prod'));
-    await ctx.run(FirebaseDistribute(build.artifact, app: Config.firebaseAppId, groups: ['qa']));
+    final build = await ctx.run(FlutterBuild(target: BuildTarget.apk, flavor: 'prod'));
+    await ctx.run(FirebaseDistribute(build.path, app: Config.firebaseAppId, groups: ['qa']));
   }),
 });
 ```
@@ -51,6 +53,17 @@ dartlane run beta      # run a lane
 dartlane doctor        # check your environment
 dartlane run beta --dry-run
 ```
+
+## Ready-made lanes
+
+`dartlane init` registers lanes from the action packages, so common steps run without writing a lane:
+
+```sh
+dartlane run flutter_build_apk --flavor=prod --mode=release
+dartlane run firebase_distribute --app=<id> --file=app.apk --groups=qa
+```
+
+Lanes: `flutter_build_apk`, `flutter_build_appbundle`, `flutter_pub_get`, `flutter_analyze`, `flutter_test` and `firebase_distribute`. Run `dartlane list` for their options. They replace the old `flutterBuildApk` and `flutterBuildAppBundle` lanes.
 
 ## Roadmap
 
@@ -64,11 +77,11 @@ iOS signing and App Store Connect are not part of 0.1.0.
 
 ## Planned packages
 
-The repo will be a pub workspace (Dart 3.6+) with four packages:
+The repo will be a pub workspace (Dart 3.10+) with four packages:
 
 | Package | Purpose |
 |---|---|
-| `dartlane_core` | Action, Context, runner, Shell/HTTP/secrets interfaces, errors, test fakes |
+| `dartlane_core` | LaneAction, LaneContext, runner, Shell/HTTP/secrets interfaces, errors, test fakes |
 | `dartlane_flutter` | Build, pub get, analyze, test and version actions |
 | `dartlane_firebase` | `FirebaseDistribute`, upload, auth |
 | `dartlane` | The CLI |
@@ -76,10 +89,26 @@ The repo will be a pub workspace (Dart 3.6+) with four packages:
 ## Repository layout
 
 ```text
-assets/   logo and images
-docs/     PRD and the GitHub issue plan
-tool/     maintenance scripts
+packages/  dartlane_core, dartlane_flutter, dartlane_firebase and the dartlane CLI
+example/   a Flutter app used to try Dartlane end to end
+assets/    logo and images
+docs/      quick start, PRD and the GitHub issue plan
+tool/      maintenance scripts
 ```
+
+## Try it from source
+
+The example app's `dartlane/` folder is generated and git-ignored. Recreate it
+from the current code whenever the CLI or the templates change:
+
+```sh
+dart pub get                       # once, from the repo root
+dart run melos run example:reset   # delete example/flutter_app/dartlane and run dartlane init again
+cd example/flutter_app
+dart run ../../packages/dartlane/bin/dartlane.dart run build
+```
+
+`example:reset` deletes everything in that folder, including files you added.
 
 ## Project planning
 

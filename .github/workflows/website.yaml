@@ -1,0 +1,60 @@
+name: website
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - website/**
+      - docs/**
+      - .github/workflows/website.yaml
+  pull_request:
+    paths:
+      - website/**
+      - docs/**
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Build
+        working-directory: website
+        run: |
+          npm ci
+          npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Pull requests from forks have no access to secrets, so only build them.
+      - name: Deploy to Firebase Hosting
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_USE_DARTLANE }}
+          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
+          entryPoint: website
+          channelId: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'live' }}

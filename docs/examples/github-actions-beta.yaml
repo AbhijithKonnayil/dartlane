@@ -1,0 +1,73 @@
+# Example GitHub Actions workflow: build the app and send it to testers with
+# the `beta` lane from docs/quick-start.md.
+#
+# Copy it to .github/workflows/beta.yaml in your app's repository.
+#
+# Setup:
+#   1. Commit the dartlane/ folder that `dartlane init` created (not .env, and
+#      not pubspec_overrides.yaml, which is only for developing Dartlane).
+#   2. Add a repository secret named FIREBASE_SERVICE_ACCOUNT holding the whole
+#      JSON key of a service account with the "Firebase App Distribution Admin"
+#      role (Settings > Secrets and variables > Actions).
+name: beta
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'beta-*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: beta
+  cancel-in-progress: false
+
+jobs:
+  beta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Get app dependencies
+        run: flutter pub get
+
+      - name: Get lane dependencies
+        working-directory: dartlane
+        run: dart pub get
+
+      # The key never goes into the repository or the log. It is written to a
+      # file outside the checkout, and Firebase sign-in reads the path from
+      # GOOGLE_APPLICATION_CREDENTIALS.
+      - name: Write the Firebase key
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          key="$RUNNER_TEMP/firebase-key.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$key"
+          chmod 600 "$key"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$key" >> "$GITHUB_ENV"
+
+      # Runs the same lane you run on your laptop. On GitHub Actions, errors
+      # and warnings show up as annotations on the run.
+      - name: Run the beta lane
+        run: dart run dartlane/lanes.dart beta --verbose
+
+      - name: Remove the Firebase key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-key.json"

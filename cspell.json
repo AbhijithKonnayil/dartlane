@@ -7,27 +7,47 @@
     "flutter"
   ],
   "ignorePaths": [
-    ".dart_tool/**",
     "**/.dart_tool/**",
-    "pubspec.lock",
+    "**/pubspec_overrides.yaml",
+    ".dart_tool/**",
     "assets/**",
-    "cspell.json"
+    "cspell.json",
+    "example/*/{android,ios,linux,macos,web,windows}/**",
+    "pubspec.lock",
+    "website/.astro/**",
+    "website/dist/**",
+    "website/node_modules/**",
+    "website/src/content/docs/docs/**"
   ],
   "words": [
     "Abhijith",
+    "aioncw",
     "appbundle",
     "behaviour",
     "buildinpublic",
     "Codemagic",
+    "cret",
     "dartlane",
     "Fastfile",
     "fastlane",
+    "flexbox",
+    "frontmatter",
     "Konnayil",
+    "logissue",
     "melos",
     "opensource",
     "pubspec",
+    "recognised",
     "refactorable",
-    "scaffolder"
+    "scaffolder",
+    "Subheadline",
+    "subosito",
+    "sysexits",
+    "temurin",
+    "tmpl",
+    "USERPROFILE",
+    "WCAG",
+    "wordmark"
   ],
   "ignoreRegExpList": [
     "/\\|\\s*[0-9a-f]{6}\\s*\\|/"

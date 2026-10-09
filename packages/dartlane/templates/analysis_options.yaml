@@ -1,0 +1,11 @@
+include: ../analysis_options.yaml
+
+# These files are copied into a user's project, where the packages they import
+# are real dependencies and the lanes are meant to be edited. Keep them
+# analyzed and formatted like any other Dart file, but skip the style lints
+# that make sense for this package and not for the copied example.
+linter:
+  rules:
+    depend_on_referenced_packages: false
+    avoid_redundant_argument_values: false
+    prefer_const_constructors: false

@@ -3,7 +3,7 @@ description: Dartlane monorepo. Release automation for Flutter and Dart, written
 publish_to: none
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.10.0
 
 workspace:
   - packages/dartlane_core
@@ -35,6 +35,20 @@ melos:
     fix:
       description: Apply automatic fixes (dart fix) and format every package.
       exec: dart fix --apply && dart format .
+    generate:
+      description: Regenerate generated code (the init templates and the version).
+      steps:
+        - generate:templates
+        - generate:version
+    generate:templates:
+      description: Embed packages/dartlane/templates into the CLI.
+      run: dart run packages/dartlane/tool/generate_templates.dart
+    generate:version:
+      description: Write the CLI version and minimum Dart from its pubspec.yaml.
+      run: dart run packages/dartlane/tool/generate_version.dart
+    example:reset:
+      description: Recreate the example app's dartlane/ folder with dartlane init.
+      run: dart run tool/reset_example.dart
     deps:
       description: Enforce workspace dependency rules (no path deps, no cycles).
       run: ./tool/check_dependencies.sh

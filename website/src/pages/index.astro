@@ -1,0 +1,661 @@
+---
+import Landing from '../layouts/Landing.astro';
+import { readStars, readVersion, site } from '../site';
+
+const version = readVersion();
+const stars = await readStars();
+---
+
+<Landing title="Dartlane — Open Source Release Automation for Flutter & Dart">
+  <!-- Sticky Header -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="logo-group">
+        <img src="/logo.png" alt="Dartlane Logo" class="logo-img" />
+        <span>Dartlane</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="/docs/quick-start/" class="nav-link">Docs</a>
+        <a href="https://github.com/AbhijithKonnayil/dartlane/tree/dev/docs/examples" target="_blank" rel="noreferrer" class="nav-link">Examples</a>
+        <a href="https://github.com/AbhijithKonnayil/dartlane/blob/dev/packages/dartlane/CHANGELOG.md" target="_blank" rel="noreferrer" class="nav-link">Changelog</a>
+      </nav>
+
+      <div class="header-actions">
+        <!-- GitHub Star Badge -->
+        <a href="https://github.com/AbhijithKonnayil/dartlane" target="_blank" rel="noreferrer" class="star-badge" title="Star Dartlane on GitHub">
+          <span class="material-symbols-outlined star-icon" style="font-variation-settings: 'FILL' 1;">star</span>
+          <span>Star</span>
+          {stars && <span class="star-count">{stars}</span>}
+        </a>
+
+        <!-- Theme Toggle Button -->
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light mode" title="Toggle theme">
+          <span class="material-symbols-outlined theme-icon" style="font-size: 19px;">dark_mode</span>
+        </button>
+
+        <!-- Get Started CTA -->
+        <a href="/docs/quick-start/" class="btn-primary">
+          Get started
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- SECTION 1: HERO SECTION -->
+    <section class="hero-section">
+      <div class="ambient-glow-top"></div>
+      <div class="ambient-glow-mid"></div>
+
+      <div class="container hero-grid">
+        <!-- Left: Headline & CTAs -->
+        <div class="hero-left">
+          <div class="hero-pill">
+            <span class="pulse-dot"></span>
+            <span class="pill-version">{version ? `Early preview: ${version}` : 'Early preview'}</span>
+            <span class="pill-sep">|</span>
+            <span class="pill-tag">Zero Ruby. Pure Dart.</span>
+          </div>
+
+          <h1 class="hero-title">
+            Ship Flutter and Dart apps faster, with <span class="gradient-text">lanes written in Dart.</span>
+          </h1>
+
+          <p class="hero-desc">
+            Release automation for Flutter and Dart. Define lanes, compose actions, run anywhere: locally on developer machines or natively in CI.
+          </p>
+
+          <div class="hero-ctas">
+            <a href="/docs/quick-start/" class="btn-primary btn-lg">
+              <span>Get started</span>
+              <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+            </a>
+            <a href="https://github.com/AbhijithKonnayil/dartlane" target="_blank" rel="noreferrer" class="btn-secondary">
+              <svg class="github-svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path>
+              </svg>
+              <span>View on GitHub</span>
+            </a>
+          </div>
+
+          <div class="hero-metrics">
+            <div class="metric-item">
+              <span class="material-symbols-outlined">bolt</span>
+              <span>Preview any lane with --dry-run</span>
+            </div>
+            <div class="metric-item">
+              <span class="material-symbols-outlined">verified</span>
+              <span>Typed actions in Dart</span>
+            </div>
+            <div class="metric-item">
+              <span class="material-symbols-outlined">layers</span>
+              <span>Same lane locally and in CI</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Interactive CLI Terminal Mockup -->
+        <div class="hero-right">
+          <div class="terminal-window">
+            <div class="terminal-titlebar">
+              <div class="terminal-dots">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+              </div>
+              <div class="terminal-title">
+                <span class="material-symbols-outlined" style="font-size: 14px;">terminal</span>
+                <span>dartlane-cli — zsh</span>
+              </div>
+              <div class="terminal-dim">80x24</div>
+            </div>
+
+            <div class="terminal-body">
+              <div class="cli-row">
+                <span class="cli-lambda">λ</span>
+                <span style="color: #cbd5e1;">project-flutter</span>
+                <span style="color: #64748b;">$</span>
+                <span class="cli-cmd">{site.installCommand}</span>
+              </div>
+              <div style="color: #94a3b8; font-size: 0.8125rem; padding-left: 1rem;">
+                Activated dartlane{version && ` ${version}`}.
+              </div>
+
+              <div class="cli-row" style="padding-top: 0.25rem;">
+                <span class="cli-lambda">λ</span>
+                <span style="color: #cbd5e1;">project-flutter</span>
+                <span style="color: #64748b;">$</span>
+                <span style="color: #f8fafc; font-weight: 600;">dartlane run beta</span>
+              </div>
+
+              <!-- Execution Steps -->
+              <div style="display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.25rem; min-width: 0;">
+                <div class="cli-step">
+                  <div class="cli-step-info">
+                    <span style="color: #64748b; font-size: 0.75rem; flex-shrink: 0;">[1/3]</span>
+                    <span class="cli-step-text" style="color: #f1f5f9;">flutter analyze</span>
+                  </div>
+                  <span class="status-badge">PASSED</span>
+                </div>
+
+                <div class="cli-step">
+                  <div class="cli-step-info">
+                    <span style="color: #64748b; font-size: 0.75rem; flex-shrink: 0;">[2/3]</span>
+                    <span class="cli-step-text" style="color: #f1f5f9;">flutter build apk --release</span>
+                  </div>
+                  <span class="status-badge">DONE</span>
+                </div>
+
+                <div class="cli-step">
+                  <div class="cli-step-info">
+                    <span style="color: #64748b; font-size: 0.75rem; flex-shrink: 0;">[3/3]</span>
+                    <span class="cli-step-text" style="color: #f1f5f9;">Firebase App Distribution upload</span>
+                  </div>
+                  <span class="status-badge status-upload">UPLOADED</span>
+                </div>
+              </div>
+
+              <!-- Success Ribbon -->
+              <div class="success-ribbon">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span class="material-symbols-outlined" style="font-size: 20px; font-variation-settings: 'FILL' 1;">check_circle</span>
+                  <span>Lane 'beta' completed successfully</span>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: INSTALL STRIP & BADGES -->
+    <section class="install-strip-section">
+      <div class="container">
+        <div class="install-strip">
+          <!-- Terminal Command Box with Copy Button -->
+          <div class="command-box">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="color: var(--dl-orange); font-weight: 700;">$</span>
+              <span id="cli-command-text">{site.installCommand}</span>
+            </div>
+            <button id="copy-cmd-btn" class="copy-btn" title="Copy to clipboard">
+              <span class="material-symbols-outlined" style="font-size: 15px;" id="copy-icon">content_copy</span>
+              <span id="copy-text">Copy</span>
+            </button>
+          </div>
+
+          <!-- Live Badges -->
+          <div class="badge-row">
+            <div class="meta-badge">
+              <span class="badge-dot badge-dot-cyan"></span>
+              <span>version</span>
+              <strong>{version ?? 'preview'}</strong>
+            </div>
+            <div class="meta-badge">
+              <span class="badge-dot badge-dot-green"></span>
+              <span>license</span>
+              <strong>{site.license}</strong>
+            </div>
+            <div class="meta-badge" style="color: var(--dl-primary);">
+              <span class="material-symbols-outlined" style="font-size: 14px;">flutter</span>
+              <strong>Android + Firebase today</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: FEATURES GRID (4 Cards) -->
+    <section class="features-section">
+      <div class="container">
+        <div class="section-tag">
+          <span class="section-tag-line"></span>
+          <span>Built for Flutter Velocities</span>
+        </div>
+        <h2 class="section-title">Everything you need to ship. Nothing you don't.</h2>
+        <p class="section-subtitle">
+          Say goodbye to opaque fastfiles, flaky Gemfile setups, and fragmented build tools. Control every stage from compilation to storefront delivery using native Dart idioms.
+        </p>
+
+        <div class="features-grid">
+          <!-- Card 1: Lanes -->
+          <div class="feature-card">
+            <div>
+              <div class="feature-icon-box">
+                <span class="material-symbols-outlined" style="font-size: 24px;">alt_route</span>
+              </div>
+              <h3>Lanes: Plain Dart Workflows</h3>
+              <p>
+                Organize complex deployment pipelines into intuitive, asynchronous Dart functions. Chain tasks, handle failures cleanly, and reuse workflow logic across apps.
+              </p>
+            </div>
+            <a href="/docs/writing-lanes-and-actions/" class="feature-link">
+              <span>Read docs</span>
+              <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
+            </a>
+          </div>
+
+          <!-- Card 2: Actions -->
+          <div class="feature-card">
+            <div>
+              <div class="feature-icon-box">
+                <span class="material-symbols-outlined" style="font-size: 24px;">extension</span>
+              </div>
+              <h3>Actions: Composable Steps</h3>
+              <p>
+                Typed, reusable steps for analyzing, testing, building Android APKs and app bundles, bumping pubspec versions, and uploading to Firebase. Write your own when you need more.
+              </p>
+            </div>
+            <a href="/docs/writing-lanes-and-actions/" class="feature-link">
+              <span>Explore actions</span>
+              <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
+            </a>
+          </div>
+
+          <!-- Card 3: Providers -->
+          <div class="feature-card">
+            <div>
+              <div class="feature-icon-box">
+                <span class="material-symbols-outlined" style="font-size: 24px;">rocket_launch</span>
+              </div>
+              <h3>Firebase App Distribution</h3>
+              <p>
+                Upload builds to your tester groups straight from a lane. Play Store and App Store publishing are not supported yet.
+              </p>
+            </div>
+            <a href="/docs/quick-start/" class="feature-link">
+              <span>Ship to testers</span>
+              <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
+            </a>
+          </div>
+
+          <!-- Card 4: CI -->
+          <div class="feature-card">
+            <div>
+              <div class="feature-icon-box">
+                <span class="material-symbols-outlined" style="font-size: 24px;">sync_alt</span>
+              </div>
+              <h3>CI-Ready Everywhere</h3>
+              <p>
+                The lane you run on your laptop runs the same way on GitHub Actions, with no prompts and error annotations. Other CI that sets CI=true gets the same behavior with plain output.
+              </p>
+            </div>
+            <a href="/docs/ci/" class="feature-link">
+              <span>CI setup guides</span>
+              <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: CODE SHOWCASE (2 Columns) -->
+    <section class="code-section">
+      <div class="container showcase-grid">
+        <!-- Left: Value Narrative -->
+        <div class="showcase-left">
+          <div class="hero-pill" style="margin-bottom: 1rem;">
+            <span class="pill-version" style="font-weight: 700;">TYPE SAFETY FIRST</span>
+          </div>
+          <h2 class="section-title">Define your pipelines in 100% Dart.</h2>
+          <p class="section-subtitle" style="margin-bottom: 2rem;">
+            No Ruby gems, no Groovy scripting, no YAML nightmare logic. Enjoy complete language coherence across your entire stack.
+          </p>
+
+          <div>
+            <!-- Value Point 1 -->
+            <div class="value-card">
+              <div class="value-icon">
+                <span class="material-symbols-outlined" style="font-size: 20px;">code</span>
+              </div>
+              <div class="value-content">
+                <h4>Instant IDE Autocomplete</h4>
+                <p>Full parameter suggestions, documentation hints, and jump-to-definition in VS Code and Android Studio.</p>
+              </div>
+            </div>
+
+            <!-- Value Point 2 -->
+            <div class="value-card">
+              <div class="value-icon">
+                <span class="material-symbols-outlined" style="font-size: 20px;">shield_with_heart</span>
+              </div>
+              <div class="value-content">
+                <h4>Compile-Time Sanity</h4>
+                <p>Catch missing variables, broken arguments, and typing mistakes before launching an expensive 30-minute CI run.</p>
+              </div>
+            </div>
+
+            <!-- Value Point 3 -->
+            <div class="value-card">
+              <div class="value-icon">
+                <span class="material-symbols-outlined" style="font-size: 20px;">swap_horiz</span>
+              </div>
+              <div class="value-content">
+                <h4>Zero Context Switching</h4>
+                <p>Your team already knows Dart. Build scripts become native codebase assets rather than devops friction.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: macOS IDE Mockup -->
+        <div class="showcase-right">
+          <div class="terminal-window">
+            <div class="terminal-titlebar">
+              <div class="terminal-dots">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+                <div style="margin-left: 0.75rem; display: flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; border-radius: 0.25rem 0.25rem 0 0; background: #080e1c; font-family: var(--font-code); font-size: 0.75rem; color: var(--dl-primary);">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">description</span>
+                  <span>dartlane.dart</span>
+                </div>
+              </div>
+              <div class="terminal-dim" style="color: #94a3b8;">UTF-8 • Dart 3.10</div>
+            </div>
+
+            <pre class="ide-code-pre"><code><span style="color: #38bdf8; font-weight: 600;">import</span> <span style="color: #2dd4bf;">'package:dartlane_core/dartlane_core.dart'</span>;
+<span style="color: #38bdf8; font-weight: 600;">import</span> <span style="color: #2dd4bf;">'package:dartlane_firebase/dartlane_firebase.dart'</span>;
+<span style="color: #38bdf8; font-weight: 600;">import</span> <span style="color: #2dd4bf;">'package:dartlane_flutter/dartlane_flutter.dart'</span>;
+
+<span style="color: #38bdf8; font-weight: 600;">import</span> <span style="color: #2dd4bf;">'config.dart'</span>;
+
+<span style="color: #00c6cf;">Future</span>&lt;<span style="color: #38bdf8; font-weight: 600;">void</span>&gt; <span style="color: #fbbf24;">main</span>(<span style="color: #00c6cf;">List</span>&lt;<span style="color: #00c6cf;">String</span>&gt; args) =&gt; <span style="color: #fbbf24;">dartlane</span>(
+  args,
+  lanes: &#123;
+    <span style="color: #2dd4bf;">'beta'</span>: <span style="color: #00c6cf;">Lane</span>(<span style="color: #2dd4bf;">'Build and ship to QA'</span>, (ctx) <span style="color: #38bdf8; font-weight: 600;">async</span> &#123;
+      <span style="color: #64748b;">// 1. Static analysis gate</span>
+      <span style="color: #38bdf8; font-weight: 600;">await</span> ctx.<span style="color: #fbbf24;">run</span>(<span style="color: #38bdf8; font-weight: 600;">const</span> <span style="color: #00c6cf;">FlutterAnalyze</span>());
+
+      <span style="color: #64748b;">// 2. Build the Android APK</span>
+      <span style="color: #38bdf8; font-weight: 600;">final</span> build = <span style="color: #38bdf8; font-weight: 600;">await</span> ctx.<span style="color: #fbbf24;">run</span>(<span style="color: #00c6cf;">FlutterBuild</span>.<span style="color: #fbbf24;">apk</span>(flavor: <span style="color: #00c6cf;">Config</span>.flavor));
+
+      <span style="color: #64748b;">// 3. Upload to Firebase App Distribution</span>
+      <span style="color: #38bdf8; font-weight: 600;">await</span> ctx.<span style="color: #fbbf24;">run</span>(
+        <span style="color: #00c6cf;">FirebaseDistribute</span>(
+          build.path,
+          app: <span style="color: #00c6cf;">Config</span>.firebaseAppId,
+          groups: [<span style="color: #2dd4bf;">'qa'</span>],
+        ),
+      );
+    &#125;),
+  &#125;,
+);</code></pre>
+
+            <div class="ide-footer">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="color: #22c55e; display: inline-flex; align-items: center; gap: 0.375rem;">
+                  <span class="badge-dot badge-dot-green"></span>
+                  <span>No syntax errors</span>
+                </span>
+                <span>25 lines</span>
+              </div>
+              <div style="color: var(--dl-primary); font-weight: 600;">Dart Analysis: Clean</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: HOW IT WORKS (Numbered steps) -->
+    <section class="steps-section">
+      <div class="container">
+        <div class="steps-header">
+          <div class="section-tag" style="justify-content: center; margin-bottom: 0.5rem;">
+            <span>Up and running in about five minutes</span>
+          </div>
+          <h2 class="section-title">How Dartlane works</h2>
+          <p class="section-subtitle" style="margin-bottom: 0;">
+            Three steps from install to a build on your testers' phones.
+          </p>
+        </div>
+
+        <div class="steps-grid">
+          <!-- Step 1 -->
+          <div class="step-card">
+            <div class="step-top">
+              <span class="step-number step-num-1">01</span>
+              <div class="step-icon-wrap" style="color: var(--dl-orange);">
+                <span class="material-symbols-outlined" style="font-size: 20px;">download</span>
+              </div>
+            </div>
+            <div>
+              <h3>Install globally</h3>
+              <p>
+                Activate the Dartlane CLI globally with <code style="color: var(--dl-primary); font-family: var(--font-code);">dart pub global activate</code>. No Ruby, no bundler.
+              </p>
+            </div>
+            <div class="step-snippet">
+              <span style="color: var(--dl-orange); font-weight: 700;">$</span> {site.installCommand}
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="step-card">
+            <div class="step-top">
+              <span class="step-number step-num-2">02</span>
+              <div class="step-icon-wrap" style="color: var(--dl-primary);">
+                <span class="material-symbols-outlined" style="font-size: 20px;">draw</span>
+              </div>
+            </div>
+            <div>
+              <h3>Set up and define a lane</h3>
+              <p>
+                Run <code style="color: var(--dl-primary); font-family: var(--font-code);">dartlane init</code> in your app. It creates <code style="color: var(--dl-primary); font-family: var(--font-code);">dartlane/lanes.dart</code>, where you chain build and upload actions.
+              </p>
+            </div>
+            <div class="step-snippet">
+              <span style="color: var(--dl-orange); font-weight: 700;">$</span> dartlane init
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="step-card">
+            <div class="step-top">
+              <span class="step-number step-num-3">03</span>
+              <div class="step-icon-wrap" style="color: var(--dl-secondary);">
+                <span class="material-symbols-outlined" style="font-size: 20px;">play_arrow</span>
+              </div>
+            </div>
+            <div>
+              <h3>Run locally or in CI</h3>
+              <p>
+                Execute <code style="color: var(--dl-primary); font-family: var(--font-code);">dartlane run beta</code>, or preview it first with <code style="color: var(--dl-primary); font-family: var(--font-code);">--dry-run</code>. The same command works in CI.
+              </p>
+            </div>
+            <div class="step-snippet">
+              <span style="color: var(--dl-orange); font-weight: 700;">$</span> dartlane run beta
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: CI INTEGRATION SECTION -->
+    <section class="ci-section">
+      <div class="container">
+        <div class="ci-container">
+          <div class="ci-grid">
+            <!-- Left: CI Description & Providers -->
+            <div class="ci-left">
+              <div class="section-tag">
+                <span class="material-symbols-outlined" style="font-size: 20px;">all_inclusive</span>
+                <span>Effortless CI/CD</span>
+              </div>
+              <h2 class="section-title">Runs the same on your laptop and on CI</h2>
+              <p class="section-subtitle" style="margin-bottom: 1.5rem;">
+                Lanes are plain Dart, so a CI job only needs Dart and Flutter. GitHub Actions gets error and warning annotations, and any CI that sets CI=true runs without prompts.
+              </p>
+
+              <div class="provider-badges">
+                <div class="provider-badge">
+                  <span class="material-symbols-outlined">verified</span>
+                  <span>GitHub Actions: full support</span>
+                </div>
+                <div class="provider-badge">
+                  <span class="material-symbols-outlined">check_circle</span>
+                  <span>Other CI (CI=true): plain output</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: CI YAML Snippet Mockup -->
+            <div class="ci-right">
+              <div class="terminal-window">
+                <div class="terminal-titlebar">
+                  <div class="terminal-title" style="color: #f1f5f9;">
+                    <span class="material-symbols-outlined" style="font-size: 16px; color: var(--dl-orange);">integration_instructions</span>
+                    <span>.github/workflows/beta.yaml</span>
+                  </div>
+                  <div class="terminal-dim" style="color: #94a3b8;">YAML</div>
+                </div>
+
+                <pre class="ide-code-pre" style="padding: 1.25rem;"><code><span style="color: #38bdf8;">- uses:</span> actions/checkout@v4
+<span style="color: #38bdf8;">- uses:</span> subosito/flutter-action@v2
+<span style="color: #38bdf8;">- name:</span> Install lane dependencies
+  <span style="color: #38bdf8;">working-directory:</span> dartlane
+  <span style="color: #38bdf8;">run:</span> dart pub get
+<span style="color: #64748b;"># Same lane you run on your laptop</span>
+<span style="color: #38bdf8;">- name:</span> Run the beta lane
+  <span style="color: #38bdf8;">run:</span> dart run dartlane/lanes.dart beta</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 7: FINAL CTA BANNER -->
+    <section class="banner-section">
+      <div class="container">
+        <div class="banner-card">
+          <div class="banner-glow"></div>
+          <div class="banner-content">
+            <div class="section-tag" style="color: #38bdf8; margin-bottom: 0.5rem;">
+              <span class="pulse-dot"></span>
+              <span>Ready to automate?</span>
+            </div>
+            <h2>Hit your release target every time.</h2>
+            <p>
+              Define your release once as a lane in Dart, then run it the same way on your laptop and in CI.
+            </p>
+
+            <div class="banner-ctas">
+              <a href="/docs/quick-start/" class="btn-primary btn-lg">
+                <span>Read the docs</span>
+                <span class="material-symbols-outlined" style="font-size: 18px;">menu_book</span>
+              </a>
+              <a href="https://github.com/AbhijithKonnayil/dartlane" target="_blank" rel="noreferrer" class="btn-secondary" style="background: rgba(255, 255, 255, 0.1); color: #ffffff; border-color: rgba(255, 255, 255, 0.15);">
+                <span>Get started on GitHub</span>
+                <span class="material-symbols-outlined" style="font-size: 18px;">open_in_new</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <!-- Brand Info -->
+        <div class="footer-brand">
+          <div class="logo-group" style="margin-bottom: 0.75rem;">
+            <img src="/logo.png" alt="Dartlane Logo" class="logo-img" />
+            <span>Dartlane</span>
+          </div>
+          <p style="font-size: 0.875rem; color: var(--dl-text-muted); max-width: 22rem; line-height: 1.6; margin: 0;">
+            Open-source release automation for Flutter and Dart apps, written in Dart.
+          </p>
+        </div>
+
+        <!-- Links Grid -->
+        <div class="footer-nav">
+          <div class="footer-nav-col">
+            <h5>Resources</h5>
+            <a href="/docs/quick-start/">Docs</a>
+            <a href="https://github.com/AbhijithKonnayil/dartlane/tree/dev/docs/examples" target="_blank" rel="noreferrer">Examples</a>
+          </div>
+
+          <div class="footer-nav-col">
+            <h5>Ecosystem</h5>
+            <a href="https://pub.dev/packages/dartlane" target="_blank" rel="noreferrer">pub.dev</a>
+            <a href="https://github.com/AbhijithKonnayil/dartlane" target="_blank" rel="noreferrer">GitHub</a>
+          </div>
+
+          <div class="footer-nav-col">
+            <h5>Legal</h5>
+            <a href="https://github.com/AbhijithKonnayil/dartlane/blob/dev/LICENSE" target="_blank" rel="noreferrer">License</a>
+          </div>
+
+          <div class="footer-nav-col">
+            <h5>Release</h5>
+            <a href="https://github.com/AbhijithKonnayil/dartlane/blob/dev/CHANGELOG.md" target="_blank" rel="noreferrer">Changelog</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 The Dartlane Authors.</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Interactive Scripts (Theme toggle, Copy button) -->
+  <script is:inline>
+    // Copy Command logic
+    const copyBtn = document.getElementById('copy-cmd-btn');
+    const copyText = document.getElementById('copy-text');
+    const copyIcon = document.getElementById('copy-icon');
+    const cliText = document.getElementById('cli-command-text')?.innerText || 'dart pub global activate dartlane';
+
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(cliText);
+          if (copyText) copyText.innerText = 'Copied!';
+          if (copyIcon) copyIcon.innerText = 'check';
+          setTimeout(() => {
+            if (copyText) copyText.innerText = 'Copy';
+            if (copyIcon) copyIcon.innerText = 'content_copy';
+          }, 2000);
+        } catch (err) {
+          console.error('Failed to copy', err);
+        }
+      });
+    }
+
+    // Theme Switcher logic
+    const themeBtn = document.getElementById('theme-toggle');
+    const themeIcon = themeBtn?.querySelector('.theme-icon');
+
+    function updateThemeUI(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+      document.documentElement.classList.toggle('light', theme === 'light');
+      if (themeIcon) {
+        themeIcon.innerText = theme === 'dark' ? 'light_mode' : 'dark_mode';
+        themeBtn.setAttribute('title', theme === 'dark' ? 'Switch to Light mode' : 'Switch to Dark mode');
+      }
+    }
+
+    // Sync initial icon with current theme
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    updateThemeUI(currentTheme);
+
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        const activeTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        const newTheme = activeTheme === 'dark' ? 'light' : 'dark';
+        updateThemeUI(newTheme);
+        try {
+          localStorage.setItem('starlight-theme', newTheme);
+        } catch (e) {}
+      });
+    }
+  </script>
+</Landing>

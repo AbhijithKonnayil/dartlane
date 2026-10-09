@@ -64,7 +64,7 @@ parse_row() { # sets F1 F2 F3 from "- a | b | c"
 
 while IFS= read -r line || [ -n "$line" ]; do
   case "$line" in
-    "#### "*) flush_issue; title="${line#\#\#\#\# }" ;;
+    "#### "*) flush_issue; title="${line#\#\#\#\# }"; title="${title#\#[0-9]* }" ;;
     "### "*)  flush_issue; ms="${line#\#\#\# }" ;;
     "## "*)   flush_issue; section="${line#\#\# }" ;;
     "- "*)
