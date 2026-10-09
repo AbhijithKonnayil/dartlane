@@ -80,6 +80,10 @@ Future<void> main(List<String> args) => dartlane(args, lanes: {
 }, checks: [_AlwaysOk(), _FlagFile(), _Optional()]);
 ''';
 
+/// The doctor tests read stderr, but on GitHub Actions the logger prints
+/// warnings and errors as annotations on stdout. Run them as if not on CI.
+const _notOnCi = {'CI': 'false', 'GITHUB_ACTIONS': 'false'};
+
 void main() {
   late Directory project;
 
@@ -168,6 +172,7 @@ dependency_overrides:
       Platform.resolvedExecutable,
       ['run', 'dartlane/lanes.dart', '--doctor'],
       workingDirectory: project.path,
+      environment: _notOnCi,
     );
 
     tearDown(() {
