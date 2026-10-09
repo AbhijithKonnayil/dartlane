@@ -13,27 +13,41 @@
     "assets/**",
     "cspell.json",
     "example/*/{android,ios,linux,macos,web,windows}/**",
-    "pubspec.lock"
+    "pubspec.lock",
+    "website/.astro/**",
+    "website/dist/**",
+    "website/node_modules/**",
+    "website/src/content/docs/docs/**"
   ],
   "words": [
     "Abhijith",
+    "aioncw",
     "appbundle",
     "behaviour",
     "buildinpublic",
     "Codemagic",
+    "cret",
     "dartlane",
     "Fastfile",
     "fastlane",
+    "flexbox",
+    "frontmatter",
     "Konnayil",
     "logissue",
     "melos",
     "opensource",
     "pubspec",
+    "recognised",
     "refactorable",
     "scaffolder",
+    "Subheadline",
+    "subosito",
     "sysexits",
+    "temurin",
     "tmpl",
-    "USERPROFILE"
+    "USERPROFILE",
+    "WCAG",
+    "wordmark"
   ],
   "ignoreRegExpList": [
     "/\\|\\s*[0-9a-f]{6}\\s*\\|/"
