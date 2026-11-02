@@ -17,9 +17,28 @@ void main() {
     test('builds a release apk by default', () async {
       ctx.shell.stub('flutter build apk --release', stdout: _apkOutput);
 
-      await ctx.run(const FlutterBuild(target: BuildTarget.apk));
+      await ctx.run(const FlutterBuild(type: ExecutableType.apk));
 
       expect(ctx.shell.commands, ['flutter build apk --release']);
+    });
+
+    test('passes --target for the entrypoint file', () async {
+      ctx.shell.stub(
+        'flutter build apk --release --target=lib/main_prod.dart',
+        stdout: _apkOutput,
+      );
+
+      final result = await ctx.run(
+        const FlutterBuild(
+          type: ExecutableType.apk,
+          target: 'lib/main_prod.dart',
+        ),
+      );
+
+      expect(result.target, 'lib/main_prod.dart');
+      expect(ctx.shell.commands, [
+        'flutter build apk --release --target=lib/main_prod.dart',
+      ]);
     });
 
     test('builds an app bundle in another mode', () async {
@@ -30,7 +49,7 @@ void main() {
 
       await ctx.run(
         const FlutterBuild(
-          target: BuildTarget.appbundle,
+          type: ExecutableType.appbundle,
           mode: BuildMode.profile,
         ),
       );
@@ -40,7 +59,7 @@ void main() {
 
     test('passes every option', () async {
       const build = FlutterBuild(
-        target: BuildTarget.apk,
+        type: ExecutableType.apk,
         flavor: 'prod',
         dartDefines: ['ENV=prod'],
         buildName: '1.2.3',
@@ -67,7 +86,7 @@ void main() {
 
     test('passes --dart-define once per entry', () async {
       const build = FlutterBuild(
-        target: BuildTarget.apk,
+        type: ExecutableType.apk,
         dartDefines: ['A=1', 'B=two words', 'C=x=y'],
       );
       ctx.shell.stub(build.describe(), stdout: _apkOutput);
@@ -86,7 +105,7 @@ void main() {
 
     test('runs in the working directory', () async {
       const build = FlutterBuild(
-        target: BuildTarget.apk,
+        type: ExecutableType.apk,
         workingDirectory: 'app',
       );
       ctx.shell.stub(build.describe(), stdout: _apkOutput);
@@ -98,7 +117,7 @@ void main() {
 
     test('describes itself as the command', () {
       expect(
-        const FlutterBuild(target: BuildTarget.apk, flavor: 'prod').describe(),
+        const FlutterBuild(type: ExecutableType.apk, flavor: 'prod').describe(),
         'flutter build apk --release --flavor=prod',
       );
     });
@@ -106,7 +125,7 @@ void main() {
     test('is logged as a step', () async {
       ctx.shell.stub('flutter build apk --release', stdout: _apkOutput);
 
-      await ctx.run(const FlutterBuild(target: BuildTarget.apk));
+      await ctx.run(const FlutterBuild(type: ExecutableType.apk));
 
       expect(ctx.logger.lines.first, '> flutter build apk --release');
     });
@@ -116,17 +135,19 @@ void main() {
     test('path is the one Flutter reports', () async {
       ctx.shell.stub('flutter build apk --release', stdout: _apkOutput);
 
-      final result = await ctx.run(const FlutterBuild(target: BuildTarget.apk));
+      final result = await ctx.run(
+        const FlutterBuild(type: ExecutableType.apk),
+      );
 
       expect(result.path, 'build/app/outputs/flutter-apk/app-release.apk');
-      expect(result.target, BuildTarget.apk);
+      expect(result.type, ExecutableType.apk);
       expect(result.mode, BuildMode.release);
       expect(result.flavor, isNull);
       expect(result.version, isNull);
     });
 
     test('path points at the flavored artifact', () async {
-      const build = FlutterBuild(target: BuildTarget.apk, flavor: 'prod');
+      const build = FlutterBuild(type: ExecutableType.apk, flavor: 'prod');
       ctx.shell.stub(
         build.describe(),
         stdout:
@@ -144,7 +165,10 @@ void main() {
     });
 
     test('path is the flavored app bundle', () async {
-      const build = FlutterBuild(target: BuildTarget.appbundle, flavor: 'prod');
+      const build = FlutterBuild(
+        type: ExecutableType.appbundle,
+        flavor: 'prod',
+      );
       const aab = 'build/app/outputs/bundle/prodRelease/app-prod-release.aab';
       ctx.shell.stub(build.describe(), stdout: '✓ Built $aab (30.0MB)');
 
@@ -157,7 +181,7 @@ void main() {
       'path is relative to the working directory when one is given',
       () async {
         const build = FlutterBuild(
-          target: BuildTarget.apk,
+          type: ExecutableType.apk,
           workingDirectory: 'app',
         );
         ctx.shell.stub(build.describe(), stdout: _apkOutput);
@@ -173,7 +197,7 @@ void main() {
 
     test('version combines the build name and number', () async {
       const both = FlutterBuild(
-        target: BuildTarget.apk,
+        type: ExecutableType.apk,
         buildName: '1.2.3',
         buildNumber: '45',
       );
@@ -181,7 +205,7 @@ void main() {
       expect((await ctx.run(both)).version, '1.2.3+45');
 
       const nameOnly = FlutterBuild(
-        target: BuildTarget.apk,
+        type: ExecutableType.apk,
         buildName: '1.2.3',
       );
       ctx.shell.stub(nameOnly.describe(), stdout: _apkOutput);
@@ -198,7 +222,7 @@ void main() {
       );
 
       await expectLater(
-        ctx.run(const FlutterBuild(target: BuildTarget.apk)),
+        ctx.run(const FlutterBuild(type: ExecutableType.apk)),
         throwsA(
           isA<ShellException>().having((e) => e.result.exitCode, 'exitCode', 1),
         ),
@@ -210,7 +234,7 @@ void main() {
     test('the build log is printed as the build runs', () async {
       ctx.shell.stub('flutter build apk --release', stdout: _apkOutput);
 
-      await ctx.run(const FlutterBuild(target: BuildTarget.apk));
+      await ctx.run(const FlutterBuild(type: ExecutableType.apk));
 
       expect(
         ctx.logger.lines,
@@ -241,7 +265,7 @@ void main() {
       ctx.shell.stub('flutter build apk --release', stdout: 'Done.');
 
       await expectLater(
-        ctx.run(const FlutterBuild(target: BuildTarget.apk)),
+        ctx.run(const FlutterBuild(type: ExecutableType.apk)),
         throwsA(isA<ActionFailed>()),
       );
     });
@@ -249,7 +273,7 @@ void main() {
     test('a dart define without = is a user error', () async {
       await expectLater(
         ctx.run(
-          const FlutterBuild(target: BuildTarget.apk, dartDefines: ['ENV']),
+          const FlutterBuild(type: ExecutableType.apk, dartDefines: ['ENV']),
         ),
         throwsA(
           isA<UserError>().having((e) => e.message, 'message', contains('ENV')),
@@ -260,7 +284,7 @@ void main() {
 
     test('obfuscate without splitDebugInfo is a user error', () async {
       await expectLater(
-        ctx.run(const FlutterBuild(target: BuildTarget.apk, obfuscate: true)),
+        ctx.run(const FlutterBuild(type: ExecutableType.apk, obfuscate: true)),
         throwsA(isA<UserError>()),
       );
       expect(ctx.shell.commands, isEmpty);
@@ -274,7 +298,7 @@ void main() {
 
     test('prints the command and runs nothing', () async {
       await dry.run(
-        const FlutterBuild(target: BuildTarget.apk, flavor: 'prod'),
+        const FlutterBuild(type: ExecutableType.apk, flavor: 'prod'),
       );
 
       expect(dry.shell.calls, isEmpty);
@@ -285,42 +309,42 @@ void main() {
 
     test('gives a result the next step can use', () async {
       final result = await dry.run(
-        const FlutterBuild(target: BuildTarget.apk),
+        const FlutterBuild(type: ExecutableType.apk),
       );
 
       expect(result.path, 'build/app/outputs/flutter-apk/app-release.apk');
-      expect(result.target, BuildTarget.apk);
+      expect(result.type, ExecutableType.apk);
       expect(result.mode, BuildMode.release);
     });
 
     test('the path is where Flutter usually puts each kind of build', () async {
       const expected = {
-        (BuildTarget.apk, BuildMode.release, null):
+        (ExecutableType.apk, BuildMode.release, null):
             'build/app/outputs/flutter-apk/app-release.apk',
-        (BuildTarget.apk, BuildMode.debug, null):
+        (ExecutableType.apk, BuildMode.debug, null):
             'build/app/outputs/flutter-apk/app-debug.apk',
-        (BuildTarget.apk, BuildMode.profile, null):
+        (ExecutableType.apk, BuildMode.profile, null):
             'build/app/outputs/flutter-apk/app-profile.apk',
-        (BuildTarget.apk, BuildMode.release, 'prod'):
+        (ExecutableType.apk, BuildMode.release, 'prod'):
             'build/app/outputs/flutter-apk/app-prod-release.apk',
-        (BuildTarget.appbundle, BuildMode.release, null):
+        (ExecutableType.appbundle, BuildMode.release, null):
             'build/app/outputs/bundle/release/app-release.aab',
-        (BuildTarget.appbundle, BuildMode.debug, null):
+        (ExecutableType.appbundle, BuildMode.debug, null):
             'build/app/outputs/bundle/debug/app-debug.aab',
-        (BuildTarget.appbundle, BuildMode.release, 'prod'):
+        (ExecutableType.appbundle, BuildMode.release, 'prod'):
             'build/app/outputs/bundle/prodRelease/app-prod-release.aab',
-        (BuildTarget.appbundle, BuildMode.profile, 'dev'):
+        (ExecutableType.appbundle, BuildMode.profile, 'dev'):
             'build/app/outputs/bundle/devProfile/app-dev-profile.aab',
       };
 
-      for (final MapEntry(key: (target, mode, flavor), value: path)
+      for (final MapEntry(key: (type, mode, flavor), value: path)
           in expected.entries) {
-        final build = FlutterBuild(target: target, mode: mode, flavor: flavor);
+        final build = FlutterBuild(type: type, mode: mode, flavor: flavor);
 
         expect(
           (await dry.run(build)).path,
           path,
-          reason: '$target $mode $flavor',
+          reason: '$type $mode $flavor',
         );
       }
     });
@@ -329,7 +353,7 @@ void main() {
       'the path is relative to the working directory when one is given',
       () async {
         final result = await dry.run(
-          const FlutterBuild(target: BuildTarget.apk, workingDirectory: 'app'),
+          const FlutterBuild(type: ExecutableType.apk, workingDirectory: 'app'),
         );
 
         expect(
@@ -342,7 +366,7 @@ void main() {
     test('carries the flavor and the version like a real build', () async {
       final result = await dry.run(
         const FlutterBuild(
-          target: BuildTarget.apk,
+          type: ExecutableType.apk,
           flavor: 'prod',
           buildName: '1.2.3',
           buildNumber: '45',
@@ -356,12 +380,12 @@ void main() {
     test('still catches options that cannot work', () async {
       await expectLater(
         dry.run(
-          const FlutterBuild(target: BuildTarget.apk, dartDefines: ['ENV']),
+          const FlutterBuild(type: ExecutableType.apk, dartDefines: ['ENV']),
         ),
         throwsA(isA<UserError>()),
       );
       await expectLater(
-        dry.run(const FlutterBuild(target: BuildTarget.apk, obfuscate: true)),
+        dry.run(const FlutterBuild(type: ExecutableType.apk, obfuscate: true)),
         throwsA(isA<UserError>()),
       );
     });
@@ -370,7 +394,7 @@ void main() {
       // A real build with no "Built" line is an error. A dry run never
       // reads the output.
       await expectLater(
-        dry.run(const FlutterBuild(target: BuildTarget.apk)),
+        dry.run(const FlutterBuild(type: ExecutableType.apk)),
         completes,
       );
     });
@@ -380,14 +404,14 @@ void main() {
     test('FlutterBuild.apk builds an apk', () {
       const build = FlutterBuild.apk(flavor: 'prod', mode: BuildMode.debug);
 
-      expect(build.target, BuildTarget.apk);
+      expect(build.type, ExecutableType.apk);
       expect(build.describe(), 'flutter build apk --debug --flavor=prod');
     });
 
     test('FlutterBuild.appBundle builds an app bundle', () {
       const build = FlutterBuild.appBundle(dartDefines: ['A=1']);
 
-      expect(build.target, BuildTarget.appbundle);
+      expect(build.type, ExecutableType.appbundle);
       expect(
         build.describe(),
         'flutter build appbundle --release --dart-define=A=1',

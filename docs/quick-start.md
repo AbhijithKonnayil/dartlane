@@ -22,12 +22,12 @@ yourself, but Dartlane does not build them.
 
 ## 1. Install
 
-The packages are not on pub.dev yet, so install from a checkout:
-
 ```sh
-git clone https://github.com/AbhijithKonnayil/dartlane.git
-dart pub global activate --source path dartlane/packages/dartlane
+dart pub global activate dartlane
 ```
+
+Dartlane is a prerelease (`0.1.0-dev.1`), and pub installs it when no stable
+version exists yet.
 
 Check it works:
 
@@ -40,10 +40,8 @@ dartlane --version
 From your Flutter app's root:
 
 ```sh
-dartlane init --local-repo /path/to/the/dartlane/checkout
+dartlane init
 ```
-
-(`--local-repo` is only needed until the packages are published.)
 
 This creates a `dartlane/` folder with `lanes.dart`, `config.dart` and its own
 `pubspec.yaml`, runs `dart pub get`, and adds `.dartlane/` and `.env` to your

@@ -10,6 +10,11 @@ Source of truth for the labels, milestones and issues created by
   and everything after it is the issue body.
 - Issue bodies must not contain lines starting with `#`.
 
+> **Status (2026-10-09):** the issues below were created and M0 to M2 and #51 are
+> closed. This file is now a historical record plus the source for the script, so
+> an issue's current state lives on GitHub, not here. Some titles on GitHub were
+> reworded (for example #29, #42).
+
 ## Labels
 
 - area:core | 1d76db | dartlane_core package
@@ -131,7 +136,7 @@ Build on the existing logger: levels (info, detail, warn, error, success), `--ve
 
 Labels: area:flutter,type:feature
 
-One typed build action: `FlutterBuild(target: apk|appbundle, mode, flavor, dartDefines, buildName, buildNumber, obfuscate, splitDebugInfo)`. Returns `BuildResult(path, target, mode, flavor, version)`. Provide `FlutterBuild.apk(...)` and `FlutterBuild.appBundle(...)` named constructors as shortcuts.
+One typed build action: `FlutterBuild(type: apk|appbundle, target, mode, flavor, dartDefines, buildName, buildNumber, obfuscate, splitDebugInfo)`. Returns `BuildResult(path, type, target, mode, flavor, version)`. Provide `FlutterBuild.apk(...)` and `FlutterBuild.appBundle(...)` named constructors as shortcuts.
 
 **Acceptance criteria**
 - A failed `flutter build` fails the lane (non-zero exit).
@@ -175,7 +180,7 @@ Labels: area:cli,type:feature
 - No hardcoded `--path=../`.
 - Adds `.dartlane/` and `.env` to `.gitignore`.
 - Asks before overwriting an existing `dartlane/` folder. Without a terminal it refuses and points to `--force`, which overwrites only the generated files and keeps any others.
-- `init` runs `dart pub get` in the new package. Until the packages are on pub.dev that needs the hidden `--local-repo <path>` option, which writes a git-ignored `pubspec_overrides.yaml` and leaves `pubspec.yaml` clean.
+- `init` runs `dart pub get` in the new package. For work from a checkout there is a hidden `--local-repo <path>` option, which writes a git-ignored `pubspec_overrides.yaml` and leaves `pubspec.yaml` clean.
 - The generated `lanes.dart` registers the ready-made lanes from the action packages, so `dartlane run <lane> --key=value` works before the user writes any lane.
 
 #### #37 CLI: run forwards arguments and the exit code

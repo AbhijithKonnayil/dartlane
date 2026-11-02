@@ -3,14 +3,14 @@ import 'package:dartlane_flutter/src/actions/build_result.dart';
 import 'package:path/path.dart' as p;
 
 /// What kind of file `flutter build` produces.
-enum BuildTarget {
+enum ExecutableType {
   /// An Android APK: `flutter build apk`.
   apk(extension: 'apk'),
 
   /// An Android app bundle: `flutter build appbundle`.
   appbundle(extension: 'aab');
 
-  const BuildTarget({required this.extension});
+  const ExecutableType({required this.extension});
 
   /// The extension of the built file.
   final String extension;
@@ -32,7 +32,7 @@ enum BuildMode {
 ///
 /// ```dart
 /// final build = await ctx.run(
-///   FlutterBuild(target: BuildTarget.apk, flavor: 'prod'),
+///   FlutterBuild(type: ExecutableType.apk, flavor: 'prod'),
 /// );
 /// print(build.path);
 /// ```
@@ -43,7 +43,8 @@ enum BuildMode {
 class FlutterBuild extends LaneAction<BuildResult> {
   /// Creates a build.
   const FlutterBuild({
-    required this.target,
+    required this.type,
+    this.target,
     this.mode = BuildMode.release,
     this.flavor,
     this.dartDefines = const [],
@@ -54,8 +55,9 @@ class FlutterBuild extends LaneAction<BuildResult> {
     this.workingDirectory,
   });
 
-  /// Builds an APK. Same as `FlutterBuild(target: BuildTarget.apk)`.
+  /// Builds an APK. Same as `FlutterBuild(type: ExecutableType.apk)`.
   const FlutterBuild.apk({
+    this.target,
     this.mode = BuildMode.release,
     this.flavor,
     this.dartDefines = const [],
@@ -64,11 +66,12 @@ class FlutterBuild extends LaneAction<BuildResult> {
     this.obfuscate = false,
     this.splitDebugInfo,
     this.workingDirectory,
-  }) : target = BuildTarget.apk;
+  }) : type = ExecutableType.apk;
 
   /// Builds an app bundle. Same as
-  /// `FlutterBuild(target: BuildTarget.appbundle)`.
+  /// `FlutterBuild(type: ExecutableType.appbundle)`.
   const FlutterBuild.appBundle({
+    this.target,
     this.mode = BuildMode.release,
     this.flavor,
     this.dartDefines = const [],
@@ -77,10 +80,14 @@ class FlutterBuild extends LaneAction<BuildResult> {
     this.obfuscate = false,
     this.splitDebugInfo,
     this.workingDirectory,
-  }) : target = BuildTarget.appbundle;
+  }) : type = ExecutableType.appbundle;
 
   /// Whether to build an APK or an app bundle.
-  final BuildTarget target;
+  final ExecutableType type;
+
+  /// The entrypoint file, passed as `--target`, for example
+  /// `lib/main_prod.dart`. Defaults to Flutter's own `lib/main.dart`.
+  final String? target;
 
   /// The build mode. Defaults to release.
   final BuildMode mode;
@@ -111,8 +118,9 @@ class FlutterBuild extends LaneAction<BuildResult> {
   /// The arguments passed to `flutter`.
   List<String> get arguments => [
     'build',
-    target.name,
+    type.name,
     '--${mode.name}',
+    if (target != null) '--target=$target',
     if (flavor != null) '--flavor=$flavor',
     for (final define in dartDefines) '--dart-define=$define',
     if (buildName != null) '--build-name=$buildName',
@@ -150,6 +158,7 @@ class FlutterBuild extends LaneAction<BuildResult> {
 
   BuildResult _result(String path) => BuildResult(
     path: path,
+    type: type,
     target: target,
     mode: mode,
     flavor: flavor,
@@ -165,10 +174,10 @@ class FlutterBuild extends LaneAction<BuildResult> {
   /// Only used for a dry run. A real build reports its own path.
   String get _usualPath {
     final suffix = flavor == null ? mode.name : '$flavor-${mode.name}';
-    switch (target) {
-      case BuildTarget.apk:
+    switch (type) {
+      case ExecutableType.apk:
         return 'build/app/outputs/flutter-apk/app-$suffix.apk';
-      case BuildTarget.appbundle:
+      case ExecutableType.appbundle:
         final folder = '${flavor ?? ''}${_capitalized(mode.name)}';
         final directory = flavor == null ? mode.name : folder;
         return 'build/app/outputs/bundle/$directory/app-$suffix.aab';
@@ -207,11 +216,11 @@ class FlutterBuild extends LaneAction<BuildResult> {
   /// error rather than a guess.
   String _builtPath(String stdout) {
     final match = RegExp(
-      'Built (.+?\\.${target.extension})',
+      'Built (.+?\\.${type.extension})',
     ).firstMatch(stdout);
     if (match == null) {
       throw ActionFailed(
-        '`flutter build` finished but did not report a .${target.extension} '
+        '`flutter build` finished but did not report a .${type.extension} '
         'file.',
       );
     }

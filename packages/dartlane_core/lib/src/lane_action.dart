@@ -5,7 +5,7 @@ import 'package:dartlane_core/src/lane_context.dart';
 ///
 /// [R] is the type of the result. An action keeps its parameters as ordinary
 /// fields set by its constructor, so a lane reads like
-/// `FlutterBuild(target: BuildTarget.apk, flavor: 'prod')`. An action with no
+/// `FlutterBuild(type: ExecutableType.apk, flavor: 'prod')`. An action with no
 /// result uses `void`.
 ///
 /// Call actions through [LaneContext.run], never [run] directly, so every step

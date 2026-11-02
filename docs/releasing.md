@@ -60,9 +60,9 @@ dart run melos publish             # publish in dependency order
 
 Melos publishes `dartlane_core` before the packages that depend on it.
 
-Until the launch milestone (M3), every package has `publish_to: none`, so
-`publish --dry-run` reports "no unpublished packages". Removing it from all four
-packages in one change is part of #51.
+All four packages are published, starting with `0.1.0-dev.1`. The root
+`pubspec.yaml` (the workspace) and the generated `dartlane/` package that `init`
+creates keep `publish_to: none`; the example app does too.
 
 ## Prereleases
 
@@ -93,10 +93,10 @@ To move from `dev` to `rc`, use `--preid rc` on the `--prerelease` run.
 
 How pub treats prereleases:
 
-- `dart pub global activate dartlane` installs the latest **stable** version.
-  While only prereleases exist, ask for one explicitly:
-  `dart pub global activate dartlane 0.1.0-dev.1`. Do not put that in the quick
-  start for ordinary users; share it with testers directly.
+- `dart pub global activate dartlane` installs the latest stable version, and
+  falls back to the newest prerelease while no stable version exists (checked
+  with `0.1.0-dev.1`). Once a stable version is out, it will no longer pick
+  prereleases, so testers then need the version: `dart pub global activate dartlane 0.1.0-rc.1`.
 - pub.dev lists prereleases on a separate line and does not make them the
   package's main version.
 - The generated `dartlane/pubspec.yaml` uses `^<dartlane version>`, so a
@@ -109,7 +109,7 @@ How pub treats prereleases:
 
 ## Checklist for each published version
 
-1. All four packages: `publish_to: none` removed, versions bumped together.
+1. All four packages: versions bumped together.
 2. `dart run melos run check` passes.
 3. `dart run melos publish --dry-run` is clean.
 4. Publish, in dependency order (Melos does this).

@@ -186,12 +186,32 @@ usually safe, but `dryRunResult` is what the next step receives.
   environment:
     sdk: ^3.10.0
   dependencies:
-    dartlane_core: ^0.1.0
+    dartlane_core: ^0.1.0-dev.1
   dev_dependencies:
     test: ^1.25.0
   ```
 
   Users add it under `dependencies:` in `dartlane/pubspec.yaml`.
+
+  Lay the package out the way `dartlane_flutter` does. Only the entry file is
+  public; everything else lives under `src/`:
+
+  ```text
+  dartlane_<name>/
+    lib/
+      dartlane_<name>.dart   # only `export` lines
+      src/
+        actions/             # LaneAction subclasses and their result types
+        checks/              # DoctorChecks and one function that lists them
+        <name>_lanes.dart    # optional ready-made lanes
+    test/                    # mirrors src/, uses dartlane_core/testing.dart
+  ```
+
+  A small plugin can keep its files directly in `src/` (as `dartlane_firebase`
+  does) and add the folders as it grows. Name actions as a verb or tool plus
+  object, without an `Action` suffix (`FlutterBuild`, `ReadPubspecVersion`), and
+  prefix them with the tool so they group in autocomplete. Name result types as
+  nouns (`BuildResult`).
 
   If your package needs setup, give it `DoctorCheck`s and export a function
   such as `slackChecks()`, which users pass to `dartlane(checks: [...])`. A
