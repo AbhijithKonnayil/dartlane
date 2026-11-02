@@ -136,7 +136,7 @@ Build on the existing logger: levels (info, detail, warn, error, success), `--ve
 
 Labels: area:flutter,type:feature
 
-One typed build action: `FlutterBuild(target: apk|appbundle, mode, flavor, dartDefines, buildName, buildNumber, obfuscate, splitDebugInfo)`. Returns `BuildResult(path, target, mode, flavor, version)`. Provide `FlutterBuild.apk(...)` and `FlutterBuild.appBundle(...)` named constructors as shortcuts.
+One typed build action: `FlutterBuild(type: apk|appbundle, target, mode, flavor, dartDefines, buildName, buildNumber, obfuscate, splitDebugInfo)`. Returns `BuildResult(path, type, target, mode, flavor, version)`. Provide `FlutterBuild.apk(...)` and `FlutterBuild.appBundle(...)` named constructors as shortcuts.
 
 **Acceptance criteria**
 - A failed `flutter build` fails the lane (non-zero exit).

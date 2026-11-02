@@ -18,17 +18,18 @@ import 'package:dartlane_flutter/src/actions/flutter_gates.dart';
 ///
 /// These replace the old `flutterBuildApk` and `flutterBuildAppBundle` lanes.
 ///
-/// The build lanes take `--mode=debug|profile|release`, `--flavor`,
+/// The build lanes take `--target=<entrypoint file>`,
+/// `--mode=debug|profile|release`, `--flavor`,
 /// `--dart-define=KEY=VALUE` (repeatable), `--build-name`, `--build-number`,
 /// `--obfuscate` and `--split-debug-info`. Unknown options are an error.
 Map<String, Lane> flutterLanes() => {
   'flutter_build_apk': Lane(
-    'Build an APK (--mode, --flavor, --dart-define, --build-name, ...)',
-    (ctx) => _build(ctx, BuildTarget.apk),
+    'Build an APK (--target, --mode, --flavor, --dart-define, ...)',
+    (ctx) => _build(ctx, ExecutableType.apk),
   ),
   'flutter_build_appbundle': Lane(
-    'Build an app bundle (--mode, --flavor, --dart-define, ...)',
-    (ctx) => _build(ctx, BuildTarget.appbundle),
+    'Build an app bundle (--target, --mode, --flavor, --dart-define, ...)',
+    (ctx) => _build(ctx, ExecutableType.appbundle),
   ),
   'flutter_pub_get': Lane('Run flutter pub get (--offline)', (ctx) async {
     ctx.args.expectOnly(['offline']);
@@ -61,6 +62,7 @@ Map<String, Lane> flutterLanes() => {
 };
 
 const _buildOptions = [
+  'target',
   'mode',
   'flavor',
   'dart-define',
@@ -70,11 +72,12 @@ const _buildOptions = [
   'split-debug-info',
 ];
 
-Future<void> _build(LaneContext ctx, BuildTarget target) async {
+Future<void> _build(LaneContext ctx, ExecutableType type) async {
   final args = ctx.args..expectOnly(_buildOptions);
   final build = await ctx.run(
     FlutterBuild(
-      target: target,
+      type: type,
+      target: args.string('target'),
       mode: _mode(args.string('mode')),
       flavor: args.string('flavor'),
       dartDefines: args.list('dart-define', commaSeparated: false),

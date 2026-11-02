@@ -79,7 +79,7 @@ Example (proposed API, names may change):
 void main(List<String> args) => dartlane(args, lanes: {
   'beta': Lane('Build and ship to QA', (ctx) async {
     await ctx.run(FlutterAnalyze());
-    final build = await ctx.run(FlutterBuild(target: BuildTarget.apk, flavor: 'prod'));
+    final build = await ctx.run(FlutterBuild(type: ExecutableType.apk, flavor: 'prod'));
     await ctx.run(FirebaseDistribute(build.path, app: Config.firebaseAppId, groups: ['qa']));
   }),
 });
@@ -132,7 +132,7 @@ void main(List<String> args) => dartlane(args, lanes: {
 ### 8.3 Built-in actions
 | ID | Requirement |
 |---|---|
-| ACT-1 | `FlutterBuild`: one action with typed params (`target`, `mode`, `flavor`, `dartDefines` as a list/map, `buildName`, `buildNumber`, `obfuscate` with `splitDebugInfo`), returns `BuildResult(path, target, mode, flavor, version)`. Named constructors `FlutterBuild.apk(...)` and `FlutterBuild.appBundle(...)` are shortcuts. The old lane names (for example `flutterBuildApk`) return as ready-made lanes. |
+| ACT-1 | `FlutterBuild`: one action with typed params (`type`, `target`, `mode`, `flavor`, `dartDefines` as a list/map, `buildName`, `buildNumber`, `obfuscate` with `splitDebugInfo`), returns `BuildResult(path, type, target, mode, flavor, version)`. Named constructors `FlutterBuild.apk(...)` and `FlutterBuild.appBundle(...)` are shortcuts. The old lane names (for example `flutterBuildApk`) return as ready-made lanes. |
 | ACT-2 | `FlutterAnalyze`, `FlutterTest`, `FlutterPubGet` as gate steps. |
 | ACT-3 | Version action reads and bumps `version:` and build number in `pubspec.yaml`. (The separate `fastlane-plugin-flutter_versioner` project stays independent **(decided)**.) |
 | ACT-4 | `FirebaseDistribute`: uploads an APK, polls the operation, sets release notes, and distributes to testers and groups; supports notes and testers from a file. |

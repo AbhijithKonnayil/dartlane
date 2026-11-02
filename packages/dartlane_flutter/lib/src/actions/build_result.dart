@@ -5,8 +5,9 @@ class BuildResult {
   /// Creates a result.
   const BuildResult({
     required this.path,
-    required this.target,
+    required this.type,
     required this.mode,
+    this.target,
     this.flavor,
     this.version,
   });
@@ -18,7 +19,10 @@ class BuildResult {
   final String path;
 
   /// Whether this is an APK or an app bundle.
-  final BuildTarget target;
+  final ExecutableType type;
+
+  /// The entrypoint file that was built, if one was given.
+  final String? target;
 
   /// The build mode.
   final BuildMode mode;
