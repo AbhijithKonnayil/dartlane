@@ -125,6 +125,20 @@ class LaneLogger {
     }
   }
 
+  /// Starts a long-running step.
+  ///
+  /// On a terminal this is an animated line that [LaneProgress.update]
+  /// rewrites.
+  /// When not [interactive] (CI, no terminal) it prints [message] and then one
+  /// plain line per update, so callers should update sparingly.
+  LaneProgress progress(String message) {
+    if (!interactive) {
+      info(message);
+      return LaneProgress._(this, null);
+    }
+    return LaneProgress._(this, _delegate.progress(_masked(message)));
+  }
+
   /// Asks a yes or no question.
   ///
   /// When not [interactive] it does not ask and returns [defaultValue].
@@ -140,5 +154,43 @@ class LaneLogger {
         .replaceAll('\r', '%0D')
         .replaceAll('\n', '%0A');
     return '::$level::$escaped';
+  }
+}
+
+/// A running step started by `LaneLogger.progress`.
+class LaneProgress {
+  LaneProgress._(this._logger, this._inner);
+
+  final LaneLogger _logger;
+  final mason.Progress? _inner;
+
+  /// Replaces the message of the running step.
+  void update(String message) {
+    final inner = _inner;
+    if (inner == null) {
+      _logger.info(message);
+    } else {
+      inner.update(_logger._masked(message));
+    }
+  }
+
+  /// Ends the step as done, optionally replacing the message.
+  void complete([String? message]) {
+    final inner = _inner;
+    if (inner == null) {
+      if (message != null) _logger.info(message);
+    } else {
+      inner.complete(message == null ? null : _logger._masked(message));
+    }
+  }
+
+  /// Ends the step as failed, optionally replacing the message.
+  void fail([String? message]) {
+    final inner = _inner;
+    if (inner == null) {
+      if (message != null) _logger.error(message);
+    } else {
+      inner.fail(message == null ? null : _logger._masked(message));
+    }
   }
 }
