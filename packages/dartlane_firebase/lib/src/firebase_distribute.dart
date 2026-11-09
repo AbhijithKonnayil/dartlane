@@ -3,11 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dartlane_core/dartlane_core.dart';
+import 'package:dartlane_firebase/src/firebase_api.dart';
 import 'package:dartlane_firebase/src/firebase_credentials.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
-const _host = 'https://firebaseappdistribution.googleapis.com';
+const String _host = firebaseHost;
 
 /// What Firebase did with an upload.
 enum ReleaseOutcome {
@@ -243,20 +244,7 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
     );
   }
 
-  /// `projects/<project number>/apps/<app id>`, from the app ID, which holds
-  /// the project number as its second part.
-  String _appName() {
-    final parts = app.split(':');
-    if (parts.length != 4 || int.tryParse(parts[1]) == null) {
-      throw UserError(
-        'Invalid Firebase app ID "$app".',
-        hint:
-            'It looks like 1:1234567890:android:abc123 and is in the '
-            'Firebase console under Project settings.',
-      );
-    }
-    return 'projects/${parts[1]}/apps/$app';
-  }
+  String _appName() => firebaseAppName(app);
 
   /// The notes, testers and groups, with the files read and merged in.
   ///
@@ -445,24 +433,8 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
     _decode(response, what);
   }
 
-  Map<String, dynamic> _decode(http.Response response, String what) {
-    var body = <String, dynamic>{};
-    try {
-      final decoded = jsonDecode(response.body);
-      if (decoded is Map<String, dynamic>) body = decoded;
-    } on FormatException {
-      // Not JSON; the status code below still decides.
-    }
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      final error = body['error'];
-      final message = error is Map<String, dynamic> ? error['message'] : null;
-      throw ActionFailed(
-        'Firebase refused to $what (HTTP ${response.statusCode})'
-        '${message == null ? '' : ': $message'}.',
-      );
-    }
-    return body;
-  }
+  Map<String, dynamic> _decode(http.Response response, String what) =>
+      decodeFirebaseResponse(response, what);
 
   String get _contentType => switch (p.extension(binary).toLowerCase()) {
     '.apk' => 'application/vnd.android.package-archive',

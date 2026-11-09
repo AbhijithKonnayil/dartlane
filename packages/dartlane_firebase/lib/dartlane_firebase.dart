@@ -4,3 +4,4 @@ library;
 export 'src/firebase_credentials.dart';
 export 'src/firebase_distribute.dart';
 export 'src/firebase_lanes.dart';
+export 'src/firebase_latest_release.dart';
