@@ -189,8 +189,7 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
     File file,
     _Inputs inputs,
   ) async {
-    ctx.logger.info('  uploading ${p.basename(binary)}');
-    final operation = await _upload(web, appName, file);
+    final operation = await _upload(ctx, web, appName, file);
     final done = await _waitFor(web, operation);
 
     final response = done['response'] as Map<String, dynamic>? ?? const {};
@@ -326,7 +325,49 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
     return file;
   }
 
-  Future<String> _upload(http.Client web, String appName, File file) async {
+  Future<String> _upload(
+    LaneContext ctx,
+    http.Client web,
+    String appName,
+    File file,
+  ) async {
+    final total = file.lengthSync();
+    final name = p.basename(binary);
+    final progress = ctx.logger.progress('  uploading $name');
+    // Every percent on a terminal, every quarter in CI logs.
+    final step = ctx.logger.interactive ? 1 : 25;
+    var sent = 0;
+    var shown = -step;
+    final counted = file.openRead().map((chunk) {
+      sent += chunk.length;
+      final percent = total == 0 ? 100 : sent * 100 ~/ total;
+      if (percent - shown >= step || percent == 100 && shown != 100) {
+        shown = percent;
+        progress.update(
+          '  uploading $name ($percent%, ${_mb(sent)} of ${_mb(total)})',
+        );
+      }
+      return chunk;
+    });
+    try {
+      final operation = await _send(web, appName, file, counted);
+      progress.complete('  uploaded $name');
+      return operation;
+    } on Object {
+      progress.fail('  upload of $name failed');
+      rethrow;
+    }
+  }
+
+  static String _mb(int bytes) =>
+      '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+
+  Future<String> _send(
+    http.Client web,
+    String appName,
+    File file,
+    Stream<List<int>> bytes,
+  ) async {
     final request =
         http.StreamedRequest(
             'POST',
@@ -339,7 +380,7 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
           })
           ..contentLength = file.lengthSync();
     // Stream from disk so a large binary is never held in memory.
-    unawaited(file.openRead().pipe(request.sink).catchError((Object _) {}));
+    unawaited(bytes.pipe(request.sink).catchError((Object _) {}));
 
     final http.Response response;
     try {

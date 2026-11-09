@@ -92,6 +92,15 @@ void main() {
     });
   });
 
+  test('logs upload progress in steps when not on a terminal', () async {
+    await ctx.run(action(groups: ['qa']));
+    expect(
+      ctx.logger.lines.where((l) => l.contains('upload')),
+      contains(startsWith('  uploading app-release.apk (100%')),
+    );
+    expect(ctx.logger.lines, contains('  uploaded app-release.apk'));
+  });
+
   test('no testers or groups: uploaded, warned, not an error', () async {
     final result = await ctx.run(action());
 
