@@ -46,3 +46,35 @@ Map<String, dynamic> decodeFirebaseResponse(
   }
   return body;
 }
+
+/// `projects/<project number>`, for project-level endpoints such as testers.
+///
+/// Throws a [UserError] if [project] is not a project number.
+String firebaseProjectName(String project) {
+  if (int.tryParse(project) == null) {
+    throw UserError(
+      'Invalid Firebase project number "$project".',
+      hint:
+          'It is the number in Project settings, and the second part of the '
+          'app ID: 1:1234567890:android:abc123 is project 1234567890.',
+    );
+  }
+  return 'projects/$project';
+}
+
+/// Sends [payload] as JSON with [method] to [url] and returns the decoded
+/// reply. Throws an `ActionFailed` saying Firebase refused to [what] when the
+/// status is not a success.
+Future<Map<String, dynamic>> sendFirebaseJson(
+  http.Client web,
+  String method,
+  String url,
+  Map<String, Object?> payload,
+  String what,
+) async {
+  final request = http.Request(method, Uri.parse(url))
+    ..headers['Content-Type'] = 'application/json'
+    ..body = jsonEncode(payload);
+  final response = await http.Response.fromStream(await web.send(request));
+  return decodeFirebaseResponse(response, what);
+}
