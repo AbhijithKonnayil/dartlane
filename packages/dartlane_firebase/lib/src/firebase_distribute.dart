@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:dartlane_core/dartlane_core.dart';
 import 'package:dartlane_firebase/src/firebase_api.dart';
 import 'package:dartlane_firebase/src/firebase_credentials.dart';
+import 'package:dartlane_firebase/src/firebase_inputs.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
@@ -205,7 +205,7 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
 
     final notes = inputs.notes;
     if (notes != null && notes.isNotEmpty) {
-      await _json(
+      await sendFirebaseJson(
         web,
         'PATCH',
         '$_host/v1/$name?updateMask=release_notes.text',
@@ -218,7 +218,7 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
 
     final distribute = inputs.testers.isNotEmpty || inputs.groups.isNotEmpty;
     if (distribute) {
-      await _json(web, 'POST', '$_host/v1/$name:distribute', {
+      await sendFirebaseJson(web, 'POST', '$_host/v1/$name:distribute', {
         if (inputs.testers.isNotEmpty) 'testerEmails': inputs.testers,
         if (inputs.groups.isNotEmpty) 'groupAliases': inputs.groups,
       }, 'distribute the release');
@@ -259,48 +259,23 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
     final notesFile = releaseNotesFile;
     final notes = notesFile == null
         ? releaseNotes
-        : _readFile(notesFile, 'release notes').trim();
+        : readInputFile(notesFile, 'release notes').trim();
 
     final testerFile = testersFile;
     final fileTesters = testerFile == null
         ? const <String>[]
-        : _readList(testerFile, 'testers');
-    for (final email in fileTesters) {
-      if (!email.contains('@')) {
-        throw UserError(
-          '$testerFile has "$email", which is not an email address.',
-          hint: 'List one tester email per line.',
-        );
-      }
-    }
+        : readInputList(testerFile, 'testers');
+    if (testerFile != null) requireEmails(fileTesters, testerFile);
     final groupFile = groupsFile;
     return _Inputs(
       notes: notes,
       testers: {...testers, ...fileTesters}.toList(),
       groups: {
         ...groups,
-        if (groupFile != null) ..._readList(groupFile, 'groups'),
+        if (groupFile != null) ...readInputList(groupFile, 'groups'),
       }.toList(),
     );
   }
-
-  String _readFile(String path, String what) {
-    final file = File(path);
-    if (!file.existsSync()) {
-      throw UserError(
-        'The $what file $path does not exist.',
-        hint: 'Check the path, or write the file in an earlier step.',
-      );
-    }
-    return file.readAsStringSync();
-  }
-
-  List<String> _readList(String path, String what) => [
-    for (final line in _readFile(path, what).split(RegExp(r'\r?\n')))
-      if (!line.trim().startsWith('#'))
-        for (final item in line.split(','))
-          if (item.trim().isNotEmpty) item.trim(),
-  ];
 
   File _checkFile() {
     final file = File(binary);
@@ -417,20 +392,6 @@ class FirebaseDistribute extends LaneAction<DistributionResult> {
       }
       await Future<void>.delayed(pollInterval);
     }
-  }
-
-  Future<void> _json(
-    http.Client web,
-    String method,
-    String url,
-    Map<String, Object?> payload,
-    String what,
-  ) async {
-    final request = http.Request(method, Uri.parse(url))
-      ..headers['Content-Type'] = 'application/json'
-      ..body = jsonEncode(payload);
-    final response = await http.Response.fromStream(await web.send(request));
-    _decode(response, what);
   }
 
   Map<String, dynamic> _decode(http.Response response, String what) =>
